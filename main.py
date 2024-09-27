@@ -32,7 +32,9 @@ view.load_unit_sprite('archer', 'assets/archer.png')
 
 
  #Créer le contrôleur
-controller = GameController(model, view)
+controller = GameController(model, view, carte)
+#affichage sur le terminal
+terminal = TerminalView(carte)
 
 # Boucle de jeu
 running = True
@@ -47,20 +49,19 @@ while running:
 
     #Effacer l'écran
     screen.fill((0, 0, 0))
+
     
-    mode = input("Mode d'affichage (graphique/terminal) : ").strip().lower()
-    if mode == 'graphique':
-        view.render_background()  # Effacer l'écran
+    view.render_background()  # Effacer l'écran
         
-        #Afficher la carte (géré par la vue)
-        view.render_map(carte,controller.camera_x, controller.camera_y)  # Afficher la carte
+     #Afficher la carte (géré par la vue)
+    view.render_map(carte,controller.camera_x, controller.camera_y)  # Afficher la carte
         
-        view.update_display()  # Mettre à jour l'affichage
+    view.update_display()  # Mettre à jour l'affichage
         
-        # Rafraîchir l'écran
-        pygame.display.flip()  # ou pygame.display.update()
-    elif mode == 'terminal':
-        TerminalView.display_map(units)
+    # Rafraîchir l'écran
+    pygame.display.flip()  # ou pygame.display.update()
+    
+    #terminal.display_map(units)
 
      # Limite le framerate à 60 images par seconde
     clock.tick(60)

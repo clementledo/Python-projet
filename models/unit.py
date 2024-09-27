@@ -20,9 +20,8 @@ class Unit:
         """Vérifie si l'unité est cliquée selon la position de la souris"""
         mouse_x, mouse_y = mouse_pos
         # Vérifie si la souris est dans les limites de l'unité
-        if self.x <= mouse_x <= self.x + self.width and self.y <= mouse_y <= self.y + self.height:
-            return True
-        return False
+        return self.x <= mouse_x <= self.x + self.width and self.y <= mouse_y <= self.y + self.height
+           
     
     def select_unit(self, mouse_pos):
         """Sélectionne l'unité si elle est cliquée."""
