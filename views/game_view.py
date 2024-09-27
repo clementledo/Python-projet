@@ -62,3 +62,7 @@ class GameView:
     def update_display(self):
         """Mettre à jour l'affichage"""
         pygame.display.flip()
+    
+
+
+

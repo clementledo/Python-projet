@@ -4,6 +4,7 @@ from models.unit import Unit
 from views.game_view import GameView
 from controllers.game_controller import GameController
 from models.carte import Carte
+from views.terminalView import TerminalView
 
 # Initialisation de Pygame
 pygame.init()
@@ -39,20 +40,27 @@ while running:
 
     running = controller.handle_input()  # Gestion des entrées utilisateur
     
+
+
+
     controller.update()  # Met à jour l'affichage des units
 
     #Effacer l'écran
     screen.fill((0, 0, 0))
-
-    view.render_background()  # Effacer l'écran
     
-    #Afficher la carte (géré par la vue)
-    view.render_map(carte,controller.camera_x, controller.camera_y)  # Afficher la carte
-    
-    view.update_display()  # Mettre à jour l'affichage
-    
-    # Rafraîchir l'écran
-    pygame.display.flip()  # ou pygame.display.update()
+    mode = input("Mode d'affichage (graphique/terminal) : ").strip().lower()
+    if mode == 'graphique':
+        view.render_background()  # Effacer l'écran
+        
+        #Afficher la carte (géré par la vue)
+        view.render_map(carte,controller.camera_x, controller.camera_y)  # Afficher la carte
+        
+        view.update_display()  # Mettre à jour l'affichage
+        
+        # Rafraîchir l'écran
+        pygame.display.flip()  # ou pygame.display.update()
+    elif mode == 'terminal':
+        TerminalView.display_map(units)
 
      # Limite le framerate à 60 images par seconde
     clock.tick(60)
