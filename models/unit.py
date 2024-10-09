@@ -101,3 +101,25 @@ class Villager(Unit):
         if self.is_building:
             self.update_building(delta_time)
         # Autres actions possibles (comme la collecte de ressources
+
+    class Archer(Unit):
+        def __init__(self, x, y):
+        super().__init__(x, y, "Archer")
+        self.hp = 30  # Points de vie
+        self.attack = 4  # Points d'attaque
+        self.speed = 1  # Vitesse de déplacement (tuiles/seconde)
+        self.training_time = 35  # Temps d'entraînement en secondes
+    class Swordsman(Unit):
+        def __init__(self, x, y):
+        super().__init__(x, y, "Archer")
+        self.hp = 40  # Points de vie
+        self.attack = 4  # Points d'attaque
+        self.speed = 0.9  # Vitesse de déplacement (tuiles/seconde)
+        self.training_time = 20  # Temps d'entraînement en secondes
+    class Horseman(Unit):
+        def __init__(self, x, y):
+        super().__init__(x, y, "Archer")
+        self.hp = 45  # Points de vie
+        self.attack = 4  # Points d'attaque
+        self.speed = 1.2  # Vitesse de déplacement (tuiles/seconde)
+        self.training_time = 30  # Temps d'entraînement en secondes
