@@ -1,6 +1,6 @@
 import random
 
-"""classe Tile pas utile je pense"""
+"""classe Tile pas utile je pense (pour la vue terminale)"""
 class Tile:
     """Classe représentant une seule tuile."""
     def __init__(self, tile_type):
