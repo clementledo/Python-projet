@@ -34,7 +34,7 @@ class wood extends Resource{
 class food extends Resource{
 
     value: 300
-    +food(Farm: farm)
+    +food(Farm: farm): void
 }
 class gold extends Resource{
     value: 800
