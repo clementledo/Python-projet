@@ -6,8 +6,6 @@ class Building:
         self.health_ratio = self.health_max / self.health_bar_length
         self.team = team
         self.pos = pos
-        self.age_2 = False
-        self.age = 'Firstage'
         self.attack_cooldown = pg.time.get_ticks()
         self.constructed = False
         if not beginning:
@@ -30,40 +28,7 @@ class Building:
         pg.draw.rect(self.bar_image, GREEN, (1, 1, (self.health / self.health_ratio) - 9, 5))
         return self.bar_image
 
-    def passer_age(self):
-        if self.game_name == 'Forum':
-            print('je suis là')
-            self.age = 'Secondage'
-            if self.resource_man.buy_age(self) != -1 and self.age_2:
-                self.bar_image = self.secondage_image.copy()
-                self.image = self.secondage_image
-                self.age_2 = False
-                print("et ici")
-                self.health_max += 1000
-                if self.health == self.health_max:
-                    self.health += 1000
-                self.health_ratio = self.health_max / self.health_bar_length
-            elif self.team == 'Red':
-                self.bar_image = self.secondage_image.copy()
-                self.image = self.secondage_image
-                self.age_2 = False
-                self.health_max += 1000
-                if self.health == self.health_max:
-                    self.health += 1000
-                self.health_ratio = self.health_max / self.health_bar_length
-
-            else:
-                self.age = 'Firstage'
-        else:
-            self.age = 'Secondage'
-            if self.age_2:
-                self.bar_image = self.secondage_image.copy()
-                self.image = self.secondage_image
-                self.age_2 = False
-                self.health_max += 1000
-                if self.health == self.health_max:
-                    self.health += 1000
-                self.health_ratio = self.health_max / self.health_bar_length
+  
 
 
 class TownCenter(Building):
@@ -110,7 +75,7 @@ class Camp(Building):
     health=0
     health_max=200
 class Keep(Building):
-    bar_image=kee[.copy()
+    bar_image=keep.copy()
     image=keep
     name="Keep"
     health=0
