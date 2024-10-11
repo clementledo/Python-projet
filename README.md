@@ -30,6 +30,6 @@ class Tiles{
   + Tiles(position,ressource)
 
 Ressource  --  Type
-Tiles --\* Ressource 
+Tiles --* Ressource 
   
 ```
