@@ -1,0 +1,55 @@
+@startuml
+class Building{
+    cost: int
+    size: int
+    pos: Pos
+    hp: int
+    build_time: int
+    symbol: char
+    etat: int[3]
+
+    +Building(): void
+    +update(): void
+    +destroy(): void
+    +damage(unit: Unit):int
+
+}
+class Towncentre extends Building{
+
+    +add_resources(): void
+    +remove_resources(): void
+    +towncentre(): void
+
+}
+class House extends Building{
+    +house(): void
+}
+class Camp extends Building{
+    +camp(): void
+}
+class Farm extends Building{
+    stockage: 300 
+
+    +product(): void
+
+}
+class Barracks extends Building{
+     +create_swordsman(): void
+}
+class Stable extends Building{
+     +create_horseman(): void
+}
+class Archery_Range extends Building{
+     +create_archery(): void
+}
+class Keep extends Building{
+    attack: 5
+    range: 8
+
+    +Keep(): Void
+    +attack(): Void
+
+}
+
+
+@enduml

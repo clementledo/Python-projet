@@ -1,0 +1,41 @@
+@startuml
+class Unit {
+  cost int[3]
+  trainingTime: time
+  hpMax: int
+  speedatk: float
+  speeddep: float
+  symbol: char
+  attack: int
+  hp: int
+  position: Pos
+  
+  +init(): void
+  +getHp(): int
+  +getPos(): Pos
+  +hpLoss(amount: int): void
+  +die(): void
+  +move(position: Pos): void
+  +create_path(pos: Pos): void
+}
+
+class Villager extends Unit {
+  +collect(Resource resource): void
+  +dropResources(): void
+  +build(Building building): void
+}
+
+class Swordsman extends Unit {
+  +attack_sword(target: Unit): void
+}
+
+class Horseman extends Unit {
+  +attack_horse(target: Unit): void
+}
+
+class Archer extends Unit {
+  +attack_archer(target: Unit): void
+}
+
+
+@enduml

@@ -1,0 +1,42 @@
+@startuml
+class Tile extends Type{
+    -pos: Pos
+    -type: type
+
+    +Tile(): void
+    +get_pos(): void
+    +get_type(): void
+}
+enum Type {
+  Wood
+  Food
+  Gold
+  Towncentre
+  House
+  Camp
+  Farm
+  Barracks
+  Stable
+  Archery_Range
+  Keep
+}
+
+class Resource extends Tile{
+    -type: Char
+    -symbol: Char
+    -quantity: int
+
+    Resource(): void
+}
+class wood extends Resource{
+    value: 100
+}
+class food extends Resource{
+
+    value: 300
+    +food(Farm: farm)
+}
+class gold extends Resource{
+    value: 800
+}
+@enduml
