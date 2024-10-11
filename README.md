@@ -7,9 +7,23 @@ Le but est de développer le jeu "Age of Empire". Le jeu est développé en pyth
 
 
 ```mermaid
-sequenceDiagram
-Alice -> Bob: Authentication Request
-Bob --> Alice: Authentication Response
-Alice -> Bob:Another authentication Response
-Bob --> Alice: Another authentication Response
+---
+title: Diagram UML of the Model
+---
+classDiagram
+  class Ressource{
+    -Enum~Type~ type
+    -int quantity
+    -char symbol
+    +Ressource(type,symbol, quantity)
+  }
+
+  class Type{
+    <<enumeration>>
+    Gold
+    Wood
+  }
+
+Ressource  --  Type
+  
 ```
