@@ -6,12 +6,10 @@ Le but est de développer le jeu "Age of Empire". Le jeu est développé en pyth
 - 2.5D
 
 
-```
-@startuml
+```mermaid
+sequenceDiagram
 Alice -> Bob: Authentication Request
 Bob --> Alice: Authentication Response
-
-Alice -> Bob: Another authentication Request
-Alice <-- Bob: Another authentication Response
-@enduml
+Alice -> Bob:Another authentication Response
+Bob --> Alice: Another authentication Response
 ```
