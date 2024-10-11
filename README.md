@@ -28,6 +28,7 @@ class Tiles{
   - (int,int) position
   - Ressource ressource
   + Tiles(position,ressource)
+}
 
 Ressource  --  Type
 Tiles --* Ressource 
