@@ -24,13 +24,15 @@ classDiagram
     Wood
   }
 
-class Tiles{
+class Tile{
   - (int,int) position
   - Ressource ressource
-  + Tiles(position,ressource)
+  + Tile(position,ressource)
 }
 
+note for Tiles "Un composition indique que si l'objet Tile est détruit alors l'objet Ressource associé est aussi détruit. Ici la ressource dépend de la case ou il est."
+
 Ressource  --  Type
-Tiles --* Ressource 
+Tile --* Ressource : composition
   
 ```
