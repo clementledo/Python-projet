@@ -1,5 +1,6 @@
 import random
 
+
 class Tile:
     """Classe représentant une seule tuile."""
     def __init__(self, tile_type):
