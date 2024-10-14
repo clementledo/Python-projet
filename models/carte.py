@@ -16,7 +16,7 @@ class Carte:
         """Génère une carte aléatoire en remplissant la grille avec des tuiles aléatoires."""
         for x in range(self.largeur):
             for y in range(self.hauteur):
-                # Choisir un type de tuile aléatoire, par exemple : 0 = plaine, 1 = forêt, 2 = montagne
+                # Choisir un type de tuile aléatoire, par exemple : 0 = p, 1 = food, 2 = Gold
                 if type_carte == "ressources_generales":
                     tile_type = random.choice([0, 1, 2])  # Plain, forêt, montagne
                 elif type_carte == "or_central":
