@@ -19,7 +19,7 @@ Les fonctions ajoutées:
 
 map.py: 
 
-La carte
+    La carte
     Les fonctions pour m.a.j
     Une fonction pour afficher dans le terminal
 
