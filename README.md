@@ -5,6 +5,7 @@ main.py: Le jeu principal
 test.py: Tester les nouvelles fonctions
 
 Les fonctions ajoutées:
+
     unit:
     Les fonctions pour trouver le chemin
     Les fonctions pour mettre a jour dans la carte
@@ -22,6 +23,7 @@ La carte
     Une fonction pour afficher dans le terminal
 
 ai.py:
+
     logique pour l'IA
     les fonctions déja testé:
         make_decision
