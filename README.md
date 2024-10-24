@@ -18,6 +18,7 @@ Les fonctions ajoutées:
     Les fonctions pour ajouter/supprimer des units
 
 map.py: 
+
 La carte
     Les fonctions pour m.a.j
     Une fonction pour afficher dans le terminal
