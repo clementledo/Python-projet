@@ -1,3 +1,4 @@
+
 from models.unit import Villager
 
 
@@ -13,9 +14,9 @@ class TerminalView:
                 tuile = self.carte.grille[x][y]
                 # Représentation des tuiles
                 if tuile.tile_type == 0:
-                    row += 'P'  # Plaine
+                    row += 'F'  # Ferme
                 elif tuile.tile_type == 1:
-                    row += 'W'  # Forêt
+                    row += 'W'  # bois
             
                 elif tuile.tile_type == 2:
                     row += 'G'  # Mine d'or
