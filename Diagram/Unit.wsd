@@ -17,6 +17,7 @@ class Unit {
   +die(): void
   +move(position: Pos): void
   +create_path(pos: Pos): void
+  +attack(): void
 }
 
 class Villager extends Unit {
@@ -26,15 +27,12 @@ class Villager extends Unit {
 }
 
 class Swordsman extends Unit {
-  +attack_sword(target: Unit): void
 }
 
 class Horseman extends Unit {
-  +attack_horse(target: Unit): void
 }
 
 class Archer extends Unit {
-  +attack_archer(target: Unit): void
 }
 
 
