@@ -1,10 +1,10 @@
 
 import pygame
 
-from models.unit import Unit
+from models.units.unit import Unit
 from views.game_view import GameView
 from controllers.game_controller import GameController
-from models.carte import Carte
+from models.map import Carte
 from views.terminalView import TerminalView
 
 # Initialisation de Pygame

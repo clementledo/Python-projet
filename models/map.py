@@ -6,7 +6,7 @@ class Tile:
     def __init__(self, tile_type):
         self.tile_type = tile_type  # Type de tuile (eau, plaine, forêt, etc.)
 
-class Carte:
+class Map:
     """Classe représentant la carte sous forme de grille N x M."""
     def __init__(self, largeur, hauteur):
         self.largeur = largeur
