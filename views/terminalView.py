@@ -1,5 +1,5 @@
 
-from models.unit import Villager
+from models.units.villager import Villager
 
 
 class TerminalView:

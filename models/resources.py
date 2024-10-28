@@ -1,12 +1,13 @@
+import pygame
 class Resource:
-    def __init__(self):
+    def __init__(self,STARTING_RESOURCES):
         self.starting_resources = {
             "Wood": STARTING_RESOURCES[0],
             "Gold": STARTING_RESOURCES[1],
             "Food": STARTING_RESOURCES[2]
         }
 
-        }
+        
         self.costs = {
             "TownCenter": {"Wood": 350, "Gold": 0, "Food": 0},
             "Barracks": {"Wood": 175, "Gold": 0, "Food": 0},
@@ -23,11 +24,12 @@ class Resource:
         }
 
         self.icons = {
-            1: wood_icon,
-            2: gold_icon,
-            3: food_icon
+            1: pygame.image.load("assets/iconfood.png"),
+            2: pygame.image.load("assets/icongold.png"),
+            3: pygame.image.load("assets/iconfood.png")
         }
-      """ I define 2 teams Blue and Red """ 
+
+    """ I define 2 teams Blue and Red """ 
     def is_affordable(self, ent):
         affordable = True
         for resource, cost in self.costs[ent].items():

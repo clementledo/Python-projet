@@ -1,6 +1,6 @@
 import pygame
 from models.units.unit import Unit
-from models.map import Carte
+from models.map import Map
 from views.game_view import GameView
 
 class GameController:

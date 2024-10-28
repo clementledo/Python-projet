@@ -4,7 +4,7 @@ import pygame
 from models.units.unit import Unit
 from views.game_view import GameView
 from controllers.game_controller import GameController
-from models.map import Carte
+from models.map import Map
 from views.terminalView import TerminalView
 
 # Initialisation de Pygame
@@ -16,14 +16,14 @@ pygame.display.set_caption('Age of Empires en Pygame - MVC')
 clock = pygame.time.Clock()
 
 # Créer le modèle (ensemble d'unités)
-units = [Unit(100, 100, 'guerrier'), Unit(200, 150, 'archer')]
+units = [Unit(100, 100, 'guerrier',7,9,5,1)] #Unit(200, 150, 'archer')]
 model = {'units': units}
 
 # Demander à l'utilisateur de choisir un type de carte (par exemple avec un input simple)
 type_carte = "ressources_generales" #input("Choisir le type de carte : ressources_generales ou or_central ? ")
 
 # Initialisation de la carte et de la vue
-carte = Carte(120, 120)  # Créer une carte de 120x120 tuiles
+carte = Map(120, 120)  # Créer une carte de 120x120 tuiles
 carte.generer_aleatoire(type_carte)  # Générer une carte aléatoire
 
 # Créer la vue et charger les sprites

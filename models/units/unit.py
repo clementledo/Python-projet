@@ -1,5 +1,5 @@
 
-from map import Map
+from models.map import Map
 import time
 from queue import PriorityQueue
 
@@ -20,7 +20,14 @@ class Unit:
         self.walkable_symbols = {'Food', 'P', None}
         self.health = hp  # Points de vie
         #self.print_grid_with_unit()
-        map.update_unit_position(self, None, self.position)
+        #map.update_unit_position(self, None, self.position)
+
+    
+
+    def update(self):
+        """Met à jour l'unité, par exemple pour la faire se déplacer."""
+        if self.destination:
+            self.move_towards(self.destination) 
     
 
     def heuristic(self, a, b):
