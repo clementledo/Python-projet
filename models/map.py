@@ -6,6 +6,17 @@ class Tile:
     def __init__(self, tile_type):
         self.tile_type = tile_type  # Type de tuile (eau, plaine, forêt, etc.)
 
+    def get_color(self):
+        """Retourne la couleur associée au type de ressource."""
+        if self.tile_type == 0:  # Type bois
+            return (34, 139, 34)  # Vert foncé
+        elif self.tile_type == 2:  # Type nourriture
+            return (139, 69, 19)  # Marron
+        elif self.tile_type == 1:  # Type or
+            return (255, 215, 0)  # Doré
+        else:
+            return (128, 128, 128)  # Couleur par défaut (gris) si le type n'est pas reconnu
+
 class Map:
     """Classe représentant la carte sous forme de grille N x M."""
     def __init__(self, largeur, hauteur):
@@ -17,12 +28,12 @@ class Map:
         """Génère une carte aléatoire en remplissant la grille avec des tuiles aléatoires."""
         for x in range(self.largeur):
             for y in range(self.hauteur):
-                # Choisir un type de tuile aléatoire, par exemple : 0 = p, 1 = food, 2 = Gold
+                # Choisir un type de tuile aléatoire, par exemple : 0 = wood, 1 = gold, 2 = food
                 if type_carte == "ressources_generales":
-                    tile_type = random.choice([0, 1, 2])  # Plain, forêt, montagne
+                    tile_type = random.choice([0, 1, 2])  # wood, gold, food
                 elif type_carte == "or_central":
                     if 40 < x < 80 and 40 < y < 80:  # Mettons que l'or est concentré au centre
-                        tile_type = 3  # Type spécial pour l'or
+                        tile_type = 1  # Type spécial pour l'or
                     else:
                         tile_type = random.choice([0, 1, 2])
                 self.grille[x][y] = Tile(tile_type)

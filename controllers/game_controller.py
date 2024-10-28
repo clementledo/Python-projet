@@ -15,6 +15,7 @@ class GameController:
         self.selected_unit = None
         self.map_width = carte.largeur
         self.map_height = carte.hauteur
+        self.zoom_level = 1.0
 
 
         # Gérer le clic et le déplacement de la souris
@@ -35,7 +36,15 @@ class GameController:
                 return False  # Quitter la boucle de jeu
             
               #Gestion de la souris
-                
+
+            # Gérer le zoom avec la molette de la souris
+            if event.type == pygame.MOUSEWHEEL:
+                if event.y > 0:  # Molette vers le haut : zoom avant
+                    self.zoom_level = min(self.zoom_level + 0.1, 2.0)  # Limite maximale du zoom
+                else:  # Molette vers le bas : zoom arrière
+                    self.zoom_level = max(self.zoom_level - 0.1, 0.5)  # Limite minimale du zoom    
+            
+            
             # Début du clic gauche (sélection d'une unité ou début du glissement)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Clic gauche
                 mouse_pos = pygame.mouse.get_pos()
@@ -75,14 +84,17 @@ class GameController:
             mouse_x, mouse_y = pygame.mouse.get_pos()
 
              
+            # Limiter la caméra pour qu'elle ne dépasse pas les bords de la carte
+            self.camera_x = max(0, min(self.camera_x, self.map_width * (120 * 32) - screen_width))
+            self.camera_y = max(0, min(self.camera_y, self.map_height * (120 * 32) - screen_height))
 
 
             # Vérifier si la souris est proche des bords de l'écran
-            if mouse_x > screen_width - 20:  # Bord droit
+            if mouse_x > screen_width:  # Bord droit
                 self.camera_x = min(self.camera_x + self.camera_speed, (120 * 32) - screen_width)
             if mouse_x < 20:  # Bord gauche
                 self.camera_x = max(self.camera_x - self.camera_speed, 0)
-            if mouse_y > screen_height - 20:  # Bord bas
+            if mouse_y > screen_height :  # Bord bas
                 self.camera_y = min(self.camera_y + self.camera_speed, (120 * 32) - screen_height)
             if mouse_y < 20:  # Bord haut
                 self.camera_y = max(self.camera_y - self.camera_speed, 0)
@@ -99,13 +111,13 @@ class GameController:
         keys = pygame.key.get_pressed()
         
         # Déplacement caméra avec touches directionnelles
-        if keys[pygame.K_LEFT]:
-            self.camera_x = max(self.camera_x - self.camera_speed, 0)
         if keys[pygame.K_RIGHT]:
+            self.camera_x = max(self.camera_x - self.camera_speed, 0)
+        if keys[pygame.K_LEFT]:
             self.camera_x = min(self.camera_x + self.camera_speed, self.map_width * self.view.tile_size * 2 - screen_width )
-        if keys[pygame.K_UP]:
-            self.camera_y = max(self.camera_y - self.camera_speed, 0)
         if keys[pygame.K_DOWN]:
+            self.camera_y = max(self.camera_y - self.camera_speed, 0)
+        if keys[pygame.K_UP]:
             self.camera_y = min(self.camera_y + self.camera_speed, self.map_height * self.view.tile_size - screen_height)
             
         return True  # Continuer la boucle de jeu
@@ -121,8 +133,11 @@ class GameController:
         print("Aucune unité sélectionnée")    
 
     def update(self):
-        """Met à jour les unités du modèle."""
+        """Met à jour les unités du modèle et les affiche."""
+        # Met à jour les unités
         for unit in self.model['units']:
             unit.update()  # Met à jour l'état de l'unité (déplacement, actions, etc.)
-        # Ne touche pas à l'affichage ici !
+            
+        # Rendu des unités avec les coordonnées de la caméra
+        self.view.render_units(self.model['units'], self.camera_x, self.camera_y, self.zoom_level)
 

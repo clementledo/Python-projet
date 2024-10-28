@@ -1,10 +1,12 @@
 
 import pygame
 
-from models.units.unit import Unit
+from models.units.unit import Unit 
+from models.units.villager import Villager
 from views.game_view import GameView
 from controllers.game_controller import GameController
 from models.map import Map
+from models.map import Tile
 from views.terminalView import TerminalView
 
 # Initialisation de Pygame
@@ -15,9 +17,7 @@ pygame.display.set_caption('Age of Empires en Pygame - MVC')
 # Créer un objet pour limiter le framerate
 clock = pygame.time.Clock()
 
-# Créer le modèle (ensemble d'unités)
-units = [Unit(100, 100, 'guerrier',7,9,5,1)] #Unit(200, 150, 'archer')]
-model = {'units': units}
+
 
 # Demander à l'utilisateur de choisir un type de carte (par exemple avec un input simple)
 type_carte = "ressources_generales" #input("Choisir le type de carte : ressources_generales ou or_central ? ")
@@ -26,10 +26,22 @@ type_carte = "ressources_generales" #input("Choisir le type de carte : ressource
 carte = Map(120, 120)  # Créer une carte de 120x120 tuiles
 carte.generer_aleatoire(type_carte)  # Générer une carte aléatoire
 
+# Créer le modèle (ensemble d'unités)
+units = [
+    #Unit(100, 100, 'guerrier', 7, 9, 5, carte),
+    Villager(150, 120,carte)  # Unité villageoise ajoutée
+]
+ #Unit(200, 150, 'archer')]
+model = {'units': units}
 # Créer la vue et charger les sprites
 view = GameView(screen)
+view.load_unit_sprite('villager', 'assets/villager.png')
 view.load_unit_sprite('guerrier', 'assets/Axethrower.png')
 view.load_unit_sprite('archer', 'assets/archer.png')
+
+print("Contenu de unit_sprites :", view.unit_sprites.keys())
+
+#print(model)
 
 
  #Créer le contrôleur
@@ -37,13 +49,16 @@ controller = GameController(model, view, carte)
 #affichage sur le terminal
 terminal = TerminalView(carte)
 
+
+
+
 # Boucle de jeu
 running = True
 while running:
+   # print(f"Camera Position: ({controller.camera_x}, {controller.camera_y})")
 
     running = controller.handle_input()  # Gestion des entrées utilisateur
     
-
 
 
     controller.update()  # Met à jour l'affichage des units
@@ -52,11 +67,23 @@ while running:
     screen.fill((0, 0, 0))
 
     
-    view.render_background()  # Effacer l'écran
+    #view.render_background()  # Effacer l'écran
         
      #Afficher la carte (géré par la vue)
-    view.render_map(carte,controller.camera_x, controller.camera_y)  # Afficher la carte
-        
+    view.render_map(carte,controller.camera_x, controller.camera_y,controller.zoom_level)  # Afficher la carte
+
+    
+
+    # Afficher la mini-carte
+    view.render_minimap(carte, controller.camera_x, controller.camera_y, controller.zoom_level)
+
+    # Afficher les unités
+    # Afficher les unités (géré par la vue)
+    view.render_units(model['units'], controller.camera_x, controller.camera_y, controller.zoom_level)
+
+    #for unit in model['units']:
+        #view.render_unit(unit,controller.camera_x,controller.camera_y) 
+    
     view.update_display()  # Mettre à jour l'affichage
         
     # Rafraîchir l'écran
