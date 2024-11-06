@@ -36,106 +36,91 @@ Ressource  --  Type
 Tile --* Ressource : composition
 
 class Building{
-  - int cost
-  - int size: int
-  - Pos pos
-  - int hp
-  - float build_time
-  - char symbol: char
-  - int etat
+    cost: int
+    size: int
+    pos: Pos
+    hp: int
+    build_time: int
+    symbol: char
+    etat: int[3]
 
-  + void Building()
-  + void update()
-  + void destroy()
-  + int damage(unit: Unit)
-}
-
-class Towncentre{
-
-  + void add_resources()
-  + void remove_resources()
-  + void towncentre()
+    +Building(): void
+    +update(): void
+    +destroy(): void
+    +damage(unit: Unit):int
 
 }
-class House{
-  + void house()
-}
-class Camp{
-  + void camp()
-}
-class Farm{
-  - int const stockage = 300 
+class Towncentre extends Building{
 
-  + void product()
+    +add_resources(): void
+    +remove_resources(): void
+    +towncentre(): void
 
 }
-class Barracks{
-  + void create_swordsman()
+class House extends Building{
+    +house(): void
 }
-class Stable{
-  + void create_horseman()
+class Camp extends Building{
+    +camp(): void
 }
-class Archery_Range{
-  + void create_archery()
-}
-class Keep{
-  - int const attack = 5
-  - int const range = 8
+class Farm extends Building{
+    stockage: 300 
 
-  + void Keep()
-  + void attack()
+    +product(): void
+
 }
-  
-Building <|-- Keep
-Building <|-- Archery_Range
-Building <|-- Stable
-Building <|-- Barracks
-Building <|-- Farm
-Building <|-- Camp
-Building <|-- House
-Building <|-- Towncentre
+class Barracks extends Building{
+     +create_swordsman(): void
+}
+class Stable extends Building{
+     +create_horseman(): void
+}
+class Archery_Range extends Building{
+     +create_archery(): void
+}
+class Keep extends Building{
+    attack: 5
+    range: 8
+
+    +Keep(): Void
+    +attack(): Void
+
+}
 
 class Unit {
-  - int cost
-  - time trainingTime
-  - int hpMax
-  - float speedatk
-  - float speeddep
-  - char symbol
-  - int attack
-  - int hp
-  - Pos position
+  cost int[3]
+  trainingTime: time
+  hpMax: int
+  speedatk: float
+  speeddep: float
+  symbol: char
+  attack: int
+  hp: int
+  position: Pos
   
-  + void init()
-  + int getHp()
-  + Pos getPos()
-  + void hpLoss(amount: int)
-  + void die()
-  + void move(position: Pos)
-  + void create_path(pos: Pos)
+  +init(): void
+  +getHp(): int
+  +getPos(): Pos
+  +hpLoss(amount: int): void
+  +die(): void
+  +move(position: Pos): void
+  +create_path(pos: Pos): void
+  +attack(): void
 }
 
-class Villager{
-  + void collect(Resource resource)
-  + void dropResources()
-  + void build(Building building)
+class Villager extends Unit {
+  +collect(Resource resource): void
+  +dropResources(): void
+  +build(Building building): void
 }
 
-class Swordsman{
-  + void attack_sword(target: Unit)
+class Swordsman extends Unit {
 }
 
-class Horseman{
-  + void attack_horse(target: Unit)
+class Horseman extends Unit {
 }
 
-class Archer{
-  + void attack_archer(target: Unit)
+class Archer extends Unit {
 }
-
-Unit <|-- Villager
-Unit <|-- Swordsman
-Unit <|-- Horseman
-Unit <|-- Archer
 
 ```
