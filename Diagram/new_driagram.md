@@ -127,6 +127,7 @@ classDiagram
         +void collect_resource(resource_type: Resource)
         +carry_capacity: int
         +collection_rate: float
+        +drop_resources()
     }
 
     class Swordsman 
@@ -147,7 +148,7 @@ classDiagram
 
     class TownCentre {
         +spawn_villager()
-        +drop_resources()
+  
     }
 
     class House {
