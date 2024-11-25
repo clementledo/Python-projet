@@ -165,6 +165,7 @@ classDiagram
     Building <|-- Camp
     Building <|-- MilitaryBuilding
     Building <|-- Keep
+    Farm <|-- ResourceTile
 
     MilitaryBuilding <|-- Barracks
     MilitaryBuilding <|-- Stable
