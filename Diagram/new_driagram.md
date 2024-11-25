@@ -70,13 +70,15 @@ classDiagram
         +speed: float
         +cost: Dict[Resource, int]
         +position: Tuple[int, int]
+        +symbol: char
+        +attack_speed: float
         +move(destination: Tuple[int, int])
         +attack(target: Unit)
     }
 
     class Villager {
-        +build(building: Building)
-        +collect_resource(resource_type: Resource)
+        +void build(building: Building)
+        +void collect_resource(resource_type: Resource)
         +carry_capacity: int
         +collection_rate: float
     }
@@ -93,6 +95,7 @@ classDiagram
         +position: Tuple[int, int]
         +cost: Dict[Resource, int]
         +build_time: int
+        +symbol: char
         +size: Tuple[int, int]
     }
 
@@ -101,9 +104,34 @@ classDiagram
         +drop_resources()
     }
 
+    class House {
+        # Population increase functionality
+    }
+
+    class ResourceBuilding {
+        +resource_type: str
+        +drop_resources()
+    }
+
     class MilitaryBuilding {
         <<abstract>>
         +spawn_unit()
+    }
+
+    class Barracks {
+        +spawn_swordsman()
+    }
+
+    class Stable {
+        +spawn_horseman()
+    }
+
+    class ArcheryRange {
+        +spawn_archer()
+    }
+
+    class Keep {
+        +fire_arrows()
     }
 
     Game "1" *-- "1..*" Player
@@ -119,7 +147,14 @@ classDiagram
     Unit <|-- Archer
 
     Building <|-- TownCentre
+    Building <|-- House
+    Building <|-- ResourceBuilding
     Building <|-- MilitaryBuilding
+    Building <|-- Keep
+
+    MilitaryBuilding <|-- Barracks
+    MilitaryBuilding <|-- Stable
+    MilitaryBuilding <|-- ArcheryRange
 
     %% note ResourceTile: Wood (W): 100 per tile\nFood (F): 300 per farm\nGold (G): 800 per tile
 ```
