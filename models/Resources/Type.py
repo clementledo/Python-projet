@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class ResourceType(Enum):
+class type(Enum):
     """
     Types of ressources :
         Wood
