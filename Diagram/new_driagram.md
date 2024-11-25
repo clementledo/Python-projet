@@ -59,6 +59,7 @@ classDiagram
     }
 
     class Player {
+        <<abstract>>
         +name: str
         +resources: Dict[Resource, int]
         +population_current: int
@@ -69,6 +70,43 @@ classDiagram
         +remove_unit(unit: Unit)
         +update_resources(resource: Resource, amount: int)
         +can_afford(cost: Dict[Resource, int]): bool
+    }
+
+    class HumanPlayer
+
+    class AIPlayer {
+        -strategy: GameStrategy
+        -knowledge_base: GameState
+        +plan_strategy()
+        +evaluate_game_state()
+        +make_decision(): PlayerAction
+        +update_strategy(game_state: GameState)
+        +choose_build_order()
+        +manage_resource_allocation()
+        +micro_manage_units()
+    }
+
+    class GameStrategy {
+        <<abstract>>
+        +aggressive
+        +defensive
+        +economic
+        +rush_strategy
+    }
+
+    class PlayerAction {
+        +type: ActionType
+        +target: Unit | Building | Tile
+        +parameters: Dict
+    }
+
+    class ActionType {
+        <<enumeration>>
+        MOVE
+        ATTACK
+        BUILD
+        GATHER
+        RESEARCH
     }
 
     class Unit {
@@ -170,6 +208,14 @@ classDiagram
     MilitaryBuilding <|-- Barracks
     MilitaryBuilding <|-- Stable
     MilitaryBuilding <|-- ArcheryRange
+
+    Player <|-- HumanPlayer
+    Player <|-- AIPlayer
+    Player --> Unit
+    Player --> Building
+    AIPlayer *-- GameStrategy
+    AIPlayer -- PlayerAction : generates
+    PlayerAction -- ActionType
 
     %% note ResourceTile: Wood (W): 100 per tile\nFood (F): 300 per farm\nGold (G): 800 per tile
 ```
