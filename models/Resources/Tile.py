@@ -1,23 +1,11 @@
 from type import Type
 
-class Pos:
-    def __init__(self, x: int, y: int):
+class Tile:
+    def __init__(self, x: int, y: int, terrain_type: TerrainType, occupant: Optional[Union["Unit", "Building"]] = None):
         self.x = x
         self.y = y
+        self.terrain_type = terrain_type
+        self.occupant = occupant
 
     def __repr__(self):
-        return f"Pos(x={self.x}, y={self.y})"
-
-class Tile:
-    def __init__(self, pos: Pos, tile_type: Type):
-        self.pos = pos
-        self.type = tile_type
-
-    def get_pos(self) -> Pos:
-        return self.pos
-
-    def get_type(self) -> Type:
-        return self.type
-
-    def __repr__(self):
-        return f"Tile(pos={self.pos}, type={self.type})"
+        return f"Tile(x={self.x}, y={self.y}, terrain_type={self.terrain_type}, occupant={self.occupant})"
