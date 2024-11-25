@@ -158,7 +158,7 @@ classDiagram
     class Farm
 
     class Camp {
-        +drop_ressources()
+      
     }
     class MilitaryBuilding {
         <<abstract>>
