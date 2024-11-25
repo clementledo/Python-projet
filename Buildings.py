@@ -1,13 +1,13 @@
 """utilisation des mÃ©thodes dans la classe Joueur (IA)"""
 
 class Batiment :
-    def __init__(self, cost, construction_time, hp, size, symbol, pos, state) :
+    def __init__(self, cost, construction_time, hp, size, symbol, x, y) :
         self.cost = cost
         self.construction_time = construction_time
         self.hp = hp
         self.symbol = symbol
         self.size = size
-        self.pos = pos
+        self.pos = (x,y)
         
     """bÃ¢timent construit par 1 ou plusieurs villageois"""
     """bÃ¢timent construit par 1 villageois -> nominal_construction_time"""
@@ -52,7 +52,7 @@ class Town_center(Batiment) :
 
     def spawn_v(self) : 
         self.remove_ressources(self,50,'F')
-        return villager(50,25,25,1,'v',2,self.pos + (delta_x, delta_y))
+        return villager(50,25,25,1,'v',2)
     """(cost1,cost2,training_time,hp,speed,symbol,attack,pos)"""
 
 class House(Batiment) :
@@ -72,7 +72,7 @@ class Barracks(Batiment) :
     def spawn_swordsman(self):
         self.remove_ressources(self,50,'F')
         self.remove_ressources(self,20,'G')
-        return swordsman(50,20,20,40,0.9,'s',4,self.pos + (delta_x, delta_y))
+        return swordsman(50,20,20,40,0.9,'s',4)
     """(cost1,cost2,training_time,hp,speed,symbol,attack,pos)"""
 
 class Stable(Batiment) :
@@ -81,7 +81,7 @@ class Stable(Batiment) :
     def spawn_horseman(self) :
         self.remove_ressources(self,80,'F')
         self.remove_ressources(self,20,'G')
-        return horseman(80,20,30,45,1.2,'h',4,self.pos + (delta_x, delta_y))
+        return horseman(80,20,30,45,1.2,'h',4)
     """(cost1,cost2,training_time,hp,speed,symbol,attack,pos)"""
 
 class Archery_Range(Batiment) :
@@ -91,7 +91,7 @@ class Archery_Range(Batiment) :
     def spawn_archer(self) :
         self.remove_ressources(self,25,'W')
         self.remove_ressources(self,45,'G')
-        return archer(25,45,30,30,1,'a',4,self.pos + (delta_x, delta_y))
+        return archer(25,45,30,30,1,'a',4)
     """(cost1,cost2,training_time,hp,speed,symbol,attack,pos)"""
 
 """ProblÃ¨me pour le contenant"""
@@ -113,5 +113,5 @@ class Keep(Batiment) :
         super().__init__(self,35,80,800,1,'K',pos,'new')
     
     def fire_arrows(self,unit) :
-        unit.hp = unit.hp - self.attack
+        unit.gethp() = unit.gethp() - self.attack
 
