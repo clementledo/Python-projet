@@ -63,3 +63,5 @@ class Farm(Batiment) :
     cont = 0
     def __init__(self) :
         super().__init__(self, 60, 10, 100, 2, 'F', pos, 'new', 0, '')
+
+
