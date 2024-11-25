@@ -8,8 +8,6 @@ class Batiment :
         self.symbol = symbol
         self.size = size
         self.pos = pos
-        """state utile ?"""
-        self.state = state
         
     """bÃ¢timent construit par 1 ou plusieurs villageois"""
     """bÃ¢timent construit par 1 villageois -> nominal_construction_time"""
