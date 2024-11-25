@@ -1,5 +1,5 @@
 
-from models.units.unit import Unit
+from .unit import Unit # type: ignore
 
 class Villager(Unit):
     def __init__(self, x, y,map):

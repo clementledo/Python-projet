@@ -3,6 +3,7 @@ import pygame
 
 from models.units.unit import Unit 
 from models.units.villager import Villager
+from models.units.archer import Archer
 from views.game_view import GameView
 from controllers.game_controller import GameController
 from models.map import Map
@@ -27,9 +28,10 @@ carte = Map(120, 120)  # Créer une carte de 120x120 tuiles
 carte.generer_aleatoire(type_carte)  # Générer une carte aléatoire
 
 # Créer le modèle (ensemble d'unités)
-units = [
+units =[
     #Unit(100, 100, 'guerrier', 7, 9, 5, carte),
-    Villager(150, 120,carte)  # Unité villageoise ajoutée
+    Villager(150, 120,carte),
+    Archer(200,150,carte)  # Unité villageoise ajoutée
 ]
  #Unit(200, 150, 'archer')]
 model = {'units': units}
@@ -38,6 +40,7 @@ view = GameView(screen)
 view.load_unit_sprite('villager', 'assets/villager.png')
 view.load_unit_sprite('guerrier', 'assets/Axethrower.png')
 view.load_unit_sprite('archer', 'assets/archer.png')
+backround=pygame.image.load('assets/black.jpg')
 
 print("Contenu de unit_sprites :", view.unit_sprites.keys())
 
@@ -67,7 +70,7 @@ while running:
     screen.fill((0, 0, 0))
 
     
-    #view.render_background()  # Effacer l'écran
+    #view.render_background(backround)  # Effacer l'écran
         
      #Afficher la carte (géré par la vue)
     view.render_map(carte,controller.camera_x, controller.camera_y,controller.zoom_level)  # Afficher la carte

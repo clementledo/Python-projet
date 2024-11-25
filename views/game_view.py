@@ -157,13 +157,22 @@ class GameView:
 
     # views/game_view.py
     def render_unit2(self, unit, camera_x, camera_y, zoom_level):
-        """Affiche une unité à sa position en mode rectangulaire (temporairement)"""
-        # Obtenir les coordonnées de l'unité
+        """Affiche une unité en fonction de la caméra et des coordonnées isométriques"""
+    
+        # Position de l'unité en grille
         x, y = unit.position
-        
+
+        # Largeur et hauteur des tuiles en fonction du zoom
+        tile_width = self.tile_size * 2 * zoom_level  # Largeur isométrique
+        tile_height = self.tile_size * zoom_level     # Hauteur isométrique
+
+        # Conversion des coordonnées grille vers isométriques
+        iso_x = abs(x - y) * (tile_width // 2)
+        iso_y = (x - y) * (tile_height // 2)
+
         # Ajuster la position en fonction de la caméra
-        screen_x = (x - camera_x)*zoom_level
-        screen_y = (y - camera_y)*zoom_level
+        screen_x = iso_x - camera_x
+        screen_y = iso_y - camera_y
 
         # Debugging
         print(f"Position unitaire: {unit.position} - Position écran: ({screen_x}, {screen_y})")
@@ -188,9 +197,16 @@ class GameView:
         for unit in units:
             self.render_unit2(unit, camera_x, camera_y, zoom_level)
 
-    def render_background(self, color=(255, 255, 255)):
-        """Remplir l'écran avec une couleur de fond"""
-        self.screen.fill(color)
+    def render_background(self, img):
+        """Remplit l'écran avec une image de fond"""
+        # Obtenez les dimensions de l'écran
+        screen_width, screen_height = self.screen.get_size()
+        
+        # Boucle pour remplir l'écran avec l'image en mosaïque (si elle est plus petite que l'écran)
+        for x in range(0, screen_width, img.get_width()):
+            for y in range(0, screen_height, img.get_height()):
+                self.screen.blit(img, (x, y))
+
     
     def update_display(self):
         """Mettre à jour l'affichage"""
