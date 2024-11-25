@@ -19,7 +19,7 @@ class Unit:
         self.walkable_symbols = {'Food', 'P', None}
         self.health = hp  # Points de vie
         #self.print_grid_with_unit()
-        map.update_unit_position(self, None, self.position)
+        #map.update_unit_position(self, None, self.position)
     
 
     def heuristic(self, a, b):
@@ -81,7 +81,7 @@ class Unit:
                             continue
                     
                     # Check if the tile is walkable
-                    if map[neighbor[0]][neighbor[1]].get_type() in self.walkable_symbols:
+                    if map[neighbor[1]][neighbor[0]].get_type() in self.walkable_symbols:
                         # Calculate tentative g_score
                         tentative_g_score = g_score[current] + 1  # Distance between adjacent nodes is 1
 

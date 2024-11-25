@@ -17,19 +17,32 @@ class IA:
         self.resources = {"Food": 0, "Wood": 0, "Gold": 0}  # AI's collected resources
         self.buildings = []
         
-    def initialize_starting_assets(self):
+    def initialize_starting_assets(self, x, y):
         # Spawn a Town Hall at a specific position
-        town_hall_position = (5, 5)  # You can choose a position on the map
-        town_hall = TownHall(position=town_hall_position)
-        self.buildings.append(town_hall)
-        self.map_data.place_building(town_hall)  # Place Town Hall on the map
+        self.resources["Food"] = 500
+        self.resources["Wood"] = 350
+        self.resources["Gold"] = 100
+        
+        town_hall_position = (x, y)  # You can choose a position on the map
+        #town_hall = TownHall(x,y,"",self.map_data)
+        #self.buildings.append(town_hall)
+        self.place_building(TownHall, town_hall_position)  # Place Town Hall on the map
 
         # Spawn 3 villagers near the Town Hall
         for i in range(3):
             villager_position = (town_hall_position[0] + i, town_hall_position[1])
-            villager = Villager(position=villager_position)
-            self.units.append(villager)
-            self.map_data.update_unit_position(villager, None, villager_position)  # Place villager on map
+            if self.map_data.is_area_free(villager_position[0], villager_position[1],1,1):
+                position = villager_position
+            else:
+                position = self.find_nearby_available_position(*villager_position, (1, 1))
+            
+            if position:
+                villager = Villager(position[0],position[1],self.map_data)
+                self.units.append(villager)
+                self.map_data.update_unit_position(villager, None, position)
+            else:
+                print("No valid position found for villager.")
+
 
     def can_afford(self, cost):
         return all(self.resources[res] >= cost[res] for res in cost)
@@ -55,7 +68,7 @@ class IA:
     def place_building(self, building_type, initial_position):
         """Place a building of the specified type at or near the initial position."""
         x, y = initial_position
-        building = building_type(initial_position)  # Create the building instance
+        building = building_type(initial_position[0], initial_position[1], "", self.map_data)  # Create the building instance
 
         # Check if there's enough resources to build it
         if not self.can_afford(building.cost):
@@ -73,14 +86,14 @@ class IA:
             if new_position:
                 building.position = new_position
                 self.map_data.place_building(building)
-                self.deduct_resources(building)
+                self.deduct_resources(building.cost)
                 print(f"AI placed {building_type.__name__} near position ({new_position[0]}, {new_position[1]}).")
             else:
                 print("No suitable position found to place the building.")
 
     def spawn_villager(self, town_hall):
         """Spawn a new villager if the AI can afford it."""
-        villager_cost = {'F': 50}  # Villager costs 50 Food
+        villager_cost = {'Food': 50}  # Villager costs 50 Food
         if self.can_afford(villager_cost):
             # Deduct resources and spawn a new villager
             self.deduct_resources(villager_cost)
@@ -103,7 +116,7 @@ class IA:
         for building in self.buildings:
             if isinstance(building, TownHall):
                 # AI decision to spawn a villager
-                if len(self.units) < 10:  # Example: If AI has fewer than 10 units
+                if len(self.units) < 10 and self.resources["Food"] > 50:  # Example: If AI has fewer than 10 units
                     self.spawn_villager(building)
 
     def set_target(self, unit, target):
@@ -138,11 +151,7 @@ class IA:
         return closest_target
 
     def gather_resource(self, unit):
-        """
-        Gather a resource if the unit is on a resource tile.
-        
-        :param unit: The unit gathering the resource.
-        """
+
         x, y = unit.position[0], unit.position[1]
         resource_type = self.map_data[y][x]  # Check the map tile the unit is on
         
@@ -182,11 +191,9 @@ class IA:
         return closest_resource
 
     def make_decision(self, all_units):
-        """
-        Decide actions for all AI-controlled units based on the current map state and nearby enemies.
+    
+        self.control_buildings()
         
-        :param all_units: A list of all units on the map (both friendly and enemy).
-        """
         for unit in self.units:
             # First priority: attack nearby enemies
             if unit in self.targets:
