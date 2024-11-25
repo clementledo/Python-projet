@@ -146,6 +146,7 @@ classDiagram
     GameState --> Unit
     GameState --> Building
 
+    Game --> GameState
     Game "1" *-- "1..*" Player
     Game "1" *-- "1" Map
     Map "1" *-- "many" Tile
