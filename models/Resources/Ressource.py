@@ -68,3 +68,29 @@ class Resource:
                     self.starting_resources_AI[resource] -= cost
                 else:
                     return -1
+
+    def get_type(self) -> Type:
+        return self.type
+
+    def get_quantity(self) -> int:
+        return self.quantity
+
+    def __repr__(self):
+        return f"Resource(type={self.type}, symbol='{self.symbol}', quantity={self.quantity}
+
+class Wood(Resource):
+    def __init__(self):
+        super().__init__(Type.Wood, 1 , 100)
+
+class Food(Resource):
+    def __init__(self, farm: str = None):
+        super().__init__(Type.Food, 2 , 300)
+        self.farm = farm
+        
+    def __repr__(self):
+        base_repr = super().__repr__()
+        return f"{base_repr}, farm={self.farm}"
+        
+class Gold(Resource):
+    def __init__(self):
+        super().__init__(Type.Gold, 3 , 800)
