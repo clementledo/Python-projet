@@ -116,11 +116,11 @@ classDiagram
         # Population increase functionality
     }
 
-    class ResourceBuilding {
-        +resource_type: str
-        +drop_resources()
-    }
+    class Farm
 
+    class Camp {
+        +drop_ressources()
+    }
     class MilitaryBuilding {
         <<abstract>>
         +spawn_unit()
@@ -161,7 +161,8 @@ classDiagram
 
     Building <|-- TownCentre
     Building <|-- House
-    Building <|-- ResourceBuilding
+    Building <|-- Farm
+    Building <|-- Camp
     Building <|-- MilitaryBuilding
     Building <|-- Keep
 
