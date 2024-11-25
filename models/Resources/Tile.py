@@ -1,4 +1,6 @@
-from type import Type
+from typing import Optional, Union
+from terrain_type import TerrainType
+
 
 class Tile:
     def __init__(self, x: int, y: int, terrain_type: TerrainType, occupant: Optional[Union["Unit", "Building"]] = None):
