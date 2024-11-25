@@ -1,0 +1,65 @@
+"""utilisation des méthodes dans la classe Joueur (IA)"""
+
+class Batiment :
+    def __init__(self, cost, construction_time, hp, size, symbol, pos, state, nb_spawn, type_spawn) :
+        self.cost = cost
+        self.construction_time = construction_time
+        self.hp = hp
+        self.symbol = symbol
+        self.size = size
+        self.pos = pos
+        """state utile ?"""
+        self.state = state
+        self.spawn = spawn
+        self.type_spawn = type_spawn
+        
+    """bâtiment construit par 1 ou plusieurs villageois"""
+    """bâtiment construit par 1 villageois -> nominal_construction_time"""
+    """bâtiment construit par pls villageois -> (3 * nominal_construction_time) / (builders_count + 2)"""
+    def building(self, delta_time, builders) :
+        for builder in builders :
+            builder.is_building = True
+        self.time_construction = (3 * self.time_construction) / (1+len(builders) + 2)
+        print(f"Construction commencée. Temps de construction réel : {self.time_construction} secondes.")
+        while (self.construction_time > 0) :
+            self.construction_time -= delta_time
+        print("Construction terminée du bâtiment")
+        """une fois la construction finie, modifier le statut des constructeurs"""
+        for builder in builders :
+            builder.is_building = False
+    """rend inutile les méthodes start_building() et update_building() de la classe Villager"""
+    """on part du principe qu'on a un nb n de constructeurs et qu'ils restent du début à la fin de la construction"""
+
+    def destroy(self) :
+        self.hp = 0
+        
+    def damage(self, unit) :
+        self.hp -= unit.attack
+
+    def print_building(self) :
+        print(self.symbol)
+
+"""peut faire spawn des villageois"""       
+class Town_center(Batiment) :
+    """pour chaque type d'unités, de ressources et de bâtiments, avoir un attribut statique liste ? non, une liste pour chaque classe mère batiment et unit"""
+    
+    def __init__(self, pos) :
+        super().__init__(self, 350, 150, 1000, 4, 'T', pos, 'new', 5, 'v')
+
+    def add_ressources(type_ressource) :
+        """reprendre le diagramme uml tile pour compléter le constructeur"""
+        return ressource(type_ressource...)
+
+    def remove_ressources () : 
+
+    def spawn_v(self) : 
+        return villager(cost,training_time,hp_max,speed_atk,symbol,attack,hp,self.pos + (delta_x, delta_y))
+
+class House(Batiment) :
+    def __init__(self, pos) :
+        super().__init__(self, 25, 25, 200, 3, 'H', pos, 'new', 5, 'v')
+
+class Farm(Batiment) :
+    cont = 0
+    def __init__(self) :
+        super().__init__(self, 60, 10, 100, 2, 'F', pos, 'new', 0, '')
