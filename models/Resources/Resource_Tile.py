@@ -1,6 +1,6 @@
-from tile import Tile
+from .Tile import Tile
 from resource import Resource
-from terrain_type import TerrainType
+from .Terrain_type import TerrainType
 
 class ResourceTile(Tile):
     def __init__(self, x: int, y: int, terrain_type: TerrainType, resource: Resource, amount: int, max_amount: int):

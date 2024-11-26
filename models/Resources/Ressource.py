@@ -89,7 +89,6 @@ class Food(Resource):
         
     def __repr__(self):
         base_repr = super().__repr__()
-        return f"{base_repr}, farm={self.farm}"
         
 class Gold(Resource):
     def __init__(self):
