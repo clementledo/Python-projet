@@ -10,14 +10,6 @@ classDiagram
         +pause()
         +resume()
     }
-    class GameState {
-        - map : Map
-        - resources : Dict
-        - units : List~Unit~
-        - buildings : List~Building~
-        + save()
-        + load()
-    }
 
     class Resource {
         <<enumeration>>
@@ -181,11 +173,6 @@ classDiagram
         +fire_arrows()
     }
 
-    GameState --> Map
-    GameState --> Unit
-    GameState --> Building
-
-    Game --> GameState
     Game "1" *-- "1..*" Player
     Game "1" *-- "1" Map
     Map "1" *-- "many" Tile
