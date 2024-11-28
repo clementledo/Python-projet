@@ -1,10 +1,6 @@
 import pygame
-from models.units.villager import Villager
-from models.units.archer import Archer
-from models.units.horseman import Horseman
-from views.game_view import GameView
-from controllers.game_controller import GameController
-from models.map import Map
+from menu import main_menu, pause_menu
+from game_state import GameState
 
 def main():
     # Initialize Pygame
@@ -14,54 +10,85 @@ def main():
     screen_info = pygame.display.Info()
     SCREEN_WIDTH = screen_info.current_w
     SCREEN_HEIGHT = screen_info.current_h
-    TILE_SIZE = 50  # Increased tile size for better visibility
+    TILE_SIZE = 50  # Tile size for the game
 
     # Create fullscreen window
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF)
     pygame.display.set_caption('Age of Empires Pygame Clone')
 
-    # Calculate map size based on screen dimensions
-    TILES_X = int(SCREEN_WIDTH / (TILE_SIZE * 2)) + 20
-    TILES_Y = int(SCREEN_HEIGHT / TILE_SIZE) + 20
+    # Initialize game state
+    game_state = GameState()
 
-    # Create map
-    carte = Map(TILES_X, TILES_Y)
-    carte.generer_aleatoire(type_carte="ressources_generales")
-
-    # Initialize units
-    units = [
-        Villager(15, 12, carte),
-        Villager(3,26,carte),
-        Archer(20, 12, carte),
-        Horseman(20,15,carte)
-    ]
-    model = {'units': units}
-
-    # Initialize view and controller
-    view = GameView(screen, tile_size=TILE_SIZE)
-    view.load_unit_sprite('Villager', 'assets/villager.png')
-    view.load_unit_sprite('Archer', 'assets/archer.png')
-    view.load_unit_sprite('Horseman', 'assets/horseman.png')
-    view.generate_decorations(carte)
-
-    controller = GameController(model, view, carte)
-
-    # Main game loop
+    # Variable to track the current screen (e.g., "main_menu", "gameplay", "pause")
+    current_screen = "main_menu"
     running = True
+
     while running:
-        # Handle input
-        running = controller.handle_input()
+        if current_screen == "main_menu":
+            # Show the main menu and handle the result
+            action = main_menu(screen, game_state)
+            if action == "start":
+                # Initialize gameplay components
+                game_state.start_new_game(screen, SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE)
+                current_screen = "gameplay"
+            elif action == "load_game":
+                try:
+                    game_state.load_state("save_game.pkl")
+                    current_screen = "gameplay"
+                except FileNotFoundError:
+                    print("No saved game found!")
+            elif action == "quit":
+                running = False
+              
+        elif current_screen == "gameplay":
+            # Handle gameplay
+            running = game_state.controller.handle_input()
 
-        # Clear screen
-        screen.fill((0, 0, 0))
+            # Check if the user paused the game
+            if game_state.controller.paused:
+                current_screen = "pause_menu"
+                continue
 
-        # Render game elements
-        view.render_map(carte, controller.camera_x, controller.camera_y, controller.zoom_level)
-        view.render_units(model['units'], controller.camera_x, controller.camera_y, controller.zoom_level)
-        view.render_minimap(carte, controller.camera_x, controller.camera_y, controller.zoom_level,units)
+            if not running:
+                break
 
-        # Update display
-        pygame.display.flip()
+            game_state.controller.update()
+
+            # Clear screen
+            screen.fill((0, 0, 0))
+
+            # Render game elements
+            game_state.view.render_map(game_state.carte, game_state.controller.camera_x, game_state.controller.camera_y, game_state.controller.zoom_level)
+            game_state.view.render_units(game_state.model['units'], game_state.controller.camera_x, game_state.controller.camera_y, game_state.controller.zoom_level, game_state.controller.selected_unit)
+            game_state.view.render_minimap(game_state.carte, game_state.controller.camera_x, game_state.controller.camera_y, game_state.controller.zoom_level, game_state.model['units'])
+
+            # Update display
+            pygame.display.flip()
+
+        elif current_screen == "pause_menu":
+            # Show the pause menu and handle the result
+            action = pause_menu(screen, game_state)
+            if action == "resume":
+                # Resume the game
+                game_state.controller.paused = False
+                current_screen = "gameplay"
+            elif action == "save":
+                # Save the game
+                game_state.save_state("save_game.pkl")
+                print("Game saved!")
+            elif action == "load":
+                # Load the game
+                try:
+                    game_state.load_state("save_game.pkl")
+                    print("Game loaded!")
+                except FileNotFoundError:
+                    print("No saved game found!")
+            elif action == "main_menu":
+                # Go to the main menu
+                current_screen = "main_menu"
+            elif action == "quit":
+                # Quit the game
+                running = False
 
     # Quit Pygame
     pygame.quit()

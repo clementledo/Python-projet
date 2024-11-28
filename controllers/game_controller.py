@@ -16,6 +16,8 @@ class GameController:
         self.map_width = carte.largeur
         self.map_height = carte.hauteur
         self.zoom_level = 1.5
+        self.selected_unit = None
+        self.paused = False
 
         self.clock = pygame.time.Clock()
          # Gérer le clic et le déplacement de la souris
@@ -32,6 +34,11 @@ class GameController:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
+            
+            if event.type ==pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:  # Basculer entre pause et reprise avec 'Échap'
+                    self.paused = not self.paused
+                    print(f"Game paused: {self.paused}")
 
             # Zoom handling
             if event.type == pygame.MOUSEWHEEL:
@@ -77,6 +84,7 @@ class GameController:
             self.camera_y -= self.camera_speed
         if keys[pygame.K_DOWN]:
             self.camera_y += self.camera_speed
+       
 
 
         return True
@@ -111,3 +119,7 @@ class GameController:
                 return
         
         print("No unit selected")
+
+    def update(self):
+        # ... autres mises à jour ...
+        self.view.render_units(self.model['units'], self.camera_x, self.camera_y, self.zoom_level, self.selected_unit)

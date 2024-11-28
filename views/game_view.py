@@ -106,6 +106,15 @@ class GameView:
                 terrain_texture = textures.get(tile.terrain_type, textures[Terrain_type.GRASS])
                 self.screen.blit(terrain_texture, (iso_x, iso_y))
 
+                        # Dessiner un point au centre de la tuile
+                point_color = (0, 255, 0)  # Vert pour les centres
+                point_radius = max(2, int(2 * zoom_level))  # Ajuster la taille en fonction du zoom
+                pygame.draw.circle(self.screen, point_color, 
+                                (iso_x + tile_width // 2, iso_y + tile_height // 2), point_radius)
+                
+         
+
+
         # Render decorations with same isometric conversion
         for decoration in self.decorations:
             x, y = decoration['x'], decoration['y']
@@ -183,7 +192,7 @@ class GameView:
         pygame.draw.rect(self.screen, (100, 100, 100), 
                         (minimap_x, minimap_y, minimap_width, minimap_height), 2)
 
-    def render_units(self, units, camera_x, camera_y, zoom_level):
+    def render_units(self, units, camera_x, camera_y, zoom_level,selected_unit):
         """Improved unit rendering with isometric projection."""
         tile_width = int(self.tile_size * 2 * zoom_level)
         tile_height = int(self.tile_size * zoom_level)
@@ -199,6 +208,13 @@ class GameView:
             # Center the map
             iso_x += screen_width // 2
             iso_y += screen_height // 4
+
+            #Highlight the selected unit
+            if selected_unit == unit:
+                highlight_color = (255, 255, 0)  # Yellow highlight
+                highlight_radius = int(tile_width * 0.5)  # Adjust as needed
+                pygame.draw.circle(self.screen, highlight_color, 
+                                (iso_x, iso_y + tile_height // 2), highlight_radius, 2)
 
             sprite = self.unit_sprites.get(unit.unit_type)
             if sprite:
