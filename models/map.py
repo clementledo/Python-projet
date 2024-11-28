@@ -1,39 +1,30 @@
 import random
-
-
-class Tile:
-    """Classe représentant une seule tuile."""
-    def __init__(self, tile_type):
-        self.tile_type = tile_type  # Type de tuile (eau, plaine, forêt, etc.)
-
-    def get_color(self):
-        """Retourne la couleur associée au type de ressource."""
-        if self.tile_type == 0:  # Type bois
-            return (34, 139, 34)  # Vert foncé
-        elif self.tile_type == 2:  # Type nourriture
-            return (139, 69, 19)  # Marron
-        elif self.tile_type == 1:  # Type or
-            return (255, 215, 0)  # Doré
-        else:
-            return (128, 128, 128)  # Couleur par défaut (gris) si le type n'est pas reconnu
+from models.Resources.Tile import Tile
+from models.Resources.Terrain_type import Terrain_type
 
 class Map:
-    """Classe représentant la carte sous forme de grille N x M."""
-    def __init__(self, largeur, hauteur):
+    def __init__(self, largeur, hauteur, type_carte="ressources_generales"):
         self.largeur = largeur
         self.hauteur = hauteur
         self.grille = [[None for _ in range(hauteur)] for _ in range(largeur)]
-
-    def generer_aleatoire(self,type_carte="ressources_generales"):
-        """Génère une carte aléatoire en remplissant la grille avec des tuiles aléatoires."""
+        self.generer_aleatoire(type_carte)
+    
+    def generer_aleatoire1(self, type_carte="ressources_generales"):
         for x in range(self.largeur):
             for y in range(self.hauteur):
-                # Choisir un type de tuile aléatoire, par exemple : 0 = wood, 1 = gold, 2 = food
-                if type_carte == "ressources_generales":
-                    tile_type = random.choice([0, 1, 2])  # wood, gold, food
-                elif type_carte == "or_central":
-                    if 40 < x < 80 and 40 < y < 80:  # Mettons que l'or est concentré au centre
-                        tile_type = 1  # Type spécial pour l'or
-                    else:
-                        tile_type = random.choice([0, 1, 2])
-                self.grille[x][y] = Tile(tile_type)
+                if random.random() < 0.1:  # 10% pour l'eau
+                    terrain_type = Terrain_type.WATER
+                else:
+                    terrain_type = Terrain_type.GRASS
+                self.grille[x][y] = Tile(x, y, terrain_type)
+
+    def generer_aleatoire(self, type_carte="ressources_generales"):
+        """Génère une carte où toutes les tuiles sont de type GRASS."""
+        for x in range(self.largeur):
+            for y in range(self.hauteur):
+                self.grille[x][y] = Tile(x, y, Terrain_type.GRASS)
+
+
+
+    def __repr__(self):
+        return f"Map({self.largeur}x{self.hauteur})"

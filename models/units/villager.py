@@ -3,7 +3,7 @@ from .unit import Unit # type: ignore
 
 class Villager(Unit):
     def __init__(self, x, y,map):
-        super().__init__(x, y, "villager", 2, 0.8, 25, map)
+        super().__init__(x, y, "Villager", 2, 0.8, 25, map)
         self.resource_capacity = 20  # Peut transporter 20 ressources
         self.resource_gather_rate = 25 / 60  # 25 ressources par minute (en secondes)
         self.is_building = False  # Indique si le villageois est en train de construire

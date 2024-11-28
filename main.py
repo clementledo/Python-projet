@@ -1,102 +1,70 @@
-
 import pygame
-
-from models.units.unit import Unit 
 from models.units.villager import Villager
 from models.units.archer import Archer
+from models.units.horseman import Horseman
 from views.game_view import GameView
 from controllers.game_controller import GameController
 from models.map import Map
-from models.map import Tile
-from views.terminalView import TerminalView
 
-# Initialisation de Pygame
-pygame.init()
-screen = pygame.display.set_mode((800, 600),pygame.DOUBLEBUF)
-pygame.display.set_caption('Age of Empires en Pygame - MVC')
+def main():
+    # Initialize Pygame
+    pygame.init()
 
-# Créer un objet pour limiter le framerate
-clock = pygame.time.Clock()
+    # Screen setup
+    screen_info = pygame.display.Info()
+    SCREEN_WIDTH = screen_info.current_w
+    SCREEN_HEIGHT = screen_info.current_h
+    TILE_SIZE = 50  # Increased tile size for better visibility
 
+    # Create fullscreen window
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF)
+    pygame.display.set_caption('Age of Empires Pygame Clone')
 
+    # Calculate map size based on screen dimensions
+    TILES_X = int(SCREEN_WIDTH / (TILE_SIZE * 2)) + 20
+    TILES_Y = int(SCREEN_HEIGHT / TILE_SIZE) + 20
 
-# Demander à l'utilisateur de choisir un type de carte (par exemple avec un input simple)
-type_carte = "ressources_generales" #input("Choisir le type de carte : ressources_generales ou or_central ? ")
+    # Create map
+    carte = Map(TILES_X, TILES_Y)
+    carte.generer_aleatoire(type_carte="ressources_generales")
 
-# Initialisation de la carte et de la vue
-carte = Map(120, 120)  # Créer une carte de 120x120 tuiles
-carte.generer_aleatoire(type_carte)  # Générer une carte aléatoire
+    # Initialize units
+    units = [
+        Villager(15, 12, carte),
+        Villager(3,26,carte),
+        Archer(20, 12, carte),
+        Horseman(20,15,carte)
+    ]
+    model = {'units': units}
 
-# Créer le modèle (ensemble d'unités)
-units =[
-    #Unit(100, 100, 'guerrier', 7, 9, 5, carte),
-    Villager(150, 120,carte),
-    Archer(200,150,carte)  # Unité villageoise ajoutée
-]
- #Unit(200, 150, 'archer')]
-model = {'units': units}
-# Créer la vue et charger les sprites
-view = GameView(screen)
-view.load_unit_sprite('villager', 'assets/villager.png')
-view.load_unit_sprite('guerrier', 'assets/Axethrower.png')
-view.load_unit_sprite('archer', 'assets/archer.png')
-backround=pygame.image.load('assets/black.jpg')
+    # Initialize view and controller
+    view = GameView(screen, tile_size=TILE_SIZE)
+    view.load_unit_sprite('Villager', 'assets/villager.png')
+    view.load_unit_sprite('Archer', 'assets/archer.png')
+    view.load_unit_sprite('Horseman', 'assets/horseman.png')
+    view.generate_decorations(carte)
 
-print("Contenu de unit_sprites :", view.unit_sprites.keys())
+    controller = GameController(model, view, carte)
 
-#print(model)
+    # Main game loop
+    running = True
+    while running:
+        # Handle input
+        running = controller.handle_input()
 
+        # Clear screen
+        screen.fill((0, 0, 0))
 
- #Créer le contrôleur
-controller = GameController(model, view, carte)
-#affichage sur le terminal
-terminal = TerminalView(carte)
+        # Render game elements
+        view.render_map(carte, controller.camera_x, controller.camera_y, controller.zoom_level)
+        view.render_units(model['units'], controller.camera_x, controller.camera_y, controller.zoom_level)
+        view.render_minimap(carte, controller.camera_x, controller.camera_y, controller.zoom_level,units)
 
+        # Update display
+        pygame.display.flip()
 
+    # Quit Pygame
+    pygame.quit()
 
-
-# Boucle de jeu
-running = True
-while running:
-   # print(f"Camera Position: ({controller.camera_x}, {controller.camera_y})")
-
-    running = controller.handle_input()  # Gestion des entrées utilisateur
-    
-
-
-    controller.update()  # Met à jour l'affichage des units
-
-    #Effacer l'écran
-    screen.fill((0, 0, 0))
-
-    
-    #view.render_background(backround)  # Effacer l'écran
-        
-     #Afficher la carte (géré par la vue)
-    view.render_map(carte,controller.camera_x, controller.camera_y,controller.zoom_level)  # Afficher la carte
-
-    
-
-    # Afficher la mini-carte
-    view.render_minimap(carte, controller.camera_x, controller.camera_y, controller.zoom_level)
-
-    # Afficher les unités
-    # Afficher les unités (géré par la vue)
-    view.render_units(model['units'], controller.camera_x, controller.camera_y, controller.zoom_level)
-
-    #for unit in model['units']:
-        #view.render_unit(unit,controller.camera_x,controller.camera_y) 
-    
-    view.update_display()  # Mettre à jour l'affichage
-        
-    # Rafraîchir l'écran
-    pygame.display.flip()  # ou pygame.display.update()
-    
-    #terminal.display_map(units)
-
-     # Limite le framerate à 60 images par seconde
-    clock.tick(60)
-
-
-# Quitter Pygame
-pygame.quit()
+if __name__ == "__main__":
+    main()

@@ -1,217 +1,216 @@
 import pygame
+from models.Resources.Terrain_type import Terrain_type
+import random
+import math
 
 class GameView:
     def __init__(self, screen, tile_size=32):
+        # ... (existing initialization code) ...
         self.screen = screen
         self.unit_sprites = {}  # Dictionnaire pour stocker les images des unités
         self.tile_size = tile_size  # Taille de chaque tuile en pixels
-         
+        self.decorations = []  # Liste pour stocker les décorations générées
+        self.decorations_generated = False  # Flag pour vérifier si les décorations ont été générées
+        self.font = pygame.font.SysFont('Arial', 36)
+        self.iso_offset_x = 0  # Store isometric offset
+        self.iso_offset_y = 0  # Store isometric offset
     
-    
-    def render_map(self, carte, camera_x, camera_y,zoom_level):
-       
-        """Affiche la carte en fonction de la position de la caméra."""
-        # Calcule combien de tuiles peuvent être visibles à l'écran
-        tiles_visible_x = self.screen.get_width() // self.tile_size
-        tiles_visible_y = self.screen.get_height() // self.tile_size
-
-        tile_width = self.tile_size * 2 *zoom_level # Largeur isométrique (64 px par ex.)
-        tile_height = self.tile_size*zoom_level     # Hauteur isométrique (32 px par ex.)
-
-
-        # Indices des tuiles visibles sur la carte
-        start_tile_x = camera_x // self.tile_size
-        start_tile_y = camera_y // self.tile_size
-        end_tile_x = min(start_tile_x + tiles_visible_x + 1, carte.largeur)
-        end_tile_y = min(start_tile_y + tiles_visible_y + 1, carte.hauteur)
+    def generate_decorations(self, carte):
+        """Génère une liste de décorations (arbres et broussailles) au début."""
+        if getattr(self, "decorations_generated", False):  # Si les décorations ont déjà été générées, on ne fait rien
+            return
         
-        
-        for x in range(start_tile_x,end_tile_x):
-            for y in range(start_tile_y,end_tile_y):
+        self.decorations = []  # Réinitialiser la liste des décorations
+        for x in range(carte.largeur):
+            for y in range(carte.hauteur):
+                tile = carte.grille[x][y]
                 
-                    tuile = carte.grille[x][y]
+                if tile.terrain_type == Terrain_type.GRASS:
+                    random_value = random.random()
+                    
+                    # Générer un arbre avec une probabilité de 0.8%
+                    if random_value < 0.008:
+                        tree = {
+                            'type': 'tree',
+                            'x': x,
+                            'y': y,
+                            'image': pygame.image.load('assets/tree.png').convert_alpha()
+                        }
+                        self.decorations.append(tree)
+                    
+                    # Générer une broussaille avec une probabilité de 0.4%
+                    elif random_value < 0.012:  # Probabilité cumulée (1.2%)
+                        bush = {
+                            'type': 'bush',
+                            'x': x,
+                            'y': y,
+                            'image': pygame.image.load('assets/bush.png').convert_alpha()
+                        }
+                        self.decorations.append(bush)
+                    # Générer Gold avec une probabilité de 0.3%  
+                    #elif random_value < 0.015:  # Probabilité cumulée (1.5%)
+                       # gold = {
+                           # 'type': 'gold',
+                           # 'x': x,
+                           # 'y': y,
+                           # 'image': pygame.image.load('assets/Gold.png').convert_alpha()
+                       # }
+                        #self.decorations.append(gold)
 
-                    # Conversion des coordonnées grille vers isométrique
-                    iso_x = (x - y) * tile_width // 2 + camera_x
-                    iso_y = (x + y) * tile_height // 2 + camera_y
+        # Marquer que les décorations ont été générées
+        self.decorations_generated = True
 
-                    if tuile.tile_type == 0:
-                        color = (34, 139, 34)  # Vert pour wood
-                    elif tuile.tile_type == 2:
-                        color = (139, 69, 19)  # Marron pour  food
-                    elif tuile.tile_type == 1:
-                        color = (255, 215, 0)  # Jaune pour gold  
-                    else:
-                        color = (128, 128, 128)  # Gris pour les montagnes
-                    
-                    
-    
-                    
-                    # Ne dessiner que les tuiles visibles à l'écran
-                    if -tile_width < iso_x < self.screen.get_width() and -tile_height < iso_y < self.screen.get_height():
-                        # Dessiner les tuiles sous forme de polygones isométriques
-                        pygame.draw.polygon(self.screen, color, [
-                            (iso_x, iso_y + tile_height // 2),                # Sommet haut
-                            (iso_x + tile_width // 2, iso_y),                 # Coin droit
-                            (iso_x + tile_width, iso_y + tile_height // 2),   # Coin bas
-                            (iso_x + tile_width // 2, iso_y + tile_height)    # Coin gauche
-                        ])
-                    
-                    
-    def render_minimap(self, map_data, camera_x, camera_y, zoom_level):
-        """Affiche une mini-carte avec un fond et la position de la caméra."""
-        # Dimensions de la mini-carte
-        minimap_width = 120
-        minimap_height = 120
+
+    def world_to_screen(self, x, y, camera_x, camera_y, zoom_level):
+        """Convert world coordinates to screen coordinates with isometric projection."""
+        tile_width = int(self.tile_size * 2 * zoom_level)
+        tile_height = int(self.tile_size * zoom_level)
         
-        # Position de la mini-carte en bas à droite
-        minimap_x = self.screen.get_width() - minimap_width - 20  # Décalé de 20 pixels par rapport au bord
-        minimap_y = self.screen.get_height() - minimap_height - 20
+        # Isometric conversion
+        iso_x = (x - y) * tile_width // 2 - camera_x
+        iso_y = (x + y) * tile_height // 2 - camera_y
+        
+        return iso_x, iso_y
 
-        # Dessiner le fond de la mini-carte
-        pygame.draw.rect(self.screen, (50, 50, 50), (minimap_x - 5, minimap_y - 5, minimap_width + 10, minimap_height + 10))  # Fond plus grand pour une bordure
-        pygame.draw.rect(self.screen, (0, 0, 0), (minimap_x, minimap_y, minimap_width, minimap_height))  # Fond de la mini-carte
+    def render_map(self, carte, camera_x, camera_y, zoom_level):
+        textures = {
+            Terrain_type.GRASS: pygame.image.load('assets/t_grass.png').convert_alpha(),
+            Terrain_type.WATER: pygame.image.load('assets/t_water.png').convert_alpha(),
+        }
 
-        # Calculer la taille d'une tuile sur la mini-carte
+        # Tile dimensions after zoom
+        tile_width = int(self.tile_size * 2 * zoom_level)
+        tile_height = int(self.tile_size * zoom_level)
+
+        # Resize textures
+        for terrain, texture in textures.items():
+            textures[terrain] = pygame.transform.scale(texture, (tile_width, tile_height))
+
+        screen_width, screen_height = self.screen.get_size()
+
+        # Render tiles across the entire map
+        for x in range(carte.largeur):
+            for y in range(carte.hauteur):
+                tile = carte.grille[x][y]
+                if not tile:
+                    continue
+
+                # Convert world to screen coordinates
+                iso_x, iso_y = self.world_to_screen(x, y, camera_x, camera_y, zoom_level)
+                
+                # Center the map
+                iso_x += screen_width // 2
+                iso_y += screen_height // 4
+
+                # Draw terrain tile
+                terrain_texture = textures.get(tile.terrain_type, textures[Terrain_type.GRASS])
+                self.screen.blit(terrain_texture, (iso_x, iso_y))
+
+        # Render decorations with same isometric conversion
+        for decoration in self.decorations:
+            x, y = decoration['x'], decoration['y']
+            iso_x, iso_y = self.world_to_screen(x, y, camera_x, camera_y, zoom_level)
+            
+            # Center the map and adjust for decoration height
+            iso_x += screen_width // 2
+            iso_y += screen_height // 4 - tile_height
+
+            # Scale and render decoration
+            tree_scaled = pygame.transform.scale(decoration['image'], (tile_width, tile_height * 2))
+            self.screen.blit(tree_scaled, (iso_x, iso_y))
+
+    def render_minimap(self, map_data, camera_x, camera_y, zoom_level,units):
+        """Advanced minimap rendering with terrain and unit representation."""
+        minimap_width = 200  # Increased size for better visibility
+        minimap_height = 200
+        minimap_x = self.screen.get_width() - minimap_width - 10
+        minimap_y = self.screen.get_height() - minimap_height - 10
+
+        # Terrain color mapping
+        terrain_colors = {
+            Terrain_type.GRASS: (34, 139, 34),    # Forest Green
+            Terrain_type.WATER: (65, 105, 225),   # Royal Blue
+            # Add more terrain types as needed
+        }
+
+        # Create a surface for the minimap
+        minimap_surface = pygame.Surface((minimap_width, minimap_height))
+        minimap_surface.fill((50, 50, 50))  # Dark background
+
+        # Calculate tile sizes
         tile_width = minimap_width / map_data.largeur
         tile_height = minimap_height / map_data.hauteur
 
-        # Dessiner les tuiles de la mini-carte
+        # Render terrain
         for x in range(map_data.largeur):
             for y in range(map_data.hauteur):
                 tile = map_data.grille[x][y]
                 if tile:
-                    color = tile.get_color()
-                    pygame.draw.rect(self.screen, color, 
-                                    (minimap_x + x * tile_width, minimap_y + y * tile_height, 
-                                    tile_width, tile_height))
+                    color = terrain_colors.get(tile.terrain_type, (100, 100, 100))
+                    pygame.draw.rect(minimap_surface, color, 
+                        (x * tile_width, y * tile_height, tile_width, tile_height))
 
-        # Représenter la zone visible sur la mini-carte (rectangle de la caméra)
-        map_width_in_pixels = map_data.largeur * self.tile_size
-        map_height_in_pixels = map_data.hauteur * self.tile_size
-
-        # Calcul de la taille du rectangle de la caméra sur la mini-carte
-        camera_rect_width = (self.screen.get_width() / map_width_in_pixels) * minimap_width / zoom_level
-        camera_rect_height = (self.screen.get_height() / map_height_in_pixels) * minimap_height / zoom_level
-
-        # Calcul de la position du rectangle de la caméra sur la mini-carte
-        camera_rect_x = minimap_x + (camera_x / map_width_in_pixels) * minimap_width
-        camera_rect_y = minimap_y + (camera_y / map_height_in_pixels) * minimap_height
-
-        # Dessiner le rectangle de la caméra
-        pygame.draw.rect(self.screen, (255, 0, 0), 
-                        (camera_rect_x, camera_rect_y, 
-                        camera_rect_width, camera_rect_height), 2)
-
-        # Ajout de quelques icônes (facultatif)
-        # Exemple : Afficher des icônes de zoom ou d'autres options
-        # Pour cela, il faudra charger les images d'icônes avec pygame.image.load et les afficher avec blit
-
-
-
-
-
-        
-
-    def load_unit_sprite(self, unit_type, image_path):
-        """Charger et stocker l'image des unités"""
-        image = pygame.image.load(image_path)
-        self.unit_sprites[unit_type] = image
-
-    def render_unit(self, unit,camera_x,camera_y,zoom_level):
-        """Affiche une unité à sa position en mode isométrique"""
-        tile_width = self.tile_size * zoom_level  # Largeur isométrique (par ex. 64 pixels)
-        tile_height = self.tile_size*zoom_level     # Hauteur isométrique (par ex. 32 pixels)
-
-        # Conversion des coordonnées de l'unité en isométrique
-        iso_x = (unit.position[0] - unit.position[1]) * (tile_width // 2) 
-        iso_y = (unit.position[0] + unit.position[1]) * (tile_height // 2) 
-        
-        # Ajustement par la position de la caméra
-        iso_x -= camera_x
-        iso_y -= camera_y
-
-        print(f"Position unitaire: {unit.position} - Iso: ({iso_x}, {iso_y})")
-        
-        # Limiter les positions isométriques pour s'assurer qu'elles sont visibles
-        if iso_x < -tile_width or iso_x > self.screen.get_width() or iso_y < -tile_height or iso_y > self.screen.get_height():
-            print(f"Unité hors de l'écran à: ({iso_x}, {iso_y})")
-            return  
-
-        # Récupérer le sprite de l'unité
-        sprite = self.unit_sprites.get(unit.unit_type)
-        if sprite:
-            print(f"Affichage de l'unité {unit.unit_type} à la position iso ({iso_x}, {iso_y})")
-        
-
-            sprite_scaled = pygame.transform.scale(sprite, (int(sprite.get_width() * zoom_level), int(sprite.get_height() * zoom_level)))
-            # Ne dessiner que si l'unité est visible à l'écran
-            if 0 <= iso_x <= self.screen.get_width() and 0 <= iso_y <= self.screen.get_height():
-                # Centrer le sprite sur la position isométrique de l'unité
-                self.screen.blit(sprite_scaled, (iso_x - sprite_scaled.get_width() // 2, iso_y - sprite_scaled.get_height() // 2))
-            else:
-                print(f"Unité hors de l'écran à: ({iso_x}, {iso_y})")
-            
-        else:
-            print(f"Aucune image trouvée pour {unit.unit_type}")
-
-    # views/game_view.py
-    def render_unit2(self, unit, camera_x, camera_y, zoom_level):
-        """Affiche une unité en fonction de la caméra et des coordonnées isométriques"""
     
-        # Position de l'unité en grille
-        x, y = unit.position
-
-        # Largeur et hauteur des tuiles en fonction du zoom
-        tile_width = self.tile_size * 2 * zoom_level  # Largeur isométrique
-        tile_height = self.tile_size * zoom_level     # Hauteur isométrique
-
-        # Conversion des coordonnées grille vers isométriques
-        iso_x = abs(x - y) * (tile_width // 2)
-        iso_y = (x - y) * (tile_height // 2)
-
-        # Ajuster la position en fonction de la caméra
-        screen_x = iso_x - camera_x
-        screen_y = iso_y - camera_y
-
-        # Debugging
-        print(f"Position unitaire: {unit.position} - Position écran: ({screen_x}, {screen_y})")
-
-        # Récupérer le sprite de l'unité
-        sprite = self.unit_sprites.get(unit.unit_type)
-        if sprite:
-            # Redimensionner le sprite selon le niveau de zoom
-            sprite_scaled = pygame.transform.scale(sprite, (int(sprite.get_width() * zoom_level), int(sprite.get_height() * zoom_level)))
+        # Render units
+        for unit in units:
+            x, y = unit.get_position()
+            unit_color = {
+                'villager': (255, 0, 0),    # Red for villagers
+                'archer': (0, 0, 255)        # Blue for archers
+            }.get(unit.unit_type, (255, 255, 255))  # White as default
             
-            # Vérification si l'unité est visible à l'écran
-            if 0 <= screen_x <= self.screen.get_width() and 0 <= screen_y <= self.screen.get_height():
-                # Centrer le sprite sur la position de l'unité
-                self.screen.blit(sprite_scaled, (screen_x - sprite_scaled.get_width() // 2, screen_y - sprite_scaled.get_height() // 2))
-            else:
-                print(f"Unité hors de l'écran à: ({screen_x}, {screen_y})")
-        else:
-            print(f"Aucune image trouvée pour {unit.unit_type}")
+            pygame.draw.rect(minimap_surface, unit_color, 
+                (x * tile_width, y * tile_height, tile_width, tile_height))
 
+        # Render camera view rectangle
+        map_width_ratio = minimap_width / (map_data.largeur * self.tile_size)
+        map_height_ratio = minimap_height / (map_data.hauteur * self.tile_size)
+        
+        camera_rect_width = self.screen.get_width() * map_width_ratio / zoom_level
+        camera_rect_height = self.screen.get_height() * map_height_ratio / zoom_level
+        camera_rect_x = camera_x * map_width_ratio
+        camera_rect_y = camera_y * map_height_ratio
+
+        # Draw camera rectangle
+        camera_rect = pygame.Rect(camera_rect_x, camera_rect_y, 
+                                camera_rect_width, camera_rect_height)
+        pygame.draw.rect(minimap_surface, (255, 255, 255), camera_rect, 2)
+
+        # Blit minimap to screen
+        self.screen.blit(minimap_surface, (minimap_x, minimap_y))
+
+        # Optional: add border
+        pygame.draw.rect(self.screen, (100, 100, 100), 
+                        (minimap_x, minimap_y, minimap_width, minimap_height), 2)
 
     def render_units(self, units, camera_x, camera_y, zoom_level):
-        for unit in units:
-            self.render_unit2(unit, camera_x, camera_y, zoom_level)
+        """Improved unit rendering with isometric projection."""
+        tile_width = int(self.tile_size * 2 * zoom_level)
+        tile_height = int(self.tile_size * zoom_level)
 
-    def render_background(self, img):
-        """Remplit l'écran avec une image de fond"""
-        # Obtenez les dimensions de l'écran
         screen_width, screen_height = self.screen.get_size()
+
+        for unit in sorted(units, key=lambda u: u.get_position()[1]):
+            x_tile, y_tile = unit.get_position()
+
+            # Convert world to screen coordinates
+            iso_x, iso_y = self.world_to_screen(x_tile, y_tile, camera_x, camera_y, zoom_level)
+            
+            # Center the map
+            iso_x += screen_width // 2
+            iso_y += screen_height // 4
+
+            sprite = self.unit_sprites.get(unit.unit_type)
+            if sprite:
+                scaled_sprite = pygame.transform.scale(sprite, 
+                    (int(sprite.get_width() * zoom_level), int(sprite.get_height() * zoom_level)))
+                
+                # Center unit on tile
+                self.screen.blit(scaled_sprite, 
+                    (iso_x - scaled_sprite.get_width() // 2, 
+                     iso_y - scaled_sprite.get_height() // 2))
         
-        # Boucle pour remplir l'écran avec l'image en mosaïque (si elle est plus petite que l'écran)
-        for x in range(0, screen_width, img.get_width()):
-            for y in range(0, screen_height, img.get_height()):
-                self.screen.blit(img, (x, y))
-
-    
-    def update_display(self):
-        """Mettre à jour l'affichage"""
-        pygame.display.flip()
-    
-
-
-
+    def load_unit_sprite(self, unit_type, image_path):
+        """Charge un sprite d'unité."""
+        image = pygame.image.load(image_path).convert_alpha()
+        self.unit_sprites[unit_type] = image

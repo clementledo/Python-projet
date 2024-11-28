@@ -1,15 +1,18 @@
 from enum import Enum
 
 
-class type_terrain(Enum):
+class Terrain_type(Enum):
+   
     """
     Types of ressources :
+       GRAS
        MINTAIN
        PLAINE
        FOREST
      
     """
-
-    MINTAIN = 1
-    PLAINE = 2
-    FOREST = 3
+    GRASS = 1
+    WATER=2
+    MINTAIN = 3
+    PLAINE = 4
+    FOREST = 5
