@@ -5,6 +5,7 @@ class Map:
         self.width = width
         self.height = height
         self.grid = [[Tile((x, y), None) for x in range(width)] for y in range(height)]
+        self.all_unit = []
 
     def place_tile(self, x, y, tile_type):
         self.grid[y][x] = Tile((x, y), tile_type)

@@ -4,28 +4,21 @@ from building.town_hall import TownHall
 
 
 class IA:
-    def __init__(self, units, map_data):
-        """
-        Initialize AI with multiple units and map data.
-        
-        :param units: A list of units the AI controls.
-        :param map_data: The 2D map data representing the game world.
-        """
-        self.units = units  # List of units this AI controls
+    def __init__(self, name, map_data):
+        self.name = name
+        self.units = []  
         self.map_data = map_data  # Full map data with obstacles and resources
         self.targets = {}  # Store targets for each unit
-        self.resources = {"Food": 0, "Wood": 0, "Gold": 0}  # AI's collected resources
+        self.resources = {"Food": 0, "Wood": 0, "Gold": 0}  
         self.buildings = []
         
     def initialize_starting_assets(self, x, y):
-        # Spawn a Town Hall at a specific position
+        
         self.resources["Food"] = 500
         self.resources["Wood"] = 350
         self.resources["Gold"] = 100
         
         town_hall_position = (x, y)  # You can choose a position on the map
-        #town_hall = TownHall(x,y,"",self.map_data)
-        #self.buildings.append(town_hall)
         self.place_building(TownHall, town_hall_position)  # Place Town Hall on the map
 
         # Spawn 3 villagers near the Town Hall
@@ -39,6 +32,7 @@ class IA:
             if position:
                 villager = Villager(position[0],position[1],self.map_data)
                 self.units.append(villager)
+                self.map_data.all_unit.append(villager)
                 self.map_data.update_unit_position(villager, None, position)
             else:
                 print("No valid position found for villager.")
@@ -78,6 +72,7 @@ class IA:
         # First, try to place the building at the initial position
         if self.map_data.is_area_free(x, y, building.size[0], building.size[1]):
             self.map_data.place_building(building)
+            self.buildings.append(building)
             self.deduct_resources(building.cost)
             print(f"AI placed {building_type.__name__} at position ({x}, {y}).")
         else:
@@ -86,6 +81,7 @@ class IA:
             if new_position:
                 building.position = new_position
                 self.map_data.place_building(building)
+                self.buildings.append(building)
                 self.deduct_resources(building.cost)
                 print(f"AI placed {building_type.__name__} near position ({new_position[0]}, {new_position[1]}).")
             else:
@@ -97,11 +93,18 @@ class IA:
         if self.can_afford(villager_cost):
             # Deduct resources and spawn a new villager
             self.deduct_resources(villager_cost)
-            new_villager_position = (town_hall.position[0], town_hall.position[1] + 1)
-            new_villager = Villager(position=new_villager_position)
-            self.units.append(new_villager)
-            self.map_data.update_unit_position(new_villager, None, new_villager_position)
-            print(f"{self.name} has spawned a new villager!")
+            villager_position = (town_hall.position[0], town_hall.position[1] + 1)
+            if self.map_data.is_area_free(villager_position[0], villager_position[1],1,1):
+                position = villager_position
+            else:
+                position = self.find_nearby_available_position(*villager_position, (1, 1))
+            
+            if position:
+                villager = Villager(position[0],position[1],self.map_data)
+                self.units.append(villager)
+                self.map_data.all_unit.append(villager)
+                self.map_data.update_unit_position(villager, None, position)
+                print(f"AI has spawned a new villager!")
         else:
             print(f"{self.name} cannot afford to spawn a villager.")
 
