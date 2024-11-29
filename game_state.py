@@ -2,6 +2,8 @@ import pickle
 from models.units.villager import Villager
 from models.units.archer import Archer
 from models.units.horseman import Horseman
+from models.Buildings.town_center import Town_center
+from models.Buildings.archery_range import Archery_Range
 from views.game_view import GameView
 from controllers.game_controller import GameController
 from models.map import Map
@@ -32,16 +34,24 @@ class GameState:
             Archer(20, 12, self.carte),
             Horseman(20, 15, self.carte)
         ]
-        self.model = {'units': units}
+        #Initialize buildings
+        buildings =[
+            Town_center((10, 10)),
+            Archery_Range((10,26))
+        ]
+        self.model = {'units': units,'buildings':buildings}
 
         # Initialize view and controller
         self.view = GameView(screen, tile_size=tile_size)
         self.view.load_unit_sprite('Villager', 'assets/villager.png')
         self.view.load_unit_sprite('Archer', 'assets/archer.png')
         self.view.load_unit_sprite('Horseman', 'assets/horseman.png')
+
+        self.view.load_building_sprite("T", "assets/Buildings/Towncenter.png")
+        self.view.load_building_sprite("A", "assets/Buildings/Archery_range.png")
         self.view.generate_decorations(self.carte)
 
-        self.controller = GameController(self.model, self.view, self.carte)
+        self.controller = GameController(self.model, self.view, self.carte,tile_size)
 
     def change_state(self, new_state):
         """Change l'état actuel du jeu."""

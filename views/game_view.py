@@ -8,6 +8,7 @@ class GameView:
         # ... (existing initialization code) ...
         self.screen = screen
         self.unit_sprites = {}  # Dictionnaire pour stocker les images des unités
+        self.building_sprites={}
         self.tile_size = tile_size  # Taille de chaque tuile en pixels
         self.decorations = []  # Liste pour stocker les décorations générées
         self.decorations_generated = False  # Flag pour vérifier si les décorations ont été générées
@@ -128,8 +129,8 @@ class GameView:
             tree_scaled = pygame.transform.scale(decoration['image'], (tile_width, tile_height * 2))
             self.screen.blit(tree_scaled, (iso_x, iso_y))
 
-    def render_minimap(self, map_data, camera_x, camera_y, zoom_level,units):
-        """Advanced minimap rendering with terrain and unit representation."""
+    def render_minimap(self, map_data, camera_x, camera_y, zoom_level, units, buildings):
+        """Advanced minimap rendering with terrain, unit, and building representation."""
         minimap_width = 200  # Increased size for better visibility
         minimap_height = 200
         minimap_x = self.screen.get_width() - minimap_width - 10
@@ -157,9 +158,8 @@ class GameView:
                 if tile:
                     color = terrain_colors.get(tile.terrain_type, (100, 100, 100))
                     pygame.draw.rect(minimap_surface, color, 
-                        (x * tile_width, y * tile_height, tile_width, tile_height))
+                                    (x * tile_width, y * tile_height, tile_width, tile_height))
 
-    
         # Render units
         for unit in units:
             x, y = unit.get_position()
@@ -169,7 +169,21 @@ class GameView:
             }.get(unit.unit_type, (255, 255, 255))  # White as default
             
             pygame.draw.rect(minimap_surface, unit_color, 
-                (x * tile_width, y * tile_height, tile_width, tile_height))
+                            (x * tile_width, y * tile_height, tile_width, tile_height))
+
+        # Render buildings
+        for building in buildings:
+            bx, by = building.pos
+            building_width = building.size[0]  # Building width in tiles
+            building_height = building.size[1]  # Building height in tiles
+
+            # Drawing the building as a rectangle on the minimap
+            # Make the building rectangle proportional to the size
+            building_color = (255, 0, 0)  # Green for buildings (change if necessary)
+            
+            # Draw the building rectangle on the minimap
+            pygame.draw.rect(minimap_surface, building_color, 
+                            (0.5*bx * tile_width, by * tile_height, 0.5*building_width * tile_width, 0.5*building_height * tile_height))
 
         # Render camera view rectangle
         map_width_ratio = minimap_width / (map_data.largeur * self.tile_size)
@@ -191,6 +205,7 @@ class GameView:
         # Optional: add border
         pygame.draw.rect(self.screen, (100, 100, 100), 
                         (minimap_x, minimap_y, minimap_width, minimap_height), 2)
+
 
     def render_units(self, units, camera_x, camera_y, zoom_level,selected_unit):
         """Improved unit rendering with isometric projection."""
@@ -230,3 +245,40 @@ class GameView:
         """Charge un sprite d'unité."""
         image = pygame.image.load(image_path).convert_alpha()
         self.unit_sprites[unit_type] = image
+
+    def load_building_sprite(self, building_name, sprite_path):
+        """Charge l'image du bâtiment à partir du chemin donné."""
+        self.building_sprites[building_name] = pygame.image.load(sprite_path).convert_alpha()
+
+    def render_buildings(self, buildings, camera_x, camera_y, zoom_level):
+        for building in buildings:
+            # Position en tuiles
+            building_x, building_y = building.pos
+
+            # Conversion en coordonnées isométriques (en tenant compte de la caméra et du zoom)
+            iso_x, iso_y = self.world_to_screen(building_x, building_y, camera_x, camera_y, zoom_level)
+
+            # Rendre les bâtiments isométriques en utilisant leur taille
+            screen_width, screen_height = self.screen.get_size()
+
+            # Centrer le bâtiment sur sa tuile (en tenant compte de sa taille et du zoom)
+            iso_x += screen_width // 2
+            iso_y += screen_height // 4
+
+            # Ajuster la position du bâtiment en fonction de sa taille
+            iso_x -= (self.tile_size * zoom_level) * building.size[0] // 2
+            iso_y -= (self.tile_size * zoom_level) * building.size[1] // 2
+
+            # Dessiner le sprite du bâtiment
+            asset = self.building_sprites.get(building.symbol)
+            scaled_asset = pygame.transform.scale(
+                asset, 
+                (int(self.tile_size * building.size[0] * zoom_level), 
+                int(self.tile_size * building.size[1] * zoom_level))
+            )
+            self.screen.blit(scaled_asset, (iso_x, iso_y))
+
+           
+           
+
+

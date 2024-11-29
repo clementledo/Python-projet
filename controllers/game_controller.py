@@ -2,9 +2,9 @@ import pygame
 import math
 
 class GameController:
-    def __init__(self, model, view, carte):
+    def __init__(self, model, view, carte,tile_size):
         # ... (existing initialization) ...
-
+        self.tile_size = tile_size
         self.model = model
         self.view = view
         self.carte = carte
@@ -17,6 +17,8 @@ class GameController:
         self.map_height = carte.hauteur
         self.zoom_level = 1.5
         self.selected_unit = None
+        self.selected_building = None
+
         self.paused = False
 
         self.clock = pygame.time.Clock()
@@ -56,6 +58,22 @@ class GameController:
                 # Check for unit selection
                 self.select_unit(pygame.mouse.get_pos())
 
+
+                # Gestion des clics sur les bâtiments
+                self.select_building(pygame.mouse.get_pos())
+
+                 # Sélection d'un bâtiment
+                mouse_pos = pygame.mouse.get_pos()
+                map_x = int(mouse_pos[0] / (self.tile_size * self.zoom_level) + self.camera_x)
+                map_y = int(mouse_pos[1] / (self.tile_size * self.zoom_level) + self.camera_y)
+                
+                for building in self.model['buildings']:
+                    bx, by = building.pos
+                    if bx == map_x and by == map_y:
+                        self.selected_building = building
+                        print(f"Building selected at {map_x}, {map_y}")
+                        break
+
             if event.type == pygame.MOUSEMOTION and self.is_dragging:
                 current_mouse_pos = pygame.mouse.get_pos()
                 if self.last_mouse_pos:
@@ -68,11 +86,7 @@ class GameController:
 
                     self.last_mouse_pos = current_mouse_pos
 
-        # Ensure units stay within map boundaries
-        for unit in self.model['units']:
-            x, y = unit.get_position()
-            unit.x_tile = max(0, min(x, self.carte.largeur - 1))
-            unit.y_tile = max(0, min(y, self.carte.hauteur - 1))
+        self.validate_positions()
         
         # Déplacement de la caméra avec les touches de direction
         keys = pygame.key.get_pressed()
@@ -88,6 +102,23 @@ class GameController:
 
 
         return True
+    
+
+    def validate_positions(self):
+        # Clamp units
+        for unit in self.model['units']:
+            x, y = unit.get_position()
+            unit.x_tile = max(0, min(x, self.carte.largeur - 1))
+            unit.y_tile = max(0, min(y, self.carte.hauteur - 1))
+        
+        # Clamp buildings
+        for building in self.model['buildings']:
+            x, y = building.pos
+            width, height = building.size
+            clamped_x = max(0, min(x, self.carte.largeur - 1))
+            clamped_y = max(0, min(y, self.carte.hauteur - 1))
+            building.pos = (clamped_x, clamped_y)
+
 
     def select_unit(self, mouse_pos):
         """Improved unit selection with screen-to-world conversion"""
@@ -119,6 +150,44 @@ class GameController:
                 return
         
         print("No unit selected")
+
+    def select_building(self, mouse_pos):
+        """Sélectionne un bâtiment en fonction des coordonnées de la souris, avec projection isométrique."""
+        screen_width, screen_height = self.view.screen.get_size()
+
+        for building in self.model['buildings']:
+            building_x, building_y = building.pos
+            
+            # Convertir la position du bâtiment en coordonnées écran avec la projection isométrique
+            iso_x, iso_y = self.view.world_to_screen(building_x, building_y, 
+                                                    self.camera_x, self.camera_y, 
+                                                    self.zoom_level)
+            
+            # Centrer la vue pour la position isométrique
+            iso_x += screen_width // 2
+            iso_y += screen_height // 4
+
+            # Calculer les coordonnées de la zone occupée par le bâtiment (en tenant compte de la taille)
+            building_width = int(self.tile_size * building.size[0] * self.zoom_level)
+            building_height = int(self.tile_size * building.size[1] * self.zoom_level)
+            
+            # Créer un rectangle de collision autour du bâtiment
+            building_rect = pygame.Rect(
+                iso_x - building_width // 2,  # Centrer horizontalement
+                iso_y - building_height // 2,  # Centrer verticalement
+                building_width, 
+                building_height
+            )
+
+            # Vérifier si la souris est à l'intérieur de ce rectangle
+            if building_rect.collidepoint(mouse_pos):
+                self.selected_building = building
+                print(f"Building selected at {building.pos} with size {building.size}")
+                return
+
+        self.selected_building = None
+        print("No building selected.")
+
 
     def update(self):
         # ... autres mises à jour ...

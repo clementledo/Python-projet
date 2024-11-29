@@ -69,14 +69,13 @@ class Resource:
                 else:
                     return -1
 
-    def get_type(self) -> Type:
-        return self.type
+    
 
     def get_quantity(self) -> int:
         return self.quantity
 
-    def __repr__(self):
-        return f"Resource(type={self.type}, symbol='{self.symbol}', quantity={self.quantity}
+   # def __repr__(self):
+        #return f"Resource(type={self.type}, symbol='{self.symbol}', quantity={self.quantity}
 
 class Wood(Resource):
     def __init__(self):
