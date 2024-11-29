@@ -53,6 +53,7 @@ class GameState:
 
         self.controller = GameController(self.model, self.view, self.carte,tile_size)
 
+    
     def change_state(self, new_state):
         """Change l'état actuel du jeu."""
         self.current_state = new_state

@@ -113,6 +113,7 @@ class GameController:
         
         # Clamp buildings
         for building in self.model['buildings']:
+            building.update()
             x, y = building.pos
             width, height = building.size
             clamped_x = max(0, min(x, self.carte.largeur - 1))

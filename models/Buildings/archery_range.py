@@ -4,7 +4,7 @@ from ..units.archer import Archer
 class Archery_Range(Building) :
     range = 4
     def __init__(self,pos) :
-        super().__init__(175,50,500,(4,4),'A',pos)
+        super().__init__("Archery_range",175,50,500,(4,4),'A',pos)
         
     def spawn_archer(self) :
         self.remove_ressources(self,25,'W')

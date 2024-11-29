@@ -258,10 +258,8 @@ class GameView:
             # Conversion en coordonnées isométriques (en tenant compte de la caméra et du zoom)
             iso_x, iso_y = self.world_to_screen(building_x, building_y, camera_x, camera_y, zoom_level)
 
-            # Rendre les bâtiments isométriques en utilisant leur taille
-            screen_width, screen_height = self.screen.get_size()
-
             # Centrer le bâtiment sur sa tuile (en tenant compte de sa taille et du zoom)
+            screen_width, screen_height = self.screen.get_size()
             iso_x += screen_width // 2
             iso_y += screen_height // 4
 
@@ -269,14 +267,16 @@ class GameView:
             iso_x -= (self.tile_size * zoom_level) * building.size[0] // 2
             iso_y -= (self.tile_size * zoom_level) * building.size[1] // 2
 
-            # Dessiner le sprite du bâtiment
-            asset = self.building_sprites.get(building.symbol)
-            scaled_asset = pygame.transform.scale(
-                asset, 
+            # Utiliser l'image actuelle du bâtiment
+            scaled_image = pygame.transform.scale(
+                building.image, 
                 (int(self.tile_size * building.size[0] * zoom_level), 
                 int(self.tile_size * building.size[1] * zoom_level))
             )
-            self.screen.blit(scaled_asset, (iso_x, iso_y))
+
+            # Dessiner le bâtiment
+            self.screen.blit(scaled_image, (iso_x, iso_y))
+
 
            
            

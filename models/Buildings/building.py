@@ -1,18 +1,27 @@
 """utilisation des mÃ©thodes dans la classe Joueur (IA)"""
+import pygame
 
 class Building :
-    def __init__(self, cost, construction_time, hp, size, symbol, pos) :
+    def __init__(self, name,cost, construction_time, hp, size, symbol, pos) :
         self.cost = cost
         self.construction_time = construction_time
         self.hp = hp
         self.symbol = symbol
         self.size = size
         self.pos = pos
+
+        self.name=name
+        self.counter=0
+        self.curr_tick=0
+        self.image = self.worksite(size)
+        self.useable=False
+
         #self.state = state
         
     """bÃ¢timent construit par 1 ou plusieurs villageois"""
     """bÃ¢timent construit par 1 villageois -> nominal_construction_time"""
     """bÃ¢timent construit par pls villageois -> (3 * nominal_construction_time) / (builders_count + 2)"""
+    
     def building(self, delta_time, builders) :
         for builder in builders :
             builder.is_building = True
@@ -27,6 +36,19 @@ class Building :
     """rend inutile les mÃ©thodes start_building() et update_building() de la classe Villager"""
     """on part du principe qu'on a un nb n de constructeurs et qu'ils restent du dÃ©but Ã  la fin de la construction"""
 
+    def update(self):
+        """Met à jour la progression de la construction du bâtiment."""
+        if not self.useable:  # Si le bâtiment n'est pas encore utilisable
+            self.curr_tick += 1
+
+            # Vérifiez si un intervalle de construction est atteint
+            if self.curr_tick >= self.construction_time:
+                self.counter += 1
+                self.curr_tick = 0  # Réinitialisez le tick courant
+
+                # Appeler la méthode pour changer l'image selon le stade
+                self.in_construction(self.size)
+
     def destroy(self) :
         self.hp = 0
         
@@ -35,4 +57,29 @@ class Building :
 
     def print_building(self) :
         print(self.symbol)
+
+    def worksite(self, size) :
+        return pygame.image.load("assets/Buildings/in_construction/1X1/while_building_1_1.png")
+
+
+    def in_construction(self, size):
+        """Met à jour l'image en fonction de l'état de construction."""
+        if self.counter == 1:
+            self.image = pygame.image.load(f"assets/Buildings/in_construction/1X1/while_building_1_2.png")
+        elif self.counter == 2:
+            self.image = pygame.image.load(f"assets/Buildings/in_construction/1X1/while_building_1_3.png")
+        elif self.counter >= 3:
+            self.image = pygame.image.load(f"assets/Buildings/{self.name}.png")
+            self.useable = True
+            self.curr_tick = 0  # Réinitialiser les ticks pour des actions futures
+
+
+
+    def broken(self, size) :
+        return pygame.image.load("Buildings/broken/broken_building_"+str(size)+".png")
+
+    def set_broken(self):
+        """Marquer le bâtiment comme cassé et changer l'image."""
+        self.image = self.broken(self.size)
+        self.useable = False  # Le bâtiment devient inutilisable
 

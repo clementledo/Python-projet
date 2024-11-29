@@ -8,7 +8,7 @@ class Town_center(Building) :
     
     def __init__(self, pos) :
         #self.population_max = self.population_max +5
-        super().__init__(350, 150, 1000, (4,4), 'T', pos)
+        super().__init__("Towncenter",350, 150, 1000, (4,4), 'T', pos)
         self.size=(4,4)
 
     def add_ressources(type_ressource) :

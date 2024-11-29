@@ -2,7 +2,8 @@ from typing import Optional, Union
 #from Terrain_type import Terrain_Type
 from models.Resources.Terrain_type import Terrain_type
 
-#from ..units import *
+from ..units.unit import Unit
+from ..Buildings.building import Building
 
 
 class Tile:

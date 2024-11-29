@@ -77,18 +77,18 @@ class Resource:
    # def __repr__(self):
         #return f"Resource(type={self.type}, symbol='{self.symbol}', quantity={self.quantity}
 
-class Wood(Resource):
-    def __init__(self):
-        super().__init__(Type.Wood, 1 , 100)
+#class Wood(Resource):
+ #   def __init__(self):
+  #      super().__init__(Type.Wood, 1 , 100)
 
-class Food(Resource):
-    def __init__(self, farm: str = None):
-        super().__init__(Type.Food, 2 , 300)
-        self.farm = farm
+#class Food(Resource):
+#    def __init__(self, farm: str = None):
+ #       super().__init__(Type.Food, 2 , 300)
+  #      self.farm = farm
         
-    def __repr__(self):
-        base_repr = super().__repr__()
+   # def __repr__(self):
+    #    base_repr = super().__repr__()
         
-class Gold(Resource):
-    def __init__(self):
-        super().__init__(Type.Gold, 3 , 800)
+#class Gold(Resource):
+ #   def __init__(self):
+  #      super().__init__(Type.Gold, 3 , 800)
