@@ -125,3 +125,30 @@ class Unit:
         """Gère la mort de l'unité."""
         print(f"L'unité {self.unit_type} est morte.")
         self.grid.get_tile(self.position[0], self.position[1]).remove_unit(self)
+
+    def serialize(self):
+        """Convertit une unité en un dictionnaire sérialisable."""
+        return {
+            "x": self.position[0],
+            "y": self.position[1],
+            "unit_type": self.unit_type,
+            "atk": self.atk_power,
+            "speed": self.speed,
+            "hp": self.health
+        }
+
+    
+    @classmethod
+    def deserialize(cls, data, map):
+        """Reconstruit une unité à partir d'un dictionnaire sérialisé."""
+        return cls(
+            x=data["x"],
+            y=data["y"],
+            unit_type=data["unit_type"],
+            atk=data["atk"],
+            speed=data["speed"],
+            hp=data["hp"],
+            map=map  # Passez la carte à l'unité
+        )
+        
+

@@ -1,6 +1,8 @@
 import pygame
 class Resource:
-    def __init__(self,STARTING_RESOURCES):
+    def __init__(self,resource_type,STARTING_RESOURCES):
+        self.resource_type = resource_type
+        self.symbol = self.get_symbol(resource_type)
         self.starting_resources = {
             "Wood": STARTING_RESOURCES[0],
             "Gold": STARTING_RESOURCES[1],
@@ -28,6 +30,14 @@ class Resource:
             2: pygame.image.load("assets/icongold.png"),
             3: pygame.image.load("assets/iconfood.png")
         }
+
+    def get_symbol(self, resource_type):
+        symbols = {
+            "Wood": "W",
+            "Gold": "G",
+            "Food": "F"
+        }
+        return symbols.get(resource_type, "?")
 
     """ I define 2 teams Blue and Red """ 
     def is_affordable(self, ent):

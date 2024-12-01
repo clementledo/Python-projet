@@ -83,3 +83,27 @@ class Building :
         self.image = self.broken(self.size)
         self.useable = False  # Le bâtiment devient inutilisable
 
+    def serialize(self):
+            """Retourne une version sérialisable du bâtiment."""
+            return {
+                "name": self.name,
+                "size": self.size,
+                
+                "cost":self.cost,
+                "construction_time": self.construction_time,
+                "hp":self.hp,
+                "useable": self.useable,
+                "symbol": self.symbol,
+                "pos": self.pos
+                
+                # Exclut self.image car ce n'est pas sérialisable
+        }
+    
+    @classmethod
+    def deserialize(cls, data):
+        """Recrée un bâtiment à partir des données sérialisées."""
+        building = cls(data["name"],data["size"],data["cost"],data["construction_time"],data["hp"],  data["symbol"] ,data["pos"])
+        building.useable = data["useable"]
+        building.image = pygame.image.load(f"assets/Buildings/{data['name']}.png")
+        return building
+
