@@ -1,5 +1,8 @@
+import math
+import random
 from resource.tile import Tile
 from resource.tile import Type
+from resource.wood import Wood
 class Map:
     def __init__(self, width, height):
         self.width = width
@@ -71,6 +74,42 @@ class Map:
         new_tile = self.get_tile(*new_position)
         new_tile.add_unit(unit)  # Add the unit to the new tile
 
+    def create_forest(self, nb_tree, pos_x, pos_y):
+        radius = int(math.sqrt(nb_tree)) 
+        placed_positions = []
+
+        for i in range(pos_x, pos_x + radius):
+            for j in range(pos_y, pos_y + radius):    
+                # Check if the position is within the map boundaries
+                if 0 <= i < self.height and 0 <= j < self.width and self.grid[j][i].type == None:  # Ensure the position is valid
+                    self.place_tile(i, j, Type.Wood) 
+                    placed_positions.append((i, j))
+                    #break
+        
+    def generer_aleatoire(self, nb_total):
+        
+        base_trees = nb_total // 20
+        min_trees = int(base_trees*0.8)  # Allow slight variation
+        max_trees = int(base_trees*1.2)        
+        trees_left = nb_total
+        for i in range(19):
+        # Randomly choose the number of trees for each forest (up to remaining trees)
+            nb_tree = random.randint(min_trees, max_trees)  # Ensure we leave enough for the other forests
+            trees_left -= nb_tree  # Deduct the chosen number of trees from remaining trees
+        
+        # Randomly choose a position on the map for the current forest
+            pos_x = random.randint(0, self.width - int(math.sqrt(nb_tree)))
+            pos_y = random.randint(0, self.height - int(math.sqrt(nb_tree)))
+        
+        # Create the forest at the chosen position
+            self.create_forest(nb_tree, pos_x, pos_y)  
+    
+        # Step 2: Create the 10th forest with the remaining trees
+        nb_tree = trees_left  # The remaining trees go to the 10th forest
+        pos_x = random.randint(0, self.width - int(math.sqrt(nb_tree)))
+        pos_y = random.randint(0, self.height - int(math.sqrt(nb_tree)))
+    
+        self.create_forest(nb_tree, pos_x, pos_y)
 
     def display(self):
         """
