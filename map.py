@@ -76,23 +76,40 @@ class Map:
 
     def create_forest(self, nb_tree, pos_x, pos_y):
         radius = int(math.sqrt(nb_tree)) 
-        placed_positions = []
 
         for i in range(pos_x, pos_x + radius):
             for j in range(pos_y, pos_y + radius):    
                 # Check if the position is within the map boundaries
                 if 0 <= i < self.height and 0 <= j < self.width and self.grid[j][i].type == None:  # Ensure the position is valid
                     self.place_tile(i, j, Type.Wood) 
-                    placed_positions.append((i, j))
-                    #break
-        
-    def generer_aleatoire(self, nb_total):
-        
-        base_trees = nb_total // 20
+
+
+    def create_mine(self, nb_gold, pos_x, pos_y):
+        radius = int(math.sqrt(nb_gold))
+        for i in range(pos_x, pos_x + radius):
+            for j in range(pos_y, pos_y + radius):    
+                # Check if the position is within the map boundaries
+                if 0 <= i < self.height and 0 <= j < self.width and self.grid[j][i].type == None:  # Ensure the position is valid
+                    self.place_tile(i, j, Type.Gold)
+
+    def generer_aleatoire(self, nb_wood = 500, nb_gold = 100, type = 1):
+        if type == 1:
+            self.create_mine(nb_gold, self.width//2 - 5, self.height//2 - 5)
+        else:
+            base_mines = nb_gold//10
+            min_mines = int(base_mines*0.8)
+            max_mines = int(base_mines*1.2)
+            for i in range(10):
+                nb_mine = random.randint(min_mines, max_mines)
+                pos_x = random.randint(0, self.width - int(math.sqrt(nb_mine)))
+                pos_y = random.randint(0, self.height - int(math.sqrt(nb_mine)))
+                self.create_mine(nb_mine, pos_x, pos_y)  
+
+        base_trees = nb_wood // 20
         min_trees = int(base_trees*0.8)  # Allow slight variation
         max_trees = int(base_trees*1.2)        
-        trees_left = nb_total
-        for i in range(19):
+    
+        for i in range(20):
         # Randomly choose the number of trees for each forest (up to remaining trees)
             nb_tree = random.randint(min_trees, max_trees)  # Ensure we leave enough for the other forests
             trees_left -= nb_tree  # Deduct the chosen number of trees from remaining trees
@@ -103,14 +120,8 @@ class Map:
         
         # Create the forest at the chosen position
             self.create_forest(nb_tree, pos_x, pos_y)  
-    
-        # Step 2: Create the 10th forest with the remaining trees
-        nb_tree = trees_left  # The remaining trees go to the 10th forest
-        pos_x = random.randint(0, self.width - int(math.sqrt(nb_tree)))
-        pos_y = random.randint(0, self.height - int(math.sqrt(nb_tree)))
-    
-        self.create_forest(nb_tree, pos_x, pos_y)
 
+        
     def display(self):
         """
         Displays a simple text-based representation of the map.

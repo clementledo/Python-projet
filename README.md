@@ -22,6 +22,7 @@ map.py:
     La carte
     Les fonctions pour m.a.j
     Une fonction pour afficher dans le terminal
+    une fonction pour générer aléatoire
 
 ai.py:
 
@@ -31,5 +32,4 @@ ai.py:
         find_nearby_targets
         find_nearby_resources
         les fonctions concernant le chemin
-
-    En cours de développer les fonctions pour construire les batiments
+        les fonction pour construire les batiments

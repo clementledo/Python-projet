@@ -6,7 +6,7 @@ from ai import IA
 
 game_map = Map(60, 60)
 
-game_map.generer_aleatoire(500)
+game_map.generer_aleatoire(type=2)
 
 game_map.display()
 
