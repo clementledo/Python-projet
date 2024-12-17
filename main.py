@@ -5,6 +5,10 @@ from game_state import GameState
 def main():
     # Initialize Pygame
     pygame.init()
+    
+    # Horloge pour gérer les FPS
+    clock = pygame.time.Clock()
+    font = pygame.font.SysFont(None, 30)
 
     # Screen setup
     screen_info = pygame.display.Info()
@@ -62,6 +66,8 @@ def main():
             game_state.view.render_units(game_state.model['units'], game_state.controller.camera_x, game_state.controller.camera_y, game_state.controller.zoom_level, game_state.controller.selected_unit)
             game_state.view.render_buildings(game_state.model['buildings'], game_state.controller.camera_x, game_state.controller.camera_y, game_state.controller.zoom_level)
             game_state.view.render_minimap(game_state.carte, game_state.controller.camera_x, game_state.controller.camera_y, game_state.controller.zoom_level, game_state.model['units'],game_state.model['buildings'])
+
+            game_state.show_fps(clock=clock,font=font,screen=screen)
 
             # Update display
             pygame.display.flip()

@@ -175,5 +175,14 @@ class GameState:
             print(f"Erreur lors du chargement de l'état du jeu : {e}")
 
 
+    def show_fps(slef,clock,font,screen):
+        
+        clock.tick()
+         # Calcul des FPS
+        fps = clock.get_fps()
+        
+        # Afficher les FPS sur l'écran
+        fps_text = font.render(f"FPS: {int(fps)}", True, (255, 255, 255))
+        screen.blit(fps_text, (10, 10))
 
 

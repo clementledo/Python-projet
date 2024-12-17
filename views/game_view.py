@@ -317,7 +317,24 @@ class GameView:
             self.screen.blit(scaled_image, (iso_x, iso_y))
 
 
-           
+    def handle_minimap_click(self, map_data, event, minimap_rect, minimap_width, minimap_height, camera_x, camera_y):
+
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Bouton gauche de la souris
+            mouse_x, mouse_y = event.pos
+
+            # Vérifie si le clic est dans la minimap
+            if minimap_rect.collidepoint(mouse_x, mouse_y):
+                # Coordonnées du clic dans la minimap
+                relative_x = mouse_x - minimap_rect.x
+                relative_y = mouse_y - minimap_rect.y
+
+                # Conversion en coordonnées sur la carte
+                map_x = (relative_x / minimap_width) * map_data.largeur * self.tile_size
+                map_y = (relative_y / minimap_height) * map_data.hauteur * self.tile_size
+
+                # Centrer la caméra sur la position cliquée
+                new_camera_x = max(0, min(map_x - self.screen.get_width() / 2, map_data.largeur * self.tile_size - self.screen.get_width()))
+                new_camera_y = max(0, min(map_y - self.screen.get_height() / 2, map_data.hauteur * self.tile_size - self.screen.get_height()))
            
 
 
