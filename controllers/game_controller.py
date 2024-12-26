@@ -28,12 +28,13 @@ class GameController:
 
         self.screen_width, self.screen_height = view.screen.get_size()
         self.map_pixel_width = carte.largeur * view.tile_size * 2
-        self.map_pixel_height = carte.hauteur * view.tile_size
+        self.map_pixel_height = carte.hauteur * view.tile_size * 2
         self.camera_boundary_x = max(0, self.map_pixel_width - self.screen_width)
         self.camera_boundary_y = max(0, self.map_pixel_height - self.screen_height)
 
     def handle_input(self):
         for event in pygame.event.get():
+            
             if event.type == pygame.QUIT:
                 return False
             
@@ -50,6 +51,9 @@ class GameController:
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 self.is_dragging = False
                 self.last_mouse_pos = pygame.mouse.get_pos()
+                
+                # Gestion des clics sur la minimap
+                self.handle_minimap_click(self.last_mouse_pos)
 
             if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 self.is_dragging = False
@@ -79,7 +83,7 @@ class GameController:
                 if self.last_mouse_pos:
                     dx = current_mouse_pos[0] - self.last_mouse_pos[0]
                     dy = current_mouse_pos[1] - self.last_mouse_pos[1]
-
+                    
                     # Update camera position with boundaries
                     self.camera_x = max(0, min(self.camera_boundary_x, self.camera_x - dx))
                     self.camera_y = max(0, min(self.camera_boundary_y, self.camera_y - dy))
@@ -102,6 +106,35 @@ class GameController:
 
 
         return True
+    
+    
+    def handle_minimap_click(self, mouse_pos):
+        """Gère les clics sur la minimap pour déplacer la caméra."""
+        
+        minimap_width = 200
+        minimap_height = 200
+        minimap_x = self.view.screen.get_width() - minimap_width - 10
+        minimap_y = self.view.screen.get_height() - minimap_height - 10
+        minimap_rect = pygame.Rect(minimap_x, minimap_y, minimap_width, minimap_height)
+
+        # Vérifier si le clic est dans la minimap
+        if minimap_rect.collidepoint(mouse_pos):
+        # Calculer les coordonnées relatives du clic dans la minimap
+            rel_x = mouse_pos[0] - minimap_rect.x
+            rel_y = mouse_pos[1] - minimap_rect.y
+            
+            
+
+            # Convertir les coordonnées relatives en coordonnées de la carte
+            map_x = int((rel_x / minimap_rect.width) * (self.map_width * self.tile_size))
+            map_y = int((rel_y / minimap_rect.height) * (self.map_height * self.tile_size))
+
+            # Ajuster la caméra pour centrer sur la position cliquée
+            self.camera_x = max(0, min(self.camera_boundary_x, map_x - self.screen_width // (2 * self.zoom_level)))
+            self.camera_y = max(0, min(self.camera_boundary_y, map_y - self.screen_height // (2 * self.zoom_level)))
+
+            print(f"Camera moved to ({self.camera_x}, {self.camera_y}) via minimap click.")
+
     
 
     def validate_positions(self):

@@ -3,6 +3,7 @@ from menu import main_menu, pause_menu
 from game_state import GameState
 
 def main():
+    
     # Initialize Pygame
     pygame.init()
     
@@ -28,6 +29,7 @@ def main():
     running = True
 
     while running:
+        
         if current_screen == "main_menu":
             # Show the main menu and handle the result
             action = main_menu(screen, game_state)
@@ -43,34 +45,35 @@ def main():
                     print("No saved game found!")
             elif action == "quit":
                 running = False
-              
+          
         elif current_screen == "gameplay":
-            # Handle gameplay
-            running = game_state.controller.handle_input()
 
-            # Check if the user paused the game
-            if game_state.controller.paused:
-                current_screen = "pause_menu"
-                continue
+                # Handle gameplay
+                running = game_state.controller.handle_input()
 
-            if not running:
-                break
+                # Check if the user paused the game
+                if game_state.controller.paused:
+                    current_screen = "pause_menu"
+                    continue
 
-            game_state.controller.update()
+                if not running:
+                    break
 
-            # Clear screen
-            screen.fill((0, 0, 0))
+                game_state.controller.update()
 
-            # Render game elements
-            game_state.view.render_map(game_state.carte, game_state.controller.camera_x, game_state.controller.camera_y, game_state.controller.zoom_level)
-            game_state.view.render_units(game_state.model['units'], game_state.controller.camera_x, game_state.controller.camera_y, game_state.controller.zoom_level, game_state.controller.selected_unit)
-            game_state.view.render_buildings(game_state.model['buildings'], game_state.controller.camera_x, game_state.controller.camera_y, game_state.controller.zoom_level)
-            game_state.view.render_minimap(game_state.carte, game_state.controller.camera_x, game_state.controller.camera_y, game_state.controller.zoom_level, game_state.model['units'],game_state.model['buildings'])
+                # Clear screen
+                screen.fill((0, 0, 0))
 
-            game_state.show_fps(clock=clock,font=font,screen=screen)
+                # Render game elements
+                game_state.view.render_map(game_state.carte, game_state.controller.camera_x, game_state.controller.camera_y, game_state.controller.zoom_level)
+                game_state.view.render_units(game_state.model['units'], game_state.controller.camera_x, game_state.controller.camera_y, game_state.controller.zoom_level, game_state.controller.selected_unit)
+                game_state.view.render_buildings(game_state.model['buildings'], game_state.controller.camera_x, game_state.controller.camera_y, game_state.controller.zoom_level)
+                game_state.view.render_minimap(game_state.carte, game_state.controller.camera_x, game_state.controller.camera_y, game_state.controller.zoom_level, game_state.model['units'],game_state.model['buildings'])
 
-            # Update display
-            pygame.display.flip()
+                game_state.show_fps(clock=clock,font=font,screen=screen)
+
+                # Update display
+                pygame.display.flip()
 
         elif current_screen == "pause_menu":
             # Show the pause menu and handle the result
