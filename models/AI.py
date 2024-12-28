@@ -37,7 +37,11 @@ class AI:
         li = (int(li[0]), int(li[1]))
         action[2] = li
         return action
-
+        
+"""pourquoi retourner le town center ?"""
+"""qu'est-ce que self.map.buildings[x][y] ?"""
+"""temps de construction ?"""
+"""1 méthode AI_construct() plutôt qu'une pouchaque type de bâtiment (voir IA Khanh)"""
     def AI_construct_Towncenter(self, x, y):
         if not self.map.world[x][y]["collision"]:
             ent = TownCenter((x, y), self.resource_man, "Red", True)
