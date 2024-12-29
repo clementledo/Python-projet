@@ -159,15 +159,15 @@ class IA:
         resource_type = self.map_data[y][x]  # Check the map tile the unit is on
         
         if resource_type == 'F':
-            self.resources["Food"] += 1
+            self.resources["Food"] += 1 "300"
             print(f"{unit.unit_type} gathered Food. Total: {self.resources['Food']}")
             self.map_data[y][x] = ' '  # Clear the resource from the map after gathering
         elif resource_type == 'W':
-            self.resources["Wood"] += 1
+            self.resources["Wood"] += 1 "100"
             print(f"{unit.unit_type} gathered Wood. Total: {self.resources['Wood']}")
             self.map_data[y][x] = ' '
         elif resource_type == 'G':
-            self.resources["Gold"] += 1
+            self.resources["Gold"] += 1 "800"
             print(f"{unit.unit_type} gathered Gold. Total: {self.resources['Gold']}")
             self.map_data[y][x] = ' '
 
