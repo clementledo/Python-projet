@@ -24,7 +24,7 @@ class Tile:
         """
         self.pos = pos  # Position of the tile (x, y)
         self.type = tile_type  # Type (Wood, Food, etc.)
-        """à quoi sert cet attribut ?"""
+        """pourquoi une liste sachant que sur une tuile on ne stocke qu'un élément ?"""
         self.units = []
 
     def get_pos(self):
