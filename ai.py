@@ -193,6 +193,7 @@ class IA:
         
         return closest_resource
 
+    """actiontype : Attack dans classe uml"""
     def make_decision(self, all_units):
     
         self.control_buildings()
