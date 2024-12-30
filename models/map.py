@@ -17,7 +17,7 @@ class Map:
             for x in range(self.largeur):
                 self.grille[y][x] = Tile(x, y)
 
-    def generer_aleatoire(self, type_carte="ressources_generales"):
+    def generer_aleatoire(self, type_carte="centre_ressources"):
         """
         Génère une carte aléatoire selon le type de carte sélectionné.
         Par défaut, toutes les tuiles sont initialisées sans ressources.
