@@ -1,6 +1,6 @@
-from unit.unit import Unit 
-from unit.villager import Villager
-from building.town_hall import TownHall
+from units.unit import Unit 
+from units.villager import Villager
+from Buildings.town_center import Town_center
 
 
 class IA:
@@ -20,7 +20,7 @@ class IA:
         self.resources["Gold"] = 100
         
         town_hall_position = (x, y)  # You can choose a position on the map
-        self.place_building(TownHall, town_hall_position)  # Place Town Hall on the map
+        self.place_building(Town_center, town_hall_position)  # Place Town Hall on the map
 
         # Spawn 3 villagers near the Town Hall
         for i in range(3):
@@ -118,7 +118,7 @@ class IA:
     def control_buildings(self):
         """Control the AI's buildings (e.g., TownHall to spawn villagers)."""
         for building in self.buildings:
-            if isinstance(building, TownHall):
+            if isinstance(building, Town_center):
                 # AI decision to spawn a villager
                 if len(self.units) < 10 and self.resources["Food"] > 50:  # Example: If AI has fewer than 10 units
                     self.spawn_villager(building)
