@@ -1,5 +1,6 @@
 import pygame
 import math
+from models.Buildings.town_center import Town_center  # Adjust the import path as necessary
 
 class GameController:
     def __init__(self, model, view, carte,tile_size):
@@ -31,14 +32,52 @@ class GameController:
         self.map_pixel_height = carte.hauteur * view.tile_size * 2
         self.camera_boundary_x = max(0, self.map_pixel_width - self.screen_width)
         self.camera_boundary_y = max(0, self.map_pixel_height - self.screen_height)
+        self.selected_units = []  # List of currently selected units
 
     def handle_input(self):
         for event in pygame.event.get():
-            
             if event.type == pygame.QUIT:
                 return False
+                
+            # Left click for selection
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                mouse_pos = pygame.mouse.get_pos()
+                clicked_unit = self.get_unit_at_position(mouse_pos)
+                clicked_building = self.get_building_at_position(mouse_pos)
+                
+                # If we clicked a unit
+                if clicked_unit:
+                    self.handle_unit_selection(clicked_unit)
+                    # If we already had a building selected, move to it
+                    if self.selected_building:
+                        self.move_units_to_building(self.selected_building)
+                        self.selected_building = None
+                
+                # If we clicked a building
+                elif clicked_building:
+                    self.selected_building = clicked_building
+                    # If we already had units selected, move them
+                    if self.selected_units:
+                        self.move_units_to_building(clicked_building)
+                        self.selected_building = None
+                
+                # Clicked nothing - clear selections
+                else:
+                    self.selected_units = []
+                    self.selected_building = None
+
+            # Right click for movement command
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
+                mouse_pos = pygame.mouse.get_pos()
+                clicked_building = self.get_building_at_position(mouse_pos)
+                
+                if clicked_building and isinstance(clicked_building, Town_center):
+                    if self.selected_units:  # If units are selected
+                        for unit in self.selected_units:
+                            unit.move_towards(clicked_building.pos, self.carte)
+                        print(f"Moving {len(self.selected_units)} units to Town Center")
             
-            if event.type ==pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:  # Basculer entre pause et reprise avec 'Échap'
                     self.paused = not self.paused
                     print(f"Game paused: {self.paused}")
@@ -89,6 +128,19 @@ class GameController:
                     self.camera_y = max(0, min(self.camera_boundary_y, self.camera_y - dy))
 
                     self.last_mouse_pos = current_mouse_pos
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:  # Left click
+                    # Select units
+                    mouse_pos = pygame.mouse.get_pos()
+                    clicked_unit = self.get_unit_at_position(mouse_pos)
+                    if clicked_unit:
+                        if pygame.key.get_mods() & pygame.KMOD_SHIFT:
+                            self.selected_units.append(clicked_unit)
+                        else:
+                            self.selected_units = [clicked_unit]
+                    else:
+                        self.selected_units = []
 
         self.validate_positions()
         
@@ -226,3 +278,78 @@ class GameController:
     def update(self):
         # ... autres mises à jour ...
         self.view.render_units(self.model['units'], self.camera_x, self.camera_y, self.zoom_level, self.selected_unit)
+
+    def move_unit_to_town_center(self):
+        """Move selected units to town center."""
+        # Find town center
+        town_center = None
+        for building in self.model['buildings']:
+            if isinstance(building, Town_center):
+                town_center = building
+                break
+        
+        if town_center:
+            # Move all selected units or first unit if none selected
+            if self.selected_units:
+                for unit in self.selected_units:
+                    unit.move_towards(town_center.pos, self.carte)
+            elif self.model['units']:
+                self.model['units'][0].move_towards(town_center.pos, self.carte)
+
+    def get_unit_at_position(self, screen_pos):
+        """Get unit at screen position."""
+        world_x = (screen_pos[0] + self.camera_x) / (self.view.tile_size * self.zoom_level)
+        world_y = (screen_pos[1] + self.camera_y) / (self.view.tile_size * self.zoom_level)
+        
+        for unit in self.model['units']:
+            unit_x, unit_y = unit.position
+            # Check if click is within unit bounds
+            if (abs(unit_x - world_x) < 1 and 
+                abs(unit_y - world_y) < 1):
+                return unit
+        return None
+
+    def get_building_at_position(self, screen_pos):
+        """Get building at screen position."""
+        world_x = (screen_pos[0] + self.camera_x) / (self.view.tile_size * self.zoom_level)
+        world_y = (screen_pos[1] + self.camera_y) / (self.view.tile_size * self.zoom_level)
+        
+        for building in self.model['buildings']:
+            building_x, building_y = building.pos
+            building_size = building.size
+            if (building_x <= world_x < building_x + building_size[0] and 
+                building_y <= world_y < building_y + building_size[1]):
+                return building
+        return None
+
+    def move_selected_units_to_town_center(self):
+        """Move selected units to town center."""
+        if not self.selected_units:
+            return
+            
+        # Find town center
+        town_center = None
+        for building in self.model['buildings']:
+            if isinstance(building, Town_center):
+                town_center = building
+                break
+        
+        if town_center:
+            for unit in self.selected_units:
+                unit.move_towards(town_center.pos, self.carte)
+            print(f"Moving {len(self.selected_units)} units to Town Center")
+
+    def handle_unit_selection(self, unit):
+        if pygame.key.get_mods() & pygame.KMOD_SHIFT:
+            if unit not in self.selected_units:
+                self.selected_units.append(unit)
+        else:
+            self.selected_units = [unit]
+        print(f"Selected units: {[u.unit_type for u in self.selected_units]}")
+
+    def move_units_to_building(self, building):
+        if not self.selected_units:
+            return
+        for unit in self.selected_units:
+            unit.move_towards(building.pos, self.carte)
+        print(f"Moving {len(self.selected_units)} units to building at {building.pos}")

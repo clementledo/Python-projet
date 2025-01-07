@@ -34,7 +34,7 @@ class GameState:
 
         # Create map
         self.carte = Map(tiles_x, tiles_y)
-        self.carte.generer_aleatoire(type_carte="ressources_generales")
+        self.carte.generer_aleatoire(type_carte="ressources_generales") 
 
         # Initialize units
         units = [

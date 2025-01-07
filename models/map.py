@@ -10,6 +10,14 @@ class Map:
         self.grille = [[None for _ in range(largeur)] for _ in range(hauteur)]
         self.generer_aleatoire(type_carte)
     
+    def get_grid(self):
+        return self.grille
+    
+    def get_tile(self, x, y):
+        """Get tile at specified coordinates."""
+        if 0 <= x < self.largeur and 0 <= y < self.hauteur:
+            return self.grille[y][x]
+        return None
 
     def generer_aleatoire2(self, type_carte="ressources_generales"):
         """Génère une carte où toutes les tuiles sont de type GRASS."""
@@ -54,7 +62,19 @@ class Map:
         else:
             raise ValueError(f"Type de carte non reconnu : {type_carte}")
 
-
+    def update_unit_position(self, unit, old_pos, new_pos):
+        """Update unit position on the map."""
+        # Remove unit from old tile
+        old_tile = self.get_tile(old_pos[0], old_pos[1])
+        if old_tile:
+            old_tile.occupant = None
+            
+        # Add unit to new tile
+        new_tile = self.get_tile(new_pos[0], new_pos[1])
+        if new_tile:
+            new_tile.occupant = unit
+            return True
+        return False
 
     def serialize(self):
         """Sérialise la carte sous forme de dictionnaire."""

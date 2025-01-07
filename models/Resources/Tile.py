@@ -15,6 +15,9 @@ class Tile:
         self.terrain_type = terrain_type
         self.resource=starting_resources
         self.occupant = occupant
+    
+    def get_type(self):
+        return self.tile_type
 
     
     def serialize(self):
