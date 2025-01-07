@@ -1,6 +1,11 @@
+from units.unit import Unit 
+from units.villager import Villager
+from Buildings.town_center import Town_center
+
 from unit.unit import Unit 
 from unit.villager import Villager
 from building.town_hall import TownHall
+from resource.tile import Type  
 
 
 class IA:
@@ -20,7 +25,7 @@ class IA:
         self.resources["Gold"] = 100
         
         town_hall_position = (x, y)  # You can choose a position on the map
-        self.place_building(TownHall, town_hall_position)  # Place Town Hall on the map
+        self.place_building(Town_center, town_hall_position)  # Place Town Hall on the map
 
         # Spawn 3 villagers near the Town Hall
         for i in range(3):
@@ -37,7 +42,6 @@ class IA:
                 self.map_data.update_unit_position(villager, None, position)
             else:
                 print("No valid position found for villager.")
-
 
     def can_afford(self, cost):
         return all(self.resources[res] >= cost[res] for res in cost)
@@ -118,7 +122,7 @@ class IA:
     def control_buildings(self):
         """Control the AI's buildings (e.g., TownHall to spawn villagers)."""
         for building in self.buildings:
-            if isinstance(building, TownHall):
+            if isinstance(building, Town_center):
                 # AI decision to spawn a villager
                 if len(self.units) < 10 and self.resources["Food"] > 50:  # Example: If AI has fewer than 10 units
                     self.spawn_villager(building)
@@ -169,26 +173,26 @@ class IA:
             print(f"{unit.unit_type} gathered Gold. Total: {self.resources['Gold']}")
             self.map_data[y][x] = ' '
 
-    def find_nearby_resources(self, unit):
+    def find_nearby_resources(self, unit, resource_type):
         """
         Find nearby resources (F, W, G) for a specific unit.
         
         :param unit: The unit searching for resources.
+        :param resource_type: The type of resource to search for ('F', 'W', 'G').
         :return: The nearest resource position or None.
         """
         closest_resource = None
         min_distance = float('inf')
-        resource_tiles = ['F', 'W', 'G']
         
         # Scan the map for nearby resources
         for y, row in enumerate(self.map_data.grid):
             for x, tile in enumerate(row):
-                if tile in resource_tiles:
+                if tile.get_type() == resource_type:
                     distance = self.get_distance(unit.position, (x, y))
                     if distance < min_distance:
                         min_distance = distance
                         closest_resource = (x, y)
-        
+        print(f"{unit.unit_type} found {resource_type} at {closest_resource}")
         return closest_resource
 
     """actiontype : Attack dans classe uml"""
@@ -273,21 +277,38 @@ class IA:
     
     def allocate_villagers(self):
         available_villagers = self.get_available_villagers()
-        for _ in self.buildings['TownHall']:
-            for _ in range(5):
-                for villager in available_villagers:
-                    villager.collect_food()
-                    available_villagers.remove(villager)
-                    break
+        for building in self.buildings:
+            if building is TownHall:
+                for _ in range(5):
+                    for villager in available_villagers:
+                        pos = self.find_nearby_resources(villager,Type.Food)
+                        if villager.position != pos:
+                            path = self.find_path(villager, pos)
+                            if path:
+                                next_step = path[0]
+                                villager.move_towards(next_step, self.map_data)
+                        else:
+                            villager.gather_resources()
+                        available_villagers.remove(villager)
+                        break
         if len(available_villagers) > 0:
             for villager in available_villagers:
-                villager.collect_wood()        
+                pos = self.find_nearby_resources(villager,Type.Wood)
+                if self.get_distance(villager.position, pos) > 1:
+                    path = self.find_path(villager, pos)
+                    if path:
+                        next_step = path[0]
+                        villager.move_towards(next_step, self.map_data)
+                else:
+                    villager.gather_resources()
+                available_villagers.remove(villager)        
                     
     def get_available_villagers(self):
         available_villagers = []
-        for villager in self.units['Villager']:
-            if villager.is_idle():
-                available_villagers.append(villager)
+        for villager in self.units: 
+            if isinstance(villager, Villager):
+                if isinstance(villager, Villager) and villager.is_idle():
+                    available_villagers.append(villager)
         return available_villagers
                 
     
@@ -321,7 +342,7 @@ class IA:
     # 4. Assign Villagers
         assigned_villagers = available_villagers[:num_villagers]
         for villager in assigned_villagers:
-            villager.start_building(building, building_pos)
+            villager.start_building(building, num_villlagers)
 
         return assigned_villagers
 
