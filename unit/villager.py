@@ -7,6 +7,7 @@ class Villager(Unit):
         self.resource_gather_rate = 25 / 60  # 25 ressources par minute (en secondes)
         self.is_building = False  # Indique si le villageois est en train de construire
         self.training_time = 25  # Temps d'entraînement en secondes
+        self.idle = True
     
     def start_building(self, building, builders_count):
         """Démarre la construction d'un bâtiment."""
@@ -37,3 +38,7 @@ class Villager(Unit):
         if self.is_building:
             self.update_building(delta_time)
         # Autres actions possibles (comme la collecte de ressources
+
+    def is_idle(self):
+        """Indique si le villageois est inactif."""
+        return self.idle
