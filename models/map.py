@@ -47,7 +47,10 @@ class Map:
                 x = random.randint(0, self.largeur - 1)
                 y = random.randint(0, self.hauteur - 1)
                 resource_type = random.choice(["Wood", "Gold"])
-                self.grille[y][x].resource = Resource(resource_type, [100, 100, 100])  # Exemple de ressources
+                if resource_type == "Wood":
+                    self.grille[y][x].resource = Resource(resource_type, [100, 0, 0]) 
+                else:
+                    self.grille[y][x].resource = Resource(resource_type, [0, 800, 0]) 
 
         elif type_carte == "centre_ressources":
             # Concentration des ressources au centre de la carte
@@ -64,8 +67,7 @@ class Map:
                     if ((x - centre_x) ** 2) / (radius_x ** 2) + ((y - centre_y) ** 2) / (radius_y ** 2) <= 1:
                         break
 
-                resource_type = random.choice(["Gold"])
-                self.grille[y][x].resource = Resource(resource_type, [100, 100, 100])  # Exemple de ressources
+                self.grille[y][x].resource = Resource("Gold", [0, 800, 0])  # Exemple de ressources
 
             # Ajouter des ressources "Wood" en dehors du cercle
             for _ in range((self.largeur * self.hauteur) // 25):  # Environ 10% des cases ont des ressources
@@ -76,8 +78,7 @@ class Map:
                     if ((x - centre_x) ** 2) / (radius_x ** 2) + ((y - centre_y) ** 2) / (radius_y ** 2) > 1:
                         break
 
-                resource_type = "Wood"
-                self.grille[y][x].resource = Resource(resource_type, [100, 100, 100])  # Exemple de ressources
+                self.grille[y][x].resource = Resource("Wood", [100, 0, 0])  # Exemple de ressources
 
         else:
             raise ValueError(f"Type de carte non reconnu : {type_carte}")
