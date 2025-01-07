@@ -1,7 +1,15 @@
 import pygame
 from asyncio import PriorityQueue
 from models.Resources.Terrain_type import Terrain_type  # Adjust the import path as necessary
+from enum import Enum
 
+class unitStatus(Enum):
+    IDLE = "idle"
+    GATHERING = "gathering"
+    BUILDING = "building"
+    MOVING = "moving"
+    RETURNING_RESOURCES = "returning_resources"
+    ATTACKING = "attacking"
 
 class Unit:
     def __init__(self, x, y, unit_type, atk, speed, hp, map):
@@ -19,7 +27,7 @@ class Unit:
         self.walkable_symbols = {Terrain_type.GRASS} 
         self.health = hp  # Points de vie
         self.max_health = hp 
-
+        self.status = unitStatus.IDLE
     def update(self):
         """Met à jour l'unité, par exemple pour la faire se déplacer."""
         if self.destination:
@@ -125,6 +133,7 @@ class Unit:
 
     def atk(self, target_unit):
         """Simule une attaque contre une autre unité."""
+        self.status == unitStatus.ATTACKING
         if self.health <= 0:
             return
         print(f"{self.unit_type} Attacked {target_unit.unit_type} at {target_unit.position}, new health: {target_unit.health - self.atk_power}")
