@@ -279,6 +279,7 @@ class GameView:
                 self.screen.blit(scaled_sprite, 
                     (iso_x - scaled_sprite.get_width() // 2, 
                      iso_y - scaled_sprite.get_height() // 2))
+                self.draw_health_bar(self.screen, unit, iso_x, iso_y, zoom_level)
         
     def load_unit_sprite(self, unit_type, image_path):
         """Charge un sprite d'unité."""
@@ -315,6 +316,36 @@ class GameView:
 
             # Dessiner le bâtiment
             self.screen.blit(scaled_image, (iso_x, iso_y))
-           
+
+    def draw_health_bar(self, surface, unit, x, y, zoom_level=1.0):
+        """Dessine une barre de vie proportionnelle aux PV de l'unité avec zoom"""
+        # Ratios pour les dimensions avec zoom
+        LARGEUR_BARRE = self.tile_size * 0.8 * zoom_level
+        HAUTEUR_BARRE = max(2, self.tile_size * 0.08 * zoom_level)
+        OFFSET_Y = self.tile_size * 0.2 * zoom_level
+        BORDER = max(1, int(zoom_level))  # Épaisseur du contour
+        
+        # Position de la barre
+        pos_x = x - 12 + (self.tile_size * zoom_level - LARGEUR_BARRE) / 8
+        pos_y = y - 3*OFFSET_Y
+        
+        # Dessiner le contour noir
+        pygame.draw.rect(surface, (0, 20, 0), 
+                        (pos_x - BORDER, pos_y - BORDER, 
+                         LARGEUR_BARRE + 2*BORDER, HAUTEUR_BARRE + 2*BORDER))
+        
+        # Barre rouge (fond)
+        pygame.draw.rect(surface, (200, 0, 0), 
+                        (pos_x, pos_y, LARGEUR_BARRE, HAUTEUR_BARRE))
+        
+        # Barre verte (PV restants)
+        if unit.health > 0:
+            ratio_pv = unit.health / unit.max_health
+            pygame.draw.rect(surface, (0, 190, 0),
+                           (pos_x, pos_y, LARGEUR_BARRE * ratio_pv, HAUTEUR_BARRE))
+
+    def draw_unit(self, surface, unit, x, y, zoom_level=1.0):
+        # ...existing code...
+        self.draw_health_bar(surface, unit, x, y, zoom_level)
 
 

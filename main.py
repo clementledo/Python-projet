@@ -70,6 +70,7 @@ def main():
                 game_state.view.render_buildings(game_state.model['buildings'], game_state.controller.camera_x, game_state.controller.camera_y, game_state.controller.zoom_level)
                 game_state.view.render_minimap(game_state.carte, game_state.controller.camera_x, game_state.controller.camera_y, game_state.controller.zoom_level, game_state.model['units'],game_state.model['buildings'])
 
+                game_state.controller.move_unit_to_town_center()
                 game_state.show_fps(clock=clock,font=font,screen=screen)
 
                 # Update display
