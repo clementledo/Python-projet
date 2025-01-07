@@ -31,32 +31,52 @@ class Map:
         Par défaut, toutes les tuiles sont initialisées sans ressources.
         
         Args:
-            type_carte (str): Type de génération ("ressources_generales" ou "centre_ressources").
+            type_carte (str): Type de génération ("ressources_generales","centre_ressources","low_ressources").
         """
         # Initialiser la grille avec des tuiles sans ressources
         for y in range(self.hauteur):
             for x in range(self.largeur):
                 self.grille[y][x] = Tile(x, y)  # Chaque tuile est vide par défaut
 
-        if type_carte == "ressources_generales":
+        if type_carte in ["ressources_generales","low_ressources"]:
+            
+            pourcent = 10 if type_carte == "ressources_generales" else 25
+            
             # Répartition aléatoire des ressources sur toute la carte
-            for _ in range((self.largeur * self.hauteur) // 10):  # Environ 10% des cases ont des ressources
+            for _ in range((self.largeur * self.hauteur) // pourcent):  # Environ 10% des cases ont des ressources
                 x = random.randint(0, self.largeur - 1)
                 y = random.randint(0, self.hauteur - 1)
-                resource_type = random.choice(["Wood", "Gold", "Food"])
+                resource_type = random.choice(["Wood", "Gold"])
                 self.grille[y][x].resource = Resource(resource_type, [100, 100, 100])  # Exemple de ressources
 
         elif type_carte == "centre_ressources":
             # Concentration des ressources au centre de la carte
             centre_x = self.largeur // 2
             centre_y = self.hauteur // 2
-            radius = min(self.largeur, self.hauteur) // 4  # Rayon pour concentrer les ressources
+            radius_x = self.largeur // 6  # Réduction du rayon horizontal
+            radius_y = self.hauteur // 6  # Réduction du rayon vertical
 
-            for _ in range((self.largeur * self.hauteur) // 10):  # Environ 10% des cases ont des ressources
-                # Générer des positions autour du centre
-                x = random.randint(max(0, centre_x - radius), min(self.largeur - 1, centre_x + radius))
-                y = random.randint(max(0, centre_y - radius), min(self.hauteur - 1, centre_y + radius))
-                resource_type = random.choice(["Wood", "Gold", "Food"])
+            for _ in range((self.largeur * self.hauteur) // 15):  # Environ 10% des cases ont des ressources
+                while True:
+                    # Générer des positions dans une forme ovale
+                    x = random.randint(0, self.largeur - 1)
+                    y = random.randint(0, self.hauteur - 1)
+                    if ((x - centre_x) ** 2) / (radius_x ** 2) + ((y - centre_y) ** 2) / (radius_y ** 2) <= 1:
+                        break
+
+                resource_type = random.choice(["Gold"])
+                self.grille[y][x].resource = Resource(resource_type, [100, 100, 100])  # Exemple de ressources
+
+            # Ajouter des ressources "Wood" en dehors du cercle
+            for _ in range((self.largeur * self.hauteur) // 25):  # Environ 10% des cases ont des ressources
+                while True:
+                    # Générer des positions en dehors de l'ovale
+                    x = random.randint(0, self.largeur - 1)
+                    y = random.randint(0, self.hauteur - 1)
+                    if ((x - centre_x) ** 2) / (radius_x ** 2) + ((y - centre_y) ** 2) / (radius_y ** 2) > 1:
+                        break
+
+                resource_type = "Wood"
                 self.grille[y][x].resource = Resource(resource_type, [100, 100, 100])  # Exemple de ressources
 
         else:

@@ -63,7 +63,7 @@ class GameState:
 
             self.view.load_building_sprite("T", "assets/Buildings/Towncenter.png")
             self.view.load_building_sprite("A", "assets/Buildings/Archery_range.png")
-            self.view.generate_decorations(self.carte)
+            self.view.generate_resources(self.carte)
 
             self.controller = GameController(self.model, self.view, self.carte,tile_size)
         else:
@@ -158,7 +158,7 @@ class GameState:
 
             self.view.load_building_sprite("T", "assets/Buildings/Towncenter.png")
             self.view.load_building_sprite("A", "assets/Buildings/Archery_range.png")
-            self.view.generate_decorations(self.carte)
+            self.view.generate_resources(self.carte)
 
             # Réinitialisation du contrôleur
             self.controller = GameController(self.model, self.view, self.carte, TILE_SIZE)

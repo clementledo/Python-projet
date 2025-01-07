@@ -16,8 +16,8 @@ class GameView:
         self.iso_offset_x = 0  # Store isometric offset
         self.iso_offset_y = 0  # Store isometric offset
     
-    def generate_decorations(self, carte):
-        """Génère une liste de décorations (arbres et broussailles) sans écraser les ressources."""
+    def generate_resources(self, carte):
+        """Génère une liste de décorations (arbres, broussailles et or) sans écraser les ressources."""
         if getattr(self, "decorations_generated", False):  # Si déjà généré, ne rien faire
             return
 
@@ -28,22 +28,30 @@ class GameView:
                 tile = carte.grille[y][x]
 
                 if tile.resource:  # Ne pas ajouter de décorations sur des cases avec des ressources
-                    continue
+                    match tile.resource.resource_type:
+                        case "Wood":
+                            tree = {
+                                'type': 'tree',
+                                'x': x,
+                                'y': y,
+                                'image': pygame.image.load('assets/tree.png').convert_alpha()
+                            }
+                            self.decorations.append(tree)
+                        case "Gold":
+                            gold = {
+                                'type': 'gold',
+                                'x': x,
+                                'y': y,
+                                'image': pygame.image.load('assets/Gold.png').convert_alpha()
+                            }
+                            self.decorations.append(gold)
+                        case _:
+                            continue
 
                 random_value = random.random()
 
                 # Générer un arbre avec une probabilité de 0.8%
-                if random_value < 0.008:
-                    tree = {
-                        'type': 'tree',
-                        'x': x,
-                        'y': y,
-                        'image': pygame.image.load('assets/tree.png').convert_alpha()
-                    }
-                    self.decorations.append(tree)
-
-                # Générer une broussaille avec une probabilité de 0.4%
-                elif random_value < 0.012:  # Probabilité cumulée (1.2%)
+                if random_value < 0.006:
                     bush = {
                         'type': 'bush',
                         'x': x,
@@ -51,8 +59,10 @@ class GameView:
                         'image': pygame.image.load('assets/bush.png').convert_alpha()
                     }
                     self.decorations.append(bush)
+                    
 
         self.decorations_generated = True
+
 
 
 

@@ -6,7 +6,7 @@ class Terrain_type(Enum):
     """
     Types of ressources :
        GRAS
-       MINTAIN
+       MONTAIN
        PLAINE
        FOREST
      
