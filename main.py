@@ -1,5 +1,5 @@
 import pygame
-from menu import main_menu, pause_menu
+from views.menu import main_menu, pause_menu
 from game_state import GameState
 
 def main():
