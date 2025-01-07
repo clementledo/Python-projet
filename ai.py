@@ -275,27 +275,26 @@ class IA:
         available_villagers = self.get_available_villagers()
         for building in self.buildings:
             if building is TownHall:
-                for villager in available_villagers:
-                    if villager.position != building.position:
-                        villager.move_towards(building.position)
-                    else:
-                        villager.gather_resources()
-                    available_villagers.remove(villager)
-                    break
-            for _ in range(5):
-                for villager in available_villagers:
-                    pos = self.find_nearby_resources(villager,Type.Food)
-                    if villager.position != pos:
-                        villager.move_towards(pos)
-                    else:
-                        villager.gather_resources()
-                    available_villagers.remove(villager)
-                    break
+                for _ in range(5):
+                    for villager in available_villagers:
+                        pos = self.find_nearby_resources(villager,Type.Food)
+                        if villager.position != pos:
+                            path = self.find_path(villager, pos)
+                            if path:
+                                next_step = path[0]
+                                villager.move_towards(next_step, self.map_data)
+                        else:
+                            villager.gather_resources()
+                        available_villagers.remove(villager)
+                        break
         if len(available_villagers) > 0:
             for villager in available_villagers:
                 pos = self.find_nearby_resources(villager,Type.Wood)
                 if self.get_distance(villager.position, pos) > 1:
-                    villager.move_towards(pos)
+                    path = self.find_path(villager, pos)
+                    if path:
+                        next_step = path[0]
+                        villager.move_towards(next_step, self.map_data)
                 else:
                     villager.gather_resources()
                 available_villagers.remove(villager)        
@@ -303,8 +302,8 @@ class IA:
     def get_available_villagers(self):
         available_villagers = []
         for villager in self.units: 
-            if villager is Villager:
-                if villager.is_idle():
+            if isinstance(villager, Villager):
+                if isinstance(villager, Villager) and villager.is_idle():
                     available_villagers.append(villager)
         return available_villagers
                 

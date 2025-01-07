@@ -35,6 +35,10 @@ class Unit:
         """
         start = self.position
 
+        # Check if the goal is walkable, if not, find the closest walkable tile
+        if map[goal[1]][goal[0]].get_type() not in self.walkable_symbols:
+            goal = self.find_closest_walkable(goal, map)
+
         # Priority queue for open nodes (unvisited positions)
         open_set = PriorityQueue()
         open_set.put((0, start))
@@ -94,6 +98,34 @@ class Unit:
 
         # Return an empty list if no path is found
         return []    
+
+    def find_closest_walkable(self, goal, map):
+        """
+        Find the closest walkable tile to the given goal.
+
+        :param goal: Tuple (x, y) goal position.
+        :param map: 2D list representing the map.
+        :return: Tuple (x, y) closest walkable tile.
+        """
+        from collections import deque
+
+        queue = deque([goal])
+        visited = set()
+        visited.add(goal)
+
+        while queue:
+            current = queue.popleft()
+            if map[current[1]][current[0]].get_type() in self.walkable_symbols:
+                return current
+
+            neighbors = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+            for direction in neighbors:
+                neighbor = (current[0] + direction[0], current[1] + direction[1])
+                if 0 <= neighbor[0] < len(map) and 0 <= neighbor[1] < len(map[0]) and neighbor not in visited:
+                    queue.append(neighbor)
+                    visited.add(neighbor)
+
+        return goal  # If no walkable tile is found, return the original goal
 
     def move_towards(self, goal, map, search_range=10):
         """
