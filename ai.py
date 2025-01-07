@@ -169,7 +169,7 @@ class IA:
             print(f"{unit.unit_type} gathered Gold. Total: {self.resources['Gold']}")
             self.map_data[y][x] = ' '
 
-    def find_nearby_resources(self, unit):
+    def find_nearby_resources(self, unit, resource_type):
         """
         Find nearby resources (F, W, G) for a specific unit.
         
