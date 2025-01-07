@@ -18,7 +18,6 @@ class Unit:
         self.grid = map
         self.walkable_symbols = {'Food', 'P', None}
         self.health = hp  # Points de vie
-        #self.print_grid_with_unit()
         #map.update_unit_position(self, None, self.position)
     
 
@@ -161,5 +160,4 @@ class Unit:
 
     def die(self):
         print(f"L'unité {self.unit_type} est morte.")
-        #self.grid.update_unit_position(self, self.position, (-1,-1))
         self.grid.get_tile(self.position[0], self.position[1]).remove_unit(self)

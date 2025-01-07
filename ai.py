@@ -11,6 +11,7 @@ class IA:
         self.targets = {}  # Store targets for each unit
         self.resources = {"Food": 0, "Wood": 0, "Gold": 0}  
         self.buildings = []
+        self.max_unit = 5
         
     def initialize_starting_assets(self, x, y):
         
@@ -125,9 +126,6 @@ class IA:
     def set_target(self, unit, target):
         """
         Set a target for a specific unit.
-        
-        :param unit: The unit to assign a target to.
-        :param target: The target unit or resource for the given unit.
         """
         self.targets[unit] = target
     
@@ -159,11 +157,11 @@ class IA:
         resource_type = self.map_data[y][x]  # Check the map tile the unit is on
         
         if resource_type == 'F':
-            self.resources["Food"] += 1 "300"
+            self.resources["Food"] += 1 
             print(f"{unit.unit_type} gathered Food. Total: {self.resources['Food']}")
             self.map_data[y][x] = ' '  # Clear the resource from the map after gathering
         elif resource_type == 'W':
-            self.resources["Wood"] += 1 "100"
+            self.resources["Wood"] += 1 
             print(f"{unit.unit_type} gathered Wood. Total: {self.resources['Wood']}")
             self.map_data[y][x] = ' '
         elif resource_type == 'G':
@@ -241,3 +239,103 @@ class IA:
     def find_path(self, unit, destination):
         #Find the shortest path to the destination using map data.
         return unit.find_path(destination, self.map_data.grid)
+
+    def execute_begin_phase(self):
+        # 0. Build Farm
+        if self.buildings['Farm'] == 0:
+            position = self.find_nearby_available_position()
+            if position:
+                self.construct_building('Farm', position)
+        
+        # 1. Train Villagers if possible
+        for town_hall in self.buildings['TownHall']:
+            if town_hall.is_idle() and self.resources['Food'] >= 50:
+                town_hall.spawn_villager()
+
+        # 2. Allocate Villagers to resources
+        self.allocate_villagers()
+
+        # 3. Build new Town Halls if conditions are met
+        if len(self.buildings['TownHall']) < 4 and self.resources['Wood'] >= 350:
+            position = self.find_building_position('TownHall')
+            if position:
+                self.construct_building('TownHall', position)
+
+        if len(self.units) + 5 < self.max_unit:
+            if self.resources['Wood'] >= 25:
+                position = self.find_building_position('House')
+                if position:
+                    self.construct_building('House',position)
+            else:
+                self.balance_resources()
+        # 4. Adjust strategy if resources are unbalanced
+        self.balance_resources()
+    
+    def allocate_villagers(self):
+        available_villagers = self.get_available_villagers()
+        for _ in self.buildings['TownHall']:
+            for _ in range(5):
+                for villager in available_villagers:
+                    villager.collect_food()
+                    available_villagers.remove(villager)
+                    break
+        if len(available_villagers) > 0:
+            for villager in available_villagers:
+                villager.collect_wood()        
+                    
+    def get_available_villagers(self):
+        available_villagers = []
+        for villager in self.units['Villager']:
+            if villager.is_idle():
+                available_villagers.append(villager)
+        return available_villagers
+                
+    
+    def allocate_villagers_for_construction(self, building, building_pos, ai_resources):
+        """
+        Dynamically allocate Villagers to construct a building.
+
+        Args:
+        building: The building object being constructed.
+        building_pos: Position of the building on the map.
+        ai_resources: The AI's current resource state.
+
+        Returns:
+        List of Villagers allocated for the construction.
+        """
+    # 1. Check building priority
+        priority = building.priority  # Assume each building has a priority attribute (e.g., high, medium, low).
+
+    # 2. Define the number of Villagers based on priority
+        if priority == "high":
+            max_villagers = 6
+        elif priority == "medium":
+            max_villagers = 4
+        else:  # Low priority
+            max_villagers = 2
+
+    # 3. Identify available Villagers
+        available_villagers = self.get_available_villagers()
+        num_villagers = min(len(available_villagers), max_villagers)
+
+    # 4. Assign Villagers
+        assigned_villagers = available_villagers[:num_villagers]
+        for villager in assigned_villagers:
+            villager.start_building(building, building_pos)
+
+        return assigned_villagers
+
+    def reevaluate_construction(self, building, progress, current_villagers):
+        """
+        Reevaluate construction progress and reassign Villagers if needed.
+
+        Args:
+        building: The building under construction.
+        progress: Current construction progress (percentage).
+        current_villagers: List of Villagers already assigned.
+        """
+        # Check if construction is falling behind schedule
+        if progress < 50 and len(current_villagers) < 4:
+            additional_villagers = self.get_idle_villagers()[:2]  # Add 2 more Villagers if needed
+            for villager in additional_villagers:
+                villager.start_building(building, building.position)
