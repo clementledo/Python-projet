@@ -167,7 +167,7 @@ class IA:
             print(f"{unit.unit_type} gathered Wood. Total: {self.resources['Wood']}")
             self.map_data[y][x] = ' '
         elif resource_type == 'G':
-            self.resources["Gold"] += 1 "800"
+            self.resources["Gold"] += 1 
             print(f"{unit.unit_type} gathered Gold. Total: {self.resources['Gold']}")
             self.map_data[y][x] = ' '
 
