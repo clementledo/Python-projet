@@ -338,7 +338,7 @@ class IA:
     # 4. Assign Villagers
         assigned_villagers = available_villagers[:num_villagers]
         for villager in assigned_villagers:
-            villager.start_building(building, building_pos)
+            villager.start_building(building, num_villlagers)
 
         return assigned_villagers
 
