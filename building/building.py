@@ -18,21 +18,16 @@ class Building:
         self.build_time = 0  # Time required to build the building
         self.map = map
         self.builders = []
-
-    def start_construction(self, build_time, builders): #Faut changer
-        """
-        Begin the construction of the building.
         
-        :param build_time: Time in seconds required to build the building.
-        """
+    """mise à jour du temps de construction d'1 building"""
+    def start_building(self, builders): 
         for builder in builders :
-            builder.is_building = True
             self.builders.append(builder)
-        self.build_time = build_time*3/(len(self.builders) + 2)
+        self.build_time = self.build_time*3/(len(self.builders) + 2)
         self.construction_start_time = time.time()  # Log the current time
-        self.is_under_construction = True
-        print(f"Construction of {self.building_type} started. It will take {build_time} seconds.")
+        print(f"Construction of {self.building_type} started. It will take {self.build_time} seconds.")
 
+    """actualisation du temps de construction d'1 building"""
     def update_builder(self, builders):
         for builder in builders :
             builder.is_building = True
