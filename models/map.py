@@ -40,7 +40,7 @@ class Map:
 
         if type_carte in ["ressources_generales","low_ressources"]:
             
-            pourcent = 10 if type_carte == "ressources_generales" else 25
+            pourcent = 30 if type_carte == "ressources_generales" else 25
             
             # Répartition aléatoire des ressources sur toute la carte
             for _ in range((self.largeur * self.hauteur) // pourcent):  # Environ 10% des cases ont des ressources

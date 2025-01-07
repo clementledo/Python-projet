@@ -5,6 +5,7 @@ from models.units.horseman import Horseman
 from models.Buildings.town_center import Town_center
 from models.Buildings.archery_range import Archery_Range
 from models.Buildings.building import Building
+from models.Buildings.barrack import Barrack
 from models.units.unit import Unit
 from views.game_view import GameView
 from controllers.game_controller import GameController
@@ -27,28 +28,31 @@ class GameState:
         self.camera_y = 0
         self.zoom_level=1.0
 
-    def start_new_game(self, screen, screen_width, screen_height, tile_size,use_terminal_view=False):
-        # Calculate map size based on screen dimensions
-        tiles_x = int(screen_width / (tile_size * 2)) + 20
-        tiles_y = int(screen_height / tile_size) + 20
-
-        # Create map
-        self.carte = Map(tiles_x, tiles_y)
-        self.carte.generer_aleatoire(type_carte="ressources_generales") 
+    def start_new_game(self, screen, map_width, map_height, tile_size, map_type="ressources_generales", use_terminal_view=False):
+        self.carte = Map(map_width, map_height)
+        self.carte.generer_aleatoire(map_type)
 
         # Initialize units
         units = [
             Villager(15, 12, self.carte),
-            Villager(3, 26, self.carte),
-            Archer(20, 12, self.carte),
-            Horseman(20, 15, self.carte)
+            Archer(20, 8, self.carte),
+            Horseman(20, 30, self.carte)  # Initial villager
         ]
-        #Initialize buildings
-        buildings =[
+        
+        # Add 10 more villagers near the first one
+        for i in range(15):
+            x_offset = i % 4  # Creates a 3x4 grid formation
+            y_offset = i // 4
+            units.append(Villager(10 + x_offset, 12 + y_offset, self.carte))
+
+        # Initialize buildings
+        buildings = [
             Town_center((10, 10)),
-            Archery_Range((10,26))
+            Archery_Range((10, 26)),
+            Barrack((20, 40))
         ]
-        self.model = {'map':self.carte,'units': units,'buildings':buildings}
+        
+        self.model = {'map': self.carte, 'units': units, 'buildings': buildings}
 
         # Initialize view and controller
         
@@ -63,6 +67,7 @@ class GameState:
 
             self.view.load_building_sprite("T", "assets/Buildings/Towncenter.png")
             self.view.load_building_sprite("A", "assets/Buildings/Archery_range.png")
+            self.view.load_building_sprite("B", "assets/Buildings/Barracks.png")
             self.view.generate_resources(self.carte)
 
             self.controller = GameController(self.model, self.view, self.carte,tile_size)

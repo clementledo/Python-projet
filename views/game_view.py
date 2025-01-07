@@ -48,17 +48,8 @@ class GameView:
                         case _:
                             continue
 
-                random_value = random.random()
-
-                # Générer un arbre avec une probabilité de 0.8%
-                if random_value < 0.006:
-                    bush = {
-                        'type': 'bush',
-                        'x': x,
-                        'y': y,
-                        'image': pygame.image.load('assets/bush.png').convert_alpha()
-                    }
-                    self.decorations.append(bush)
+               
+               
                     
 
         self.decorations_generated = True

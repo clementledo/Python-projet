@@ -1,5 +1,5 @@
 import pygame
-from views.menu import main_menu, pause_menu
+from views.menu import main_menu, pause_menu, settings_menu
 from game_state import GameState
 
 def main():
@@ -28,16 +28,26 @@ def main():
     current_screen = "main_menu"
     running = True
 
+    map_sizes = {
+        "Small": (30, 30),
+        "Medium": (75, 75),
+        "Large": (120, 120)
+    }
+
     while running:
-        
         if current_screen == "main_menu":
-            # Show the main menu and handle the result
             action = main_menu(screen, game_state)
-            if action == "start":
-                # Initialize gameplay components
-                game_state.start_new_game(screen, SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE)
+            if isinstance(action, dict) and action["action"] == "start":
+                map_size = map_sizes[action["map_size"]]
+                game_state.start_new_game(
+                    screen, 
+                    map_size[0], 
+                    map_size[1], 
+                    TILE_SIZE,
+                    map_type=action["map_type"]
+                )
                 current_screen = "gameplay"
-            elif action == "load_game":
+            elif action == "load":
                 try:
                     game_state.load_state("save_game.pkl")
                     current_screen = "gameplay"
@@ -45,6 +55,18 @@ def main():
                     print("No saved game found!")
             elif action == "quit":
                 running = False
+
+        elif current_screen == "settings":
+            settings_result = settings_menu(screen)
+            if settings_result == "back":
+                current_screen = "main_menu"
+            elif isinstance(settings_result, dict):
+                if settings_result["action"] == "start":
+                    map_size = map_sizes[settings_result["map_size"]]
+                    game_state.start_new_game(screen, map_size[0], map_size[1], TILE_SIZE)
+                    current_screen = "gameplay"
+                elif settings_result["action"] == "quit":
+                    running = False
           
         elif current_screen == "gameplay":
 
@@ -70,7 +92,7 @@ def main():
                 game_state.view.render_buildings(game_state.model['buildings'], game_state.controller.camera_x, game_state.controller.camera_y, game_state.controller.zoom_level)
                 game_state.view.render_minimap(game_state.carte, game_state.controller.camera_x, game_state.controller.camera_y, game_state.controller.zoom_level, game_state.model['units'],game_state.model['buildings'])
 
-                game_state.controller.move_unit_to_town_center()
+                #game_state.controller.move_unit_to_town_center()
                 game_state.show_fps(clock=clock,font=font,screen=screen)
 
                 # Update display
