@@ -184,5 +184,3 @@ class GameState:
         # Afficher les FPS sur l'écran
         fps_text = font.render(f"FPS: {int(fps)}", True, (255, 255, 255))
         screen.blit(fps_text, (10, 10))
-
-
