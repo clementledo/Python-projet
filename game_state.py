@@ -10,6 +10,7 @@ from models.units.unit import Unit
 from views.game_view import GameView
 from controllers.game_controller import GameController
 from models.map import Map
+from models.Player.IA import IAPlayer, Strategy
 import pygame
 
 TILE_SIZE = 50
@@ -33,75 +34,93 @@ class GameState:
         "Marines": {
             "resources": {"food": 20000, "wood": 20000, "gold": 20000},
             "buildings": [
-                ("Town_center", (10, 10)),
-                ("Town_center", (30, 30)),
-                ("Town_center", (50, 50)),
-                ("Barrack", (12, 22)),
-                ("Barrack", (42, 32)),
-                ("Archery_Range", (14, 54)),
-                ("Archery_Range", (54, 34))
+                # Base principale
+                ("Town_center", (15, 15)),    # Centre ville principal
+                ("Barrack", (20, 15)),        # Caserne proche du centre
+                ("Archery_Range", (15, 20)),  # Camp de tir proche du centre
+                
+                # Base secondaire gauche
+                ("Town_center", (10, 40)),    # Second centre ville
+                ("Barrack", (15, 40)),        # Caserne de support
+                
+                # Base secondaire droite
+                ("Town_center", (40, 10)),    # Troisième centre ville
+                ("Archery_Range", (40, 15))   # Camp de tir de support
             ],
             "villagers": 15
         }
     }
 
     def __init__(self):
-        self.current_state = "main_menu"  # État initial du jeu
-        self.running = True  # Flag pour savoir si le jeu tourne
-        self.model = None  # Le modèle du jeu (sera initialisé plus tard)
-        self.view=None
-        self.camera_x = 0  
+        self.running = True
+        self.players = {}
+        self.model = {}
+        self.view = None
+        self.controller = None
+        self.carte = None
+        self.camera_x = 0
         self.camera_y = 0
-        self.zoom_level=1.0
+        self.zoom_level = 1
+        self.player_resources = {}
 
-    def start_new_game(self, screen, map_width, map_height, tile_size, map_type="ressources_generales", starting_condition="Moyenne", use_terminal_view=False):
-        self.carte = Map(map_width, map_height)
-        self.carte.generer_aleatoire(map_type)
-        
-        # Get starting condition configuration
+    def start_new_game(self, screen, map_width, map_height, tile_size, map_type="ressources_generales", starting_condition="Marines", use_terminal_view=False, ai_mode=True):
+        # Initialize map, units, buildings, and resources
+        self.carte = Map(map_width, map_height, map_type)  # Corrected constructor call
         condition = self.STARTING_CONDITIONS[starting_condition]
+        self.player_resources = {1: condition["resources"].copy(), 2: condition["resources"].copy()}
         
-        # Initialize resources
-        self.resources = condition["resources"].copy()
-        self.carte.resources = self.resources  # Pass resources to map for rendering
-        
-        # Initialize units
         units = []
+        buildings = []
+
+        # Initialize buildings
+        for building_type, pos in condition["buildings"]:
+            building_class = globals()[building_type]
+            building = building_class(pos)
+            building.player_id = 1
+            buildings.append(building)
+
+            mirrored_x = map_width - pos[0] - 1
+            building = building_class((mirrored_x, pos[1]))
+            building.player_id = 2
+            buildings.append(building)
+
+        # Initialize units
         for i in range(condition["villagers"]):
             x_offset = i % 4
             y_offset = i // 4
-            units.append(Villager(10 + x_offset, 12 + y_offset, self.carte))
-        
-        # Initialize buildings
-        buildings = []
-        for building_type, pos in condition["buildings"]:
-            if building_type == "Town_center":
-                buildings.append(Town_center(pos))
-            elif building_type == "Barrack":
-                buildings.append(Barrack(pos))
-            elif building_type == "Archery_Range":
-                buildings.append(Archery_Range(pos))
-        
+            villager = Villager(10 + x_offset, 12 + y_offset, self.carte)
+            villager.player_id = 1
+            units.append(villager)
+            
+            villager = Villager(map_width - 15 + x_offset, 12 + y_offset, self.carte)
+            villager.player_id = 2
+            units.append(villager)
+
         self.model = {'map': self.carte, 'units': units, 'buildings': buildings}
+        
+        # Initialize AI players
+        if ai_mode:
+            self.players = {
+                1: IAPlayer(1, self, Strategy.AGGRESSIVE),
+                2: IAPlayer(2, self, Strategy.DEFENSIVE)
+            }
 
         # Initialize view and controller
         if not use_terminal_view:
-            from views.game_view import GameView  # Import uniquement si nécessaire
             self.view = GameView(screen, tile_size)
+            self.view.game_state = self  # Pass game_state reference to view
+            self.carte.resources = self.player_resources  # Pass both players' resources
             
             self.view.load_unit_sprite('Villager', 'assets/villager.png')
             self.view.load_unit_sprite('Archer', 'assets/archer.png')
-            self.view.load_unit_sprite('Horseman', 'assets/horseman.png')
+            #self.view.load_unit_sprite('Horseman', 'assets/horseman.png')
 
             self.view.load_building_sprite("T", "assets/Buildings/Towncenter.png")
             self.view.load_building_sprite("A", "assets/Buildings/Archery_range.png")
             self.view.load_building_sprite("B", "assets/Buildings/Barracks.png")
-            self.view.generate_resources(self.carte)
 
-            self.controller = GameController(self.model, self.view, self.carte,tile_size)
-        else:
-                self.view = None
-    
+            self.controller = GameController(self.model,self.view, self.carte, tile_size)  # Pass required arguments
+
     def change_state(self, new_state):
         """Change l'état actuel du jeu."""
         self.current_state = new_state
@@ -217,4 +236,37 @@ class GameState:
         # Afficher les FPS sur l'écran
         fps_text = font.render(f"FPS: {int(fps)}", True, (255, 255, 255))
         screen.blit(fps_text, (10, 10))
+
+    def update_ai(self):
+        """Update AI players each frame"""
+        if hasattr(self, 'players'):
+            for player in self.players.values():
+                player.update()
+
+    def run_game_loop(self):
+        """Main game loop with AI updates"""
+        clock = pygame.time.Clock()
+        font = pygame.font.Font(None, 36)
+
+        while self.running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                self.controller.handle_input()
+
+            # Update AI players
+            self.update_ai()
+
+            # Update display
+            if self.view:
+                self.view.render_map(self.carte, self.camera_x, self.camera_y, self.zoom_level)
+                self.view.render_units(self.model['units'], self.camera_x, self.camera_y, self.zoom_level, self.controller.selected_unit)
+                self.view.render_buildings(self.model['buildings'], self.camera_x, self.camera_y, self.zoom_level)
+                self.view.generate_resources(self.carte)
+                self.view.render_minimap(self.carte, self.camera_x, self.camera_y, self.zoom_level, self.model['units'], self.model['buildings'])
+                
+                self.show_fps(clock, font, self.view.screen)
+                pygame.display.flip()
+                
+            clock.tick(60)
 

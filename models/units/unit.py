@@ -12,12 +12,18 @@ class unitStatus(Enum):
     ATTACKING = "attacking"
 
 class Unit:
-    def __init__(self, x, y, unit_type, atk, speed, hp, map):
-        self.position = (x, y)  # Position en termes de tuiles
-        self.unit_type = unit_type  # Type d'unité (guerrier, archer)
+    def __init__(self, x, y, unit_type, speed, attack_speed, hp, map):
+        self.x = x
+        self.y = y
+        self.position = (x, y)
+        self.unit_type = unit_type
+        self.speed = speed
+        self.attack_speed = attack_speed
+        self.attack_range = 1  # Default melee range
+        self.health = hp
+        self.max_health = hp
+        self.status = unitStatus.IDLE
         self.symbol = unit_type[0]
-        self.atk_power = atk
-        self.speed = speed  # Movement speed (tiles per second)
         self.move_cooldown = 0.9  # Time between moves in seconds
         self.last_move_time = 0  # Last time the unit moved
         self.remaining_move = 0
@@ -25,13 +31,24 @@ class Unit:
         self.path = []  # Liste du chemin
         self.grid = map  # Carte sur laquelle l'unité se déplace
         self.walkable_symbols = {Terrain_type.GRASS} 
-        self.health = hp  # Points de vie
-        self.max_health = hp 
-        self.status = unitStatus.IDLE
+
     def update(self):
-        """Met à jour l'unité, par exemple pour la faire se déplacer."""
-        if self.destination:
-            self.move_towards(self.destination)
+        """Update unit state"""
+        if self.status == unitStatus.MOVING:
+            if self.destination:
+                if self.move_towards(self.destination, self.grid):
+                    self.status = unitStatus.IDLE
+                    self.destination = None
+        elif self.status == unitStatus.ATTACKING:
+            if self.target and self.target.health > 0:
+                if self.distance_to(self.target) <= self.attack_range:
+                    self.atk(self.target)
+                else:
+                    self.status = unitStatus.MOVING
+                    self.destination = self.target.position
+            else:
+                self.status = unitStatus.IDLE
+                self.target = None
 
     def heuristic(self, a, b):
         """Fonction heuristique pour A* (distance de Manhattan)."""

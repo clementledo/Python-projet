@@ -2,8 +2,15 @@ from .unit import Unit # type: ignore
 from .unit import unitStatus
 
 class Villager(Unit):
-    def __init__(self, x, y,map):
-        super().__init__(x, y, "Villager", 2, 0.8, 25, map)
+    def __init__(self, x, y, map):
+        super().__init__(x, y, "Villager", 2, 1.0, 25, map)
+        self.is_gathering = False
+        self.gathering_progress = 0
+        self.gathering_speed = 1
+        self.carry_capacity = 10
+        self.carried_resources = 0
+        self.resource_type = None
+        self.nearest_dropoff = None
         self.resource_capacity = 20  # Peut transporter 20 ressources
         self.resource_gather_rate = 25 / 60  # 25 ressources par minute (en secondes)
         self.training_time = 25  # Temps d'entraînement en secondes
@@ -12,6 +19,7 @@ class Villager(Unit):
         self.current_resource_type = None
         self.building = None
         self.remaining_construction_time = 0
+        self.attack_range = 1
     
     def start_building(self, building, builders_count):
         """Démarre la construction d'un bâtiment."""
@@ -43,6 +51,36 @@ class Villager(Unit):
             resources_gathered = self.resource_capacity
         print(f"{resources_gathered} unités de {resource_type} collectées.")
     
+    def gather(self, resource_pos):
+        tile = self.grid.get_tile(resource_pos[0], resource_pos[1])
+        if tile.resource:
+            self.resource_type = self.get_resource_type(tile.resource)
+            self.status = unitStatus.GATHERING
+            self.is_gathering = True
+            self.destination = resource_pos
+
+    def get_resource_type(self, resource):
+        """Map resource to resource type"""
+        resource_mapping = {
+            "W": "wood",
+            "F": "food",
+            "G": "gold"
+        }
+        return resource_mapping.get(resource.symbol, "food")
+
+    def update_gathering(self):
+        """Update gathering progress"""
+        if self.status == unitStatus.GATHERING:
+            if self.carried_resources >= self.carry_capacity:
+                self.return_resources()
+            else:
+                tile = self.grid.get_tile(self.position[0], self.position[1])
+                if tile.resource:
+                    self.gathering_progress += self.gathering_speed
+                    if self.gathering_progress >= 100:
+                        self.carried_resources += 1
+                        self.gathering_progress = 0
+
     def update(self):
         """Met à jour le villageois (construction, collecte, etc.)."""
         delta_time = 1 / 60  # Exemple de 60 FPS pour gérer le temps

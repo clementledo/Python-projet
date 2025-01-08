@@ -2,23 +2,37 @@ from models.Buildings.building import Building
 from ..units.villager import Villager
 from ..Resources import Ressource
 
-"""peut faire spawn des villageois"""       
-class Town_center(Building) :
-    """pour chaque type d'unitÃ©s, de ressources et de bÃ¢timents, avoir un attribut statique liste ? non, une liste pour chaque classe mÃ¨re batiment et unit"""
-    
-    def __init__(self, pos) :
-        #self.population_max = self.population_max +5
-        super().__init__("Towncenter",350, 10, 1000, (4,4), 'T', pos)
-        self.size=(4,4)
+class Town_center(Building):
+    def __init__(self, pos):
+        super().__init__("Town_center", 350, 10, 1000, (4, 4), 'T', pos)
+        self.training_time = 0
+        self.training_cooldown = 50
+        self.villager_cost = {"food": 50}
+        self.spawn_offset = (4, 2)  # Spawn position relative to TC
 
-    def add_ressources(type_ressource) :
-        """reprendre le diagramme uml tile pour complÃ©ter le constructeur"""
-        return Ressource(type_ressource)
+    def train_villager(self, game_state):
+        """Train a new villager if resources available"""
+        player_resources = game_state.player_resources[self.player_id]
+        
+        if (self.training_time <= 0 and 
+            player_resources["food"] >= self.villager_cost["food"]):
+            
+            # Create new villager
+            spawn_x = self.pos[0] + self.spawn_offset[0]
+            spawn_y = self.pos[1] + self.spawn_offset[1]
+            new_villager = Villager(spawn_x, spawn_y, game_state.carte)
+            new_villager.player_id = self.player_id
+            
+            # Deduct resources
+            game_state.player_resources[self.player_id]["food"] -= self.villager_cost["food"]
+            
+            # Add to game
+            game_state.model['units'].append(new_villager)
+            self.training_time = self.training_cooldown
+            return True
+        return False
 
-    def remove_ressources (self,number,type) : 
-        return
-
-    def spawn_v(self) : 
-        self.remove_ressources(self,50,'F')
-        return Villager(50,25,25,1,'v',2)
-    """(cost1,cost2,training_time,hp,speed,symbol,attack,pos)"""
+    def update(self):
+        """Update training cooldown"""
+        if self.training_time > 0:
+            self.training_time -= 1

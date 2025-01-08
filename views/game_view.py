@@ -256,29 +256,31 @@ class GameView:
             (minimap_x, minimap_y, minimap_width, minimap_height),
             2
     )
+        
 
 
-    def render_units(self, units, camera_x, camera_y, zoom_level,selected_unit):
-        """Improved unit rendering with isometric projection."""
+    def colorize_surface(self, surface, color):
+        """Apply color tint to a surface"""
+        colorized = surface.copy()
+        colorized.fill(color, special_flags=pygame.BLEND_RGBA_MULT)
+        return colorized
+
+    def render_units(self, units, camera_x, camera_y, zoom_level, selected_unit):
+        """Improved unit rendering with isometric projection and player colors."""
         tile_width = int(self.tile_size * 2 * zoom_level)
         tile_height = int(self.tile_size * zoom_level)
-
         screen_width, screen_height = self.screen.get_size()
 
         for unit in sorted(units, key=lambda u: u.get_position()[1]):
             x_tile, y_tile = unit.get_position()
-
-            # Convert world to screen coordinates
             iso_x, iso_y = self.world_to_screen(x_tile, y_tile, camera_x, camera_y, zoom_level)
             
-            # Center the map
             iso_x += screen_width // 2
             iso_y += screen_height // 4
 
-            #Highlight the selected unit
             if selected_unit == unit:
-                highlight_color = (255, 255, 0)  # Yellow highlight
-                highlight_radius = int(tile_width * 0.5)  # Adjust as needed
+                highlight_color = (255, 255, 0)
+                highlight_radius = int(tile_width * 0.5)
                 pygame.draw.circle(self.screen, highlight_color, 
                                 (iso_x, iso_y + tile_height // 2), highlight_radius, 2)
 
@@ -287,12 +289,15 @@ class GameView:
                 scaled_sprite = pygame.transform.scale(sprite, 
                     (int(sprite.get_width() * zoom_level), int(sprite.get_height() * zoom_level)))
                 
-                # Center unit on tile
+                # Apply blue tint for Player 2 units
+                if unit.player_id == 2:
+                    scaled_sprite = self.colorize_surface(scaled_sprite, (100, 100, 255, 255))
+                
                 self.screen.blit(scaled_sprite, 
                     (iso_x - scaled_sprite.get_width() // 2, 
-                     iso_y - scaled_sprite.get_height() // 2))
+                    iso_y - scaled_sprite.get_height() // 2))
                 self.draw_health_bar(self.screen, unit, iso_x, iso_y, zoom_level)
-        
+
     def load_unit_sprite(self, unit_type, image_path):
         """Charge un sprite d'unité."""
         image = pygame.image.load(image_path).convert_alpha()
@@ -303,29 +308,26 @@ class GameView:
         self.building_sprites[building_name] = pygame.image.load(sprite_path).convert_alpha()
 
     def render_buildings(self, buildings, camera_x, camera_y, zoom_level):
+        """Render buildings with player colors"""
+        screen_width, screen_height = self.screen.get_size()
+        
         for building in buildings:
-            # Get building properties
             building_x, building_y = building.pos
-            building_size_x, building_size_y = building.size
+            iso_x, iso_y = self.world_to_screen(building_x, building_y, camera_x, camera_y, zoom_level)
             
-            # Calculate required size in pixels based on tiles to occupy
-            required_width = self.tile_size * building_size_x * zoom_level
-            required_height = self.tile_size * building_size_y * zoom_level
-
-            # Scale building sprite to match required tile coverage
-            scaled_image = pygame.transform.scale(
-                building.image, 
-                (int(required_width), int(required_height))
-            )
-
-            # Calculate final position for centered building
-            main_iso_x, main_iso_y = self.world_to_screen(building_x, building_y, camera_x, camera_y, zoom_level)
-            screen_width, screen_height = self.screen.get_size()
-            main_iso_x += screen_width // 2 - (required_width // 4)  # Adjust for isometric view
-            main_iso_y += screen_height // 4 - (required_height // 4)
-
-            # Draw building sprite
-            self.screen.blit(scaled_image, (main_iso_x, main_iso_y))
+            iso_x += screen_width // 2
+            iso_y += screen_height // 4
+            
+            sprite = self.building_sprites.get(building.symbol)
+            if sprite:
+                scaled_sprite = pygame.transform.scale(sprite, 
+                    (int(sprite.get_width() * zoom_level), int(sprite.get_height() * zoom_level)))
+                
+                # Apply blue tint for Player 2 buildings
+                if building.player_id == 2:
+                    scaled_sprite = self.colorize_surface(scaled_sprite, (100, 100, 255, 255))
+                
+                self.screen.blit(scaled_sprite, (iso_x, iso_y))
 
     def draw_health_bar(self, surface, unit, x, y, zoom_level=1.0):
         """Dessine une barre de vie proportionnelle aux PV de l'unité avec zoom"""
@@ -359,34 +361,47 @@ class GameView:
         self.draw_health_bar(surface, unit, x, y, zoom_level)
 
     def render_resources(self, resources):
-        """Display resource panel with current resources"""
-        # Panel position at top of screen
-        panel_x = 1220
-        panel_y = 10
-        
-        # Scale panel to reasonable size
+        """Display resource panel with current resources for both players"""
+        # Panel dimensions
         panel_width = 700
         panel_height = 80
-        scaled_panel = pygame.transform.scale(self.resource_panel, (panel_width, panel_height))
-        self.screen.blit(scaled_panel, (panel_x, panel_y))
+        padding = 10
+
+        # Panel positions
+        panel1_x = 1220
+        panel1_y = 10
+        panel2_x = 1220
+        panel2_y = 100  # Below player 1's panel
 
         # Resource icon size and spacing
         icon_size = 40
         spacing = 150
-        
-        # Display each resource (using lowercase keys)
-        for i, (resource_type, amount) in enumerate(resources.items()):
-            # Position for this resource
-            x = panel_x + 40 + (i *spacing)
-            y = panel_y + 15
-            
-            # Draw icon (ensure lowercase key)
-            resource_type = resource_type.lower()
-            icon = pygame.transform.scale(self.resource_icons[resource_type], (icon_size, icon_size))
-            self.screen.blit(icon, (x, y))
-            
-            # Draw amount
-            text = self.font.render(str(amount), True, (255, 255, 255))
-            self.screen.blit(text, (x + icon_size + 20, y + 8))
+
+        # Draw panels for both players
+        for player_id, panel_y in [(1, panel1_y), (2, panel2_y)]:
+            # Draw panel background
+            scaled_panel = pygame.transform.scale(self.resource_panel, (panel_width, panel_height))
+            self.screen.blit(scaled_panel, (panel1_x, panel_y))
+
+            # Player label
+            player_text = self.font.render(f"Player {player_id}", True, 
+                                         (255, 215, 0) if player_id == 1 else (0, 191, 255))
+            self.screen.blit(player_text, (panel1_x + 10, panel_y + 5))
+
+            # Display each resource
+            resources_to_display = self.game_state.player_resources[player_id]
+            for i, (resource_type, amount) in enumerate(resources_to_display.items()):
+                # Position for this resource
+                x = panel1_x + 40 + (i * spacing)
+                y = panel_y + 25
+                
+                # Draw icon
+                resource_type = resource_type.lower()
+                icon = pygame.transform.scale(self.resource_icons[resource_type], (icon_size, icon_size))
+                self.screen.blit(icon, (x, y))
+                
+                # Draw amount
+                text = self.font.render(str(amount), True, (255, 255, 255))
+                self.screen.blit(text, (x + icon_size + 20, y + 8))
 
 

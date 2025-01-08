@@ -173,7 +173,7 @@ def settings_menu(screen):
 
         # Draw main title
         main_title = font_main_title.render("SETTINGS", True, (90, 42, 42))  # Dark brown
-        title_rect = main_title.get_rect(center=(SCREEN_WIDTH//2+30, 200))
+        title_rect = main_title.get_rect(center=(SCREEN_WIDTH//2+30, 197))
         screen.blit(main_title, title_rect)
 
         # Draw section titles
