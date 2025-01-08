@@ -2,9 +2,9 @@ from units.unit import Unit
 from units.villager import Villager
 from Buildings.town_center import Town_center
 
-from unit.unit import Unit 
-from unit.villager import Villager
-from building.town_hall import TownHall
+# from unit.unit import Unit 
+from units.villager import Villager
+from Buildings.town_center import Town_center
 from resource.tile import Type  
 
 
@@ -278,7 +278,7 @@ class IA:
     def allocate_villagers(self):
         available_villagers = self.get_available_villagers()
         for building in self.buildings:
-            if building is TownHall:
+            if isinstance(building, Town_center):
                 for _ in range(5):
                     for villager in available_villagers:
                         pos = self.find_nearby_resources(villager,Type.Food)
@@ -342,7 +342,7 @@ class IA:
     # 4. Assign Villagers
         assigned_villagers = available_villagers[:num_villagers]
         for villager in assigned_villagers:
-            villager.start_building(building, num_villlagers)
+            villager.start_building(building, num_villagers)
 
         return assigned_villagers
 

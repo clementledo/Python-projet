@@ -141,6 +141,9 @@ def settings_menu(screen):
     selected_size = 1
     selected_type = 0
 
+    starting_conditions = ["Maigre", "Moyenne", "Marines"]
+    selected_condition = 1
+
     # Main buttons
     buttons = [
         {"label": "Start", "action": "start_game", "rect": pygame.Rect(670, 1020, 200, 50)},
@@ -159,6 +162,11 @@ def settings_menu(screen):
         for i, type_name in enumerate(map_types)
     ]
 
+    condition_buttons = [
+        {"label": cond, "rect": pygame.Rect(1300, 430 + i*BUTTON_SPACING, 200, 50)}
+        for i, cond in enumerate(starting_conditions)
+    ]
+
     running = True
     while running:
         screen.blit(bg_image, (0, 0))
@@ -171,8 +179,10 @@ def settings_menu(screen):
         # Draw section titles
         title_size = font_title.render("Map Size", True, (90, 42, 42))
         title_type = font_title.render("Resource Distribution", True, (90, 42, 42))
+        title_condition = font_title.render("Starting Condition", True, (90, 42, 42))
         screen.blit(title_size, (600, 460))
         screen.blit(title_type, (500, 730))
+        screen.blit(title_condition, (1250, 350))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -185,7 +195,8 @@ def settings_menu(screen):
                             return {
                                 "action": "start",
                                 "map_size": map_sizes[selected_size],
-                                "map_type": map_types[selected_type]
+                                "map_type": map_types[selected_type],
+                                "starting_condition": starting_conditions[selected_condition]
                             }
                         elif button["action"] == "back":
                             return "back"
@@ -197,6 +208,10 @@ def settings_menu(screen):
                 for i, type_button in enumerate(type_buttons):
                     if type_button["rect"].collidepoint(event.pos):
                         selected_type = i
+
+                for i, condition_button in enumerate(condition_buttons):
+                    if condition_button["rect"].collidepoint(event.pos):
+                        selected_condition = i
 
         # Draw main buttons
         for button in buttons:
@@ -225,6 +240,16 @@ def settings_menu(screen):
             screen.blit(text, (
                 type_button["rect"].x + (button["rect"].width - text.get_width()) // 2,
                 type_button["rect"].y + (button["rect"].height - text.get_height()) // 2
+            ))
+
+        # Draw condition buttons
+        for i, condition_button in enumerate(condition_buttons):
+            color = (120, 60, 60) if i == selected_condition else (90, 42, 42)
+            pygame.draw.rect(screen, color, condition_button["rect"])
+            text = font.render(condition_button["label"], True, (255, 255, 255))
+            screen.blit(text, (
+                condition_button["rect"].x + (condition_button["rect"].width - text.get_width()) // 2,
+                condition_button["rect"].y + (condition_button["rect"].height - text.get_height()) // 2
             ))
 
         pygame.display.flip()

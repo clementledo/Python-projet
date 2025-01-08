@@ -5,14 +5,21 @@ import math
 
 class GameView:
     def __init__(self, screen, tile_size=32):
-        # ... (existing initialization code) ...
         self.screen = screen
-        self.unit_sprites = {}  # Dictionnaire pour stocker les images des unités
-        self.building_sprites={}
-        self.tile_size = tile_size  # Taille de chaque tuile en pixels
+        self.tile_size = tile_size
+        self.unit_sprites = {}
+        self.building_sprites = {}
+        
+        # Load resource panel and icons
+        self.resource_panel = pygame.image.load('assets/resourcecivpanel.png').convert_alpha()
+        self.resource_icons = {
+            "food": pygame.image.load("assets/iconfood.png").convert_alpha(),
+            "wood": pygame.image.load("assets/iconwood.png").convert_alpha(),
+            "gold": pygame.image.load("assets/icongold.png").convert_alpha()
+        }
+        self.font = pygame.font.SysFont('Arial', 24)
         self.decorations = []  # Liste pour stocker les décorations générées
         self.decorations_generated = False  # Flag pour vérifier si les décorations ont été générées
-        self.font = pygame.font.SysFont('Arial', 36)
         self.iso_offset_x = 0  # Store isometric offset
         self.iso_offset_y = 0  # Store isometric offset
     
@@ -149,6 +156,10 @@ class GameView:
                 decoration['image'], (tile_width, tile_height * 2)
             )
             self.screen.blit(decoration_image, (iso_x, iso_y))
+
+        # Render resource panel last (on top)
+        if hasattr(carte, 'resources'):
+            self.render_resources(carte.resources)
 
 
     def render_minimap(self, map_data, camera_x, camera_y, zoom_level, units, buildings):
@@ -293,30 +304,28 @@ class GameView:
 
     def render_buildings(self, buildings, camera_x, camera_y, zoom_level):
         for building in buildings:
-            # Position en tuiles
+            # Get building properties
             building_x, building_y = building.pos
+            building_size_x, building_size_y = building.size
+            
+            # Calculate required size in pixels based on tiles to occupy
+            required_width = self.tile_size * building_size_x * zoom_level
+            required_height = self.tile_size * building_size_y * zoom_level
 
-            # Conversion en coordonnées isométriques (en tenant compte de la caméra et du zoom)
-            iso_x, iso_y = self.world_to_screen(building_x, building_y, camera_x, camera_y, zoom_level)
-
-            # Centrer le bâtiment sur sa tuile (en tenant compte de sa taille et du zoom)
-            screen_width, screen_height = self.screen.get_size()
-            iso_x += screen_width // 2
-            iso_y += screen_height // 4
-
-            # Ajuster la position du bâtiment en fonction de sa taille
-            iso_x -= (self.tile_size * zoom_level) * building.size[0] // 2
-            iso_y -= (self.tile_size * zoom_level) * building.size[1] // 2
-
-            # Utiliser l'image actuelle du bâtiment
+            # Scale building sprite to match required tile coverage
             scaled_image = pygame.transform.scale(
                 building.image, 
-                (int(self.tile_size * building.size[0] * zoom_level), 
-                int(self.tile_size * building.size[1] * zoom_level))
+                (int(required_width), int(required_height))
             )
 
-            # Dessiner le bâtiment
-            self.screen.blit(scaled_image, (iso_x, iso_y))
+            # Calculate final position for centered building
+            main_iso_x, main_iso_y = self.world_to_screen(building_x, building_y, camera_x, camera_y, zoom_level)
+            screen_width, screen_height = self.screen.get_size()
+            main_iso_x += screen_width // 2 - (required_width // 4)  # Adjust for isometric view
+            main_iso_y += screen_height // 4 - (required_height // 4)
+
+            # Draw building sprite
+            self.screen.blit(scaled_image, (main_iso_x, main_iso_y))
 
     def draw_health_bar(self, surface, unit, x, y, zoom_level=1.0):
         """Dessine une barre de vie proportionnelle aux PV de l'unité avec zoom"""
@@ -348,5 +357,36 @@ class GameView:
     def draw_unit(self, surface, unit, x, y, zoom_level=1.0):
         # ...existing code...
         self.draw_health_bar(surface, unit, x, y, zoom_level)
+
+    def render_resources(self, resources):
+        """Display resource panel with current resources"""
+        # Panel position at top of screen
+        panel_x = 1220
+        panel_y = 10
+        
+        # Scale panel to reasonable size
+        panel_width = 700
+        panel_height = 80
+        scaled_panel = pygame.transform.scale(self.resource_panel, (panel_width, panel_height))
+        self.screen.blit(scaled_panel, (panel_x, panel_y))
+
+        # Resource icon size and spacing
+        icon_size = 40
+        spacing = 150
+        
+        # Display each resource (using lowercase keys)
+        for i, (resource_type, amount) in enumerate(resources.items()):
+            # Position for this resource
+            x = panel_x + 40 + (i *spacing)
+            y = panel_y + 15
+            
+            # Draw icon (ensure lowercase key)
+            resource_type = resource_type.lower()
+            icon = pygame.transform.scale(self.resource_icons[resource_type], (icon_size, icon_size))
+            self.screen.blit(icon, (x, y))
+            
+            # Draw amount
+            text = self.font.render(str(amount), True, (255, 255, 255))
+            self.screen.blit(text, (x + icon_size + 20, y + 8))
 
 

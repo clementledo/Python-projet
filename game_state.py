@@ -19,6 +19,32 @@ class GameState:
     """
     Classe pour gérer l'état du jeu.
     """
+    STARTING_CONDITIONS = {
+        "Maigre": {
+            "resources": {"food": 50, "wood": 200, "gold": 50},
+            "buildings": [("Town_center", (10, 10))],
+            "villagers": 3
+        },
+        "Moyenne": {
+            "resources": {"food": 2000, "wood": 2000, "gold": 2000},
+            "buildings": [("Town_center", (10, 10))],
+            "villagers": 3
+        },
+        "Marines": {
+            "resources": {"food": 20000, "wood": 20000, "gold": 20000},
+            "buildings": [
+                ("Town_center", (10, 10)),
+                ("Town_center", (30, 30)),
+                ("Town_center", (50, 50)),
+                ("Barrack", (12, 22)),
+                ("Barrack", (42, 32)),
+                ("Archery_Range", (14, 54)),
+                ("Archery_Range", (54, 34))
+            ],
+            "villagers": 15
+        }
+    }
+
     def __init__(self):
         self.current_state = "main_menu"  # État initial du jeu
         self.running = True  # Flag pour savoir si le jeu tourne
@@ -28,35 +54,37 @@ class GameState:
         self.camera_y = 0
         self.zoom_level=1.0
 
-    def start_new_game(self, screen, map_width, map_height, tile_size, map_type="ressources_generales", use_terminal_view=False):
+    def start_new_game(self, screen, map_width, map_height, tile_size, map_type="ressources_generales", starting_condition="Moyenne", use_terminal_view=False):
         self.carte = Map(map_width, map_height)
         self.carte.generer_aleatoire(map_type)
-
-        # Initialize units
-        units = [
-            Villager(15, 12, self.carte),
-            Archer(20, 8, self.carte),
-            Horseman(20, 30, self.carte)  # Initial villager
-        ]
         
-        # Add 10 more villagers near the first one
-        for i in range(15):
-            x_offset = i % 4  # Creates a 3x4 grid formation
+        # Get starting condition configuration
+        condition = self.STARTING_CONDITIONS[starting_condition]
+        
+        # Initialize resources
+        self.resources = condition["resources"].copy()
+        self.carte.resources = self.resources  # Pass resources to map for rendering
+        
+        # Initialize units
+        units = []
+        for i in range(condition["villagers"]):
+            x_offset = i % 4
             y_offset = i // 4
             units.append(Villager(10 + x_offset, 12 + y_offset, self.carte))
-
+        
         # Initialize buildings
-        buildings = [
-            Town_center((10, 10)),
-            Archery_Range((10, 26)),
-            Barrack((20, 40))
-        ]
+        buildings = []
+        for building_type, pos in condition["buildings"]:
+            if building_type == "Town_center":
+                buildings.append(Town_center(pos))
+            elif building_type == "Barrack":
+                buildings.append(Barrack(pos))
+            elif building_type == "Archery_Range":
+                buildings.append(Archery_Range(pos))
         
         self.model = {'map': self.carte, 'units': units, 'buildings': buildings}
 
         # Initialize view and controller
-        
-
         if not use_terminal_view:
             from views.game_view import GameView  # Import uniquement si nécessaire
             self.view = GameView(screen, tile_size)

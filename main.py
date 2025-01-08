@@ -44,7 +44,8 @@ def main():
                     map_size[0], 
                     map_size[1], 
                     TILE_SIZE,
-                    map_type=action["map_type"]
+                    map_type=action["map_type"],
+                    starting_condition=action["starting_condition"]
                 )
                 current_screen = "gameplay"
             elif action == "load":
