@@ -7,6 +7,7 @@ class Villager(Unit):
         self.resource_gather_rate = 25 / 60  # 25 ressources par minute (en secondes)
         self.is_building = False  # Indique si le villageois est en train de construire
         self.training_time = 25  # Temps d'entraînement en secondes
+        self.current_load = 0  # Ressources actuellement transportées
         self.idle = True
     
     def start_building(self, building, builders_count):
@@ -28,8 +29,8 @@ class Villager(Unit):
     def gather_resources(self, resource_type, delta_time):
         """Simule la collecte de ressources. Collecte au rythme de 25/minute."""
         resources_gathered = self.resource_gather_rate * delta_time
-        if resources_gathered > self.resource_capacity:
-            resources_gathered = self.resource_capacity
+        if resources_gathered + self.current_load > self.resource_capacity:
+            resources_gathered = self.resource_capacity - self.current_load
         print(f"{resources_gathered} unités de {resource_type} collectées.")
     
     def update(self):

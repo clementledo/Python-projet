@@ -152,24 +152,21 @@ class IA:
 
         return closest_target
 
-    def gather_resource(self, unit):
+    def gather_resource(self, unit, position, delta_time):
 
-        x, y = unit.position[0], unit.position[1]
-        resource_type = self.map_data[y][x]  # Check the map tile the unit is on
+        x, y = position[0], position[1]
+        resource_type = self.map_data.grid[y][x].get_type()  # Check the map tile the resource is on
         
-        if resource_type == 'F':
-            self.resources["Food"] += 1 
+        if resource_type == Type.Food:
+            unit.gather_resources('F', delta_time)
             print(f"{unit.unit_type} gathered Food. Total: {self.resources['Food']}")
-            self.map_data[y][x] = ' '  # Clear the resource from the map after gathering
-        elif resource_type == 'W':
-            self.resources["Wood"] += 1 
+        elif resource_type == Type.Wood:
+            unit.gather_resources('W', delta_time)
             print(f"{unit.unit_type} gathered Wood. Total: {self.resources['Wood']}")
-            self.map_data[y][x] = ' '
-        elif resource_type == 'G':
-            self.resources["Gold"] += 1 
+        elif resource_type == Type.Gold:
+            unit.gather_resources('G', delta_time)
             print(f"{unit.unit_type} gathered Gold. Total: {self.resources['Gold']}")
-            self.map_data[y][x] = ' '
-
+            
     def find_nearby_resources(self, unit, resource_type):
         """
         Find nearby resources (F, W, G) for a specific unit.
@@ -275,7 +272,7 @@ class IA:
     def allocate_villagers(self):
         available_villagers = self.get_available_villagers()
         for building in self.buildings:
-            if building is TownHall:
+            if isinstance(building, TownHall):
                 for _ in range(5):
                     for villager in available_villagers:
                         pos = self.find_nearby_resources(villager,Type.Food)
@@ -285,7 +282,7 @@ class IA:
                                 next_step = path[0]
                                 villager.move_towards(next_step, self.map_data)
                         else:
-                            villager.gather_resources()
+                            self.gather_resource(villager, pos, 100)
                         available_villagers.remove(villager)
                         break
         if len(available_villagers) > 0:
@@ -297,7 +294,7 @@ class IA:
                         next_step = path[0]
                         villager.move_towards(next_step, self.map_data)
                 else:
-                    villager.gather_resources()
+                    self.gather_resource(villager, pos, 100)
                 available_villagers.remove(villager)        
                     
     def get_available_villagers(self):
