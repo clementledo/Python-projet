@@ -1,9 +1,11 @@
-from .unit import Unit # type: ignore
+from .unit import Unit
 from .unit import unitStatus
+import pygame
+import os
 
 class Villager(Unit):
     def __init__(self, x, y, map):
-        super().__init__(x, y, "Villager", 2, 1.0, 25, map)
+        super().__init__(x, y, "Villager", 0.5, 1.0, 25, map)
         self.is_gathering = False
         self.gathering_progress = 0
         self.gathering_speed = 1
@@ -20,6 +22,66 @@ class Villager(Unit):
         self.building = None
         self.remaining_construction_time = 0
         self.attack_range = 1
+
+        # Animation attributes
+        self.walking_sprites = []
+        self.standing_sprites = []
+        self.current_frame = 0
+        self.animation_speed = 0.6  # Seconds per frame
+        self.last_update = pygame.time.get_ticks()
+        self.load_walking_sprites()
+        self.load_standing_sprites()
+    
+    def load_walking_sprites(self):
+        """Load all walking animation sprites"""
+        sprite_dir = "assets/Sprites/Villager/Walk"
+        for i in range(16, 76):  # 75 frames
+            sprite_path = os.path.join(sprite_dir, f"Villagerwalk{i:03d}.png")
+            try:
+                sprite = pygame.image.load(sprite_path).convert_alpha()
+                self.walking_sprites.append(sprite)
+            except pygame.error as e:
+                print(f"Couldn't load sprite: {sprite_path}")
+                print(e)
+
+    def load_standing_sprites(self):
+        """Load all standing animation sprites"""
+        sprite_dir = "assets/Sprites/Villager/Stand"
+        for i in range(53, 75):  # Adjust range based on actual sprite count
+            sprite_path = os.path.join(sprite_dir, f"Villagerstand{i:03d}.png")
+            try:
+                sprite = pygame.image.load(sprite_path).convert_alpha()
+                self.standing_sprites.append(sprite)
+            except pygame.error as e:
+                print(f"Couldn't load sprite: {sprite_path}")
+                print(e)
+    
+    def get_current_sprite(self):
+        """Returns the current sprite based on unit state"""
+        now = pygame.time.get_ticks()
+        if now - self.last_update > self.animation_speed * 1000:
+            self.last_update = now
+            if self.status == unitStatus.MOVING:
+                self.current_frame = (self.current_frame + 1) % len(self.walking_sprites)
+                return self.walking_sprites[self.current_frame]
+            else:
+                self.current_frame = (self.current_frame + 1) % len(self.standing_sprites)
+                return self.standing_sprites[self.current_frame]
+        
+        # Return current frame without updating
+        if self.status == unitStatus.MOVING:
+            return self.walking_sprites[self.current_frame]
+        return self.standing_sprites[self.current_frame]
+
+    def move_towards(self, position, grid):
+        """Handle movement and animation"""
+        result = super().move_towards(position, grid)
+        if result and self.status == unitStatus.MOVING:
+            now = pygame.time.get_ticks()
+            if now - self.last_update > self.animation_speed * 1000:
+                self.last_update = now
+                self.current_frame = (self.current_frame + 1) % len(self.walking_sprites)
+        return result
     
     def start_building(self, building, builders_count):
         """Démarre la construction d'un bâtiment."""
@@ -81,8 +143,11 @@ class Villager(Unit):
                         self.carried_resources += 1
                         self.gathering_progress = 0
 
-    def update(self):
-        """Met à jour le villageois (construction, collecte, etc.)."""
+    def update(self, delta_time):
+        """Update unit state and animation"""
+        super().update(delta_time)
+        if self.status == unitStatus.IDLE:
+            self.current_frame = 0
         delta_time = 1 / 60  # Exemple de 60 FPS pour gérer le temps
         
         if self.status == unitStatus.BUILDING:

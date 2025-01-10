@@ -23,12 +23,12 @@ class GameState:
     STARTING_CONDITIONS = {
         "Maigre": {
             "resources": {"food": 50, "wood": 200, "gold": 50},
-            "buildings": [("Town_center", (10, 10))],
+            "buildings": [("Town_center", (10, 9))],
             "villagers": 3
         },
         "Moyenne": {
             "resources": {"food": 2000, "wood": 2000, "gold": 2000},
-            "buildings": [("Town_center", (10, 10))],
+            "buildings": [("Town_center", (10, 9))],
             "villagers": 3
         },
         "Marines": {

@@ -2,9 +2,10 @@ import pygame
 from models.Resources.Terrain_type import Terrain_type
 import random
 import math
+from models.units.villager import Villager
 
 class GameView:
-    def __init__(self, screen, tile_size=32):
+    def __init__(self, screen, tile_size=50):
         self.screen = screen
         self.tile_size = tile_size
         self.unit_sprites = {}
@@ -265,38 +266,57 @@ class GameView:
         colorized.fill(color, special_flags=pygame.BLEND_RGBA_MULT)
         return colorized
 
-    def render_units(self, units, camera_x, camera_y, zoom_level, selected_unit):
-        """Improved unit rendering with isometric projection and player colors."""
-        tile_width = int(self.tile_size * 2 * zoom_level)
-        tile_height = int(self.tile_size * zoom_level)
-        screen_width, screen_height = self.screen.get_size()
-
-        for unit in sorted(units, key=lambda u: u.get_position()[1]):
-            x_tile, y_tile = unit.get_position()
-            iso_x, iso_y = self.world_to_screen(x_tile, y_tile, camera_x, camera_y, zoom_level)
-            
-            iso_x += screen_width // 2
-            iso_y += screen_height // 4
-
-            if selected_unit == unit:
-                highlight_color = (255, 255, 0)
-                highlight_radius = int(tile_width * 0.5)
-                pygame.draw.circle(self.screen, highlight_color, 
-                                (iso_x, iso_y + tile_height // 2), highlight_radius, 2)
-
-            sprite = self.unit_sprites.get(unit.unit_type)
-            if sprite:
-                scaled_sprite = pygame.transform.scale(sprite, 
-                    (int(sprite.get_width() * zoom_level), int(sprite.get_height() * zoom_level)))
+    def render_unit_paths(self, units, camera_x, camera_y, zoom_level):
+        """Render paths for units that are moving"""
+        for unit in units:
+            path = unit.get_path_for_rendering()
+            if path:
+                # Convert path points to screen coordinates
+                screen_points = []
+                for point in path:
+                    iso_x, iso_y = self.world_to_screen(point[0], point[1], camera_x, camera_y, zoom_level)
+                    iso_x += self.screen.get_width() // 2
+                    iso_y += self.screen.get_height() // 4
+                    screen_points.append((int(iso_x), int(iso_y)))
                 
-                # Apply blue tint for Player 2 units
-                if unit.player_id == 2:
-                    scaled_sprite = self.colorize_surface(scaled_sprite, (100, 100, 255, 255))
-                
-                self.screen.blit(scaled_sprite, 
-                    (iso_x - scaled_sprite.get_width() // 2, 
-                    iso_y - scaled_sprite.get_height() // 2))
-                self.draw_health_bar(self.screen, unit, iso_x, iso_y, zoom_level)
+                if len(screen_points) > 1:
+                    pygame.draw.lines(self.screen, (205, 55, 0), False, screen_points, 1)
+
+    def render_units(self, units, camera_x, camera_y, zoom_level, selected_unit=None):
+        # Draw paths first
+        self.render_unit_paths(units, camera_x, camera_y, zoom_level)
+        for unit in units:
+            if isinstance(unit, Villager):
+                sprite = unit.get_current_sprite()
+                if sprite:
+                    tile_width = int(self.tile_size * 2 * zoom_level)
+                    tile_height = int(self.tile_size * zoom_level)
+                    screen_width, screen_height = self.screen.get_size()
+
+                    x_tile, y_tile = unit.get_position()
+                    iso_x, iso_y = self.world_to_screen(x_tile, y_tile, camera_x, camera_y, zoom_level)
+                    
+                    iso_x += screen_width // 2
+                    iso_y += screen_height // 4
+
+                    if selected_unit == unit:
+                        highlight_color = (255, 255, 0)
+                        highlight_radius = int(tile_width * 0.5)
+                        pygame.draw.circle(self.screen, highlight_color, 
+                                        (iso_x, iso_y + tile_height // 2), highlight_radius, 2)
+
+                    scaled_sprite = pygame.transform.scale(sprite, 
+                        (int(sprite.get_width() * zoom_level), 
+                        int(sprite.get_height() * zoom_level)))
+                    
+                    # Apply blue tint for Player 2 units
+                    if unit.player_id == 2:
+                        scaled_sprite = self.colorize_surface(scaled_sprite, (100, 100, 255, 255))
+                    
+                    self.screen.blit(scaled_sprite, 
+                        (iso_x - scaled_sprite.get_width() // 2, 
+                        iso_y - scaled_sprite.get_height() // 2))
+                    self.draw_health_bar(self.screen, unit, iso_x, iso_y, zoom_level)
 
     def load_unit_sprite(self, unit_type, image_path):
         """Charge un sprite d'unité."""
@@ -308,8 +328,9 @@ class GameView:
         self.building_sprites[building_name] = pygame.image.load(sprite_path).convert_alpha()
 
     def render_buildings(self, buildings, camera_x, camera_y, zoom_level):
-        """Render buildings with player colors"""
+        """Render buildings with foundations"""
         screen_width, screen_height = self.screen.get_size()
+        mouse_pos = pygame.mouse.get_pos()
         
         for building in buildings:
             building_x, building_y = building.pos
@@ -320,14 +341,45 @@ class GameView:
             
             sprite = self.building_sprites.get(building.symbol)
             if sprite:
+                # Scale sprite first to check bounds
                 scaled_sprite = pygame.transform.scale(sprite, 
-                    (int(sprite.get_width() * zoom_level), int(sprite.get_height() * zoom_level)))
+                    (int(sprite.get_width() * zoom_level), 
+                     int(sprite.get_height() * zoom_level)))
                 
-                # Apply blue tint for Player 2 buildings
+                # Calculate sprite bounds for mouse detection
+                sprite_rect = pygame.Rect(
+                    iso_x - scaled_sprite.get_width() // 2,
+                    iso_y - scaled_sprite.get_height() // 2,
+                    scaled_sprite.get_width(),
+                    scaled_sprite.get_height()
+                )
+                
+                # Only draw foundation if mouse is over building
+                if sprite_rect.collidepoint(mouse_pos):
+                    # Calculate foundation size
+                    tile_width = self.tile_size * zoom_level
+                    tile_height = tile_width / 2
+                    
+                    foundation_width = building.size[0] * tile_width 
+                    foundation_height = building.size[1] * tile_height 
+                    
+                    foundation_points = [
+                        (iso_x, iso_y + foundation_height),
+                        (iso_x - foundation_width, iso_y),
+                        (iso_x, iso_y - foundation_height),
+                        (iso_x + foundation_width, iso_y),
+                        (iso_x, iso_y + foundation_height)
+                    ]
+                    
+                    pygame.draw.lines(self.screen, (255, 255, 255), False, foundation_points, 1)
+                
+                # Draw building sprite
                 if building.player_id == 2:
                     scaled_sprite = self.colorize_surface(scaled_sprite, (100, 100, 255, 255))
                 
-                self.screen.blit(scaled_sprite, (iso_x, iso_y))
+                self.screen.blit(scaled_sprite, 
+                    (iso_x - scaled_sprite.get_width() // 2, 
+                     iso_y - scaled_sprite.get_height() // 2))
 
     def draw_health_bar(self, surface, unit, x, y, zoom_level=1.0):
         """Dessine une barre de vie proportionnelle aux PV de l'unité avec zoom"""

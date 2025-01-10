@@ -31,6 +31,12 @@ class Unit:
         self.path = []  # Liste du chemin
         self.grid = map  # Carte sur laquelle l'unité se déplace
         self.walkable_symbols = {Terrain_type.GRASS} 
+        self.current_path = []  # Store current path for visualization
+        self.show_path = True   # Toggle path visibility
+        self.visited_path = []  # Store visited path points
+        self.path_segment_length = 3  # Number of future points to show
+
+   
 
     def update(self):
         """Update unit state"""
@@ -59,10 +65,10 @@ class Unit:
         return self.position
 
     def find_path(self, goal, grid, search_range=10):
+        """A* pathfinding with obstacle avoidance"""
         start = self.position
         print(f"Finding path from {start} to {goal}")
-        print(f"Manhattan distance: {self.heuristic(start, goal)}")
-
+        
         open_set = []
         open_set.append((0, start))
         
@@ -70,6 +76,50 @@ class Unit:
         g_score = {start: 0}
         f_score = {start: self.heuristic(start, goal)}
         visited = set()
+
+        def get_neighbors(pos):
+            """Get valid neighbors avoiding obstacles"""
+            # Only cardinal and diagonal moves
+            basic_moves = [(0, 1), (1, 0), (0, -1), (-1, 0)]  # Cardinal
+            diagonal_moves = [(1, 1), (1, -1), (-1, 1), (-1, -1)]  # Diagonal
+            
+            all_moves = basic_moves + diagonal_moves
+            valid_neighbors = []
+            
+            # Try cardinal moves first (straight path)
+            for dx, dy in basic_moves:
+                new_pos = (pos[0] + dx, pos[1] + dy)
+                if (0 <= new_pos[0] < grid.largeur and 
+                    0 <= new_pos[1] < grid.hauteur and
+                    not grid.is_position_occupied(new_pos[0], new_pos[1])):
+                    valid_neighbors.append(new_pos)
+            
+            # If no cardinal moves available, try diagonal
+            if not valid_neighbors:
+                for dx, dy in diagonal_moves:
+                    new_pos = (pos[0] + dx, pos[1] + dy)
+                    if (0 <= new_pos[0] < grid.largeur and 
+                        0 <= new_pos[1] < grid.hauteur and
+                        not grid.is_position_occupied(new_pos[0], new_pos[1])):
+                        valid_neighbors.append(new_pos)
+            
+            return valid_neighbors
+
+        def get_tile_cost(pos):
+            """Calculate cost penalty for position based on nearby obstacles"""
+            base_cost = 1
+            
+            # Check for buildings directly from grid
+            tile = grid.get_tile(pos[0], pos[1])
+            if tile and hasattr(tile, 'occupant'):
+                if tile.occupant and tile.occupant.unit_type == 'Building':
+                    base_cost += 5  # High cost for buildings
+            
+            # Check for resources
+            if tile and hasattr(tile, 'resource_type') and tile.resource_type:
+                base_cost += 3  # Cost penalty for resources
+                
+            return base_cost
 
         while open_set:
             current = min(open_set, key=lambda x: x[0])[1]
@@ -85,61 +135,44 @@ class Unit:
 
             visited.add(current)
             
-            # Add diagonal movements
-            neighbors = [
-                (0, 1), (1, 0), (0, -1), (-1, 0),  # Cardinal directions
-                (1, 1), (1, -1), (-1, 1), (-1, -1)  # Diagonal directions
-            ]
-            
-            for direction in neighbors:
-                neighbor = (current[0] + direction[0], current[1] + direction[1])
-                
-                if (0 <= neighbor[0] < len(grid) and 
-                    0 <= neighbor[1] < len(grid[0])):
+            for neighbor in get_neighbors(current):
+                if neighbor not in visited:
+                    tile_cost = get_tile_cost(neighbor)
+                    tentative_g_score = g_score[current] + tile_cost
                     
-                    if search_range is not None:
-                        manhattan_dist = abs(neighbor[0] - start[0]) + abs(neighbor[1] - start[1])
-                        if manhattan_dist > search_range:
-                            continue
-
-                    tile_type = grid[neighbor[0]][neighbor[1]].get_type()
-
-                    if tile_type in self.walkable_symbols:
-                        # Adjust movement cost for diagonal movement
-                        move_cost = 1.4 if direction[0] != 0 and direction[1] != 0 else 1
-                        tentative_g_score = g_score[current] + move_cost
-
-                        if (neighbor not in g_score or 
-                            tentative_g_score < g_score[neighbor]):
-                            came_from[neighbor] = current
-                            g_score[neighbor] = tentative_g_score
-                            f_score[neighbor] = tentative_g_score + self.heuristic(neighbor, goal)
-                            if neighbor not in visited:
-                                open_set.append((f_score[neighbor], neighbor))
+                    if (neighbor not in g_score or 
+                        tentative_g_score < g_score[neighbor]):
+                        came_from[neighbor] = current
+                        g_score[neighbor] = tentative_g_score
+                        f_score[neighbor] = tentative_g_score + self.heuristic(neighbor, goal)
+                        open_set.append((f_score[neighbor], neighbor))
 
         print(f"No path found - explored positions: {visited}")
         return []
 
-    def move_towards(self, goal, map, search_range=10):
+    def move_towards(self, goal, grid, search_range=10):
         """Move unit towards goal using pathfinding with speed control."""
         if self.health <= 0:
             return False
+        self.status = unitStatus.MOVING
 
-        current_time = pygame.time.get_ticks() / 1000.0  # Convert to seconds
+        current_time = pygame.time.get_ticks() / 1000.0
         if current_time - self.last_move_time < self.move_cooldown / self.speed:
-            return False  # Too soon to move again
+            return False
 
-        path = self.find_path(goal, map.get_grid(), search_range)
+        # Find new path if needed
+        if not self.current_path:
+            self.current_path = self.find_path(goal, grid, search_range)
+            self.visited_path = [self.position]  # Reset visited path
         
-        if path:
-            next_step = path[0]
+        if self.current_path:
+            next_step = self.current_path[0]
             old_position = self.position
             try:
                 self.position = next_step
-                map.get_tile(old_position[0], old_position[1]).occupant = None
-                map.get_tile(next_step[0], next_step[1]).occupant = self
+                self.visited_path.append(next_step)  # Add to visited path
+                self.current_path.pop(0)  # Remove taken step
                 self.last_move_time = current_time
-                print(f"{self.unit_type} moved to {next_step}")
                 return True
             except Exception as e:
                 print(f"Error moving unit: {e}")
@@ -147,6 +180,13 @@ class Unit:
                 return False
         
         return False
+
+    def get_path_for_rendering(self):
+        """Return current visible path segment"""
+        if self.show_path and self.current_path:
+            # Return current position and next few points
+            return [self.position] + self.current_path[:self.path_segment_length]
+        return []
 
     def atk(self, target_unit):
         """Simule une attaque contre une autre unité."""

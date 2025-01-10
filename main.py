@@ -15,7 +15,7 @@ def main():
     screen_info = pygame.display.Info()
     SCREEN_WIDTH = screen_info.current_w
     SCREEN_HEIGHT = screen_info.current_h
-    TILE_SIZE = 50  # Tile size for the game
+    TILE_SIZE = 70  # Tile size for the game
 
     # Create fullscreen window
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF)
@@ -97,7 +97,7 @@ def main():
                 
                 game_state.view.render_minimap(game_state.carte, game_state.controller.camera_x, game_state.controller.camera_y, game_state.controller.zoom_level, game_state.model['units'],game_state.model['buildings'])
 
-                #game_state.controller.move_unit_to_town_center()
+                game_state.controller.move_unit_to_town_center()
                 game_state.show_fps(clock=clock,font=font,screen=screen)
 
                 # Update display
