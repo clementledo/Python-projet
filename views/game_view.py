@@ -23,6 +23,22 @@ class GameView:
         self.decorations_generated = False  # Flag pour vérifier si les décorations ont été générées
         self.iso_offset_x = 0  # Store isometric offset
         self.iso_offset_y = 0  # Store isometric offset
+
+    def render(self, model, camera_x, camera_y, zoom_level):
+        """Render game state"""
+        self.screen.fill((0, 0, 0))
+        
+        # Render map
+        self.render_map(model['map'], camera_x, camera_y, zoom_level)
+        
+        # Render buildings
+        self.render_buildings(model['buildings'], camera_x, camera_y, zoom_level)
+        
+        # Render units
+        self.render_units(model['units'], camera_x, camera_y, zoom_level)
+        
+        # Update display
+        pygame.display.flip()
     
     def generate_resources(self, carte):
         """Génère une liste de décorations (arbres, broussailles et or) sans écraser les ressources."""

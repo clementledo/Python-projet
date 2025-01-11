@@ -84,6 +84,23 @@ class Resource:
     def get_quantity(self) -> int:
         return self.quantity
 
+    def serialize(self):
+        """Serialize resource data"""
+        return {
+            "resource_type": self.resource_type,
+            "symbol": self.symbol,
+            "starting_resources": self.starting_resources
+        }
+
+    @classmethod
+    def deserialize(cls, data):
+        """Deserialize resource data"""
+        resource = cls(data["resource_type"], 
+                     [data["starting_resources"]["Wood"],
+                      data["starting_resources"]["Gold"],
+                      data["starting_resources"]["Food"]])
+        return resource
+
    # def __repr__(self):
         #return f"Resource(type={self.type}, symbol='{self.symbol}', quantity={self.quantity}
 

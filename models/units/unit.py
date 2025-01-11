@@ -20,6 +20,7 @@ class Unit:
         self.speed = speed
         self.attack_speed = attack_speed
         self.attack_range = 1  # Default melee range
+        self.atk_power = 5  # Default attack power
         self.health = hp
         self.max_health = hp
         self.status = unitStatus.IDLE
@@ -209,27 +210,33 @@ class Unit:
         self.grid.get_tile(self.position[0], self.position[1]).remove_unit(self)
 
     def serialize(self):
-        """Convertit une unité en un dictionnaire sérialisable."""
+        """Serialize unit data"""
         return {
-            "x": self.position[0],
-            "y": self.position[1],
+            "x": self.x,
+            "y": self.y,
+            "position": self.position,
             "unit_type": self.unit_type,
-            "atk": self.atk_power,
             "speed": self.speed,
-            "hp": self.health
+            "attack_speed": self.attack_speed,
+            "attack_range": self.attack_range,
+            "atk_power": self.atk_power,
+            "health": self.health,
+            "max_health": self.max_health,
+            "status": self.status.value,
+            "player_id": self.player_id if hasattr(self, 'player_id') else None
         }
 
-    
     @classmethod
     def deserialize(cls, data, map):
-        """Reconstruit une unité à partir d'un dictionnaire sérialisé."""
-        return cls(
-            x=data["x"],
-            y=data["y"],
-            unit_type=data["unit_type"],
-            atk=data["atk"],
-            speed=data["speed"],
-            hp=data["hp"],
-            map=map  # Passez la carte à l'unité
-        )
+        """Deserialize unit data"""
+        unit = cls(data["x"], data["y"], data["unit_type"], 
+                  data["speed"], data["attack_speed"], data["health"], map)
+        unit.position = data["position"]
+        unit.attack_range = data["attack_range"]
+        unit.atk_power = data["atk_power"]
+        unit.max_health = data["max_health"]
+        unit.status = unitStatus(data["status"])
+        if "player_id" in data:
+            unit.player_id = data["player_id"]
+        return unit
 

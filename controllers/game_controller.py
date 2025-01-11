@@ -19,6 +19,7 @@ class GameController:
         self.zoom_level = 0.5
         self.selected_unit = None
         self.selected_building = None
+        self.player_resources = {}
 
         self.paused = False
 
@@ -353,3 +354,9 @@ class GameController:
         for unit in self.selected_units:
             unit.move_towards(building.pos, self.carte)
         print(f"Moving {len(self.selected_units)} units to building at {building.pos}")
+
+    
+
+    def render_resources(self):
+        """Render resource display"""
+        self.view.render_resource_panel()

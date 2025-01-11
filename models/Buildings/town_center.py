@@ -8,7 +8,8 @@ class Town_center(Building):
         self.training_time = 0
         self.training_cooldown = 50
         self.villager_cost = {"food": 50}
-        self.spawn_offset = (4, 2)  # Spawn position relative to TC
+        self.spawn_offset = (4, 2)
+        self.player_id=1  # Spawn position relative to TC
 
     def train_villager(self, game_state):
         """Train a new villager if resources available"""

@@ -4,8 +4,9 @@ import pygame
 import os
 
 class Villager(Unit):
-    def __init__(self, x, y, map):
+    def __init__(self, x, y, map, player_id=1):
         super().__init__(x, y, "Villager", 0.5, 1.0, 25, map)
+        self.player_id = player_id
         self.is_gathering = False
         self.gathering_progress = 0
         self.gathering_speed = 1
@@ -22,6 +23,7 @@ class Villager(Unit):
         self.building = None
         self.remaining_construction_time = 0
         self.attack_range = 1
+        self.atk_power = 3  # Villager specific attack power
 
         # Animation attributes
         self.walking_sprites = []
@@ -154,3 +156,40 @@ class Villager(Unit):
             self.update_building(delta_time)
         elif self.status == unitStatus.GATHERING:
             self.gather_resources(self.current_resource_type, delta_time)
+
+    def serialize(self):
+        """Serialize villager data"""
+        base_data = super().serialize()
+        villager_data = {
+            "is_gathering": self.is_gathering,
+            "gathering_progress": self.gathering_progress,
+            "gathering_speed": self.gathering_speed,
+            "carry_capacity": self.carry_capacity,
+            "carried_resources": self.carried_resources,
+            "resource_type": self.resource_type,
+            "resource_capacity": self.resource_capacity,
+            "resource_gather_rate": self.resource_gather_rate,
+            "current_resources": self.current_resources,
+            "current_resource_type": self.current_resource_type,
+        }
+        return {**base_data, **villager_data}
+
+    @classmethod
+    def deserialize(cls, data, map):
+        """Deserialize villager data"""
+        villager = cls(data["x"], data["y"], map, data["player_id"])
+        villager.position = data["position"]
+        villager.health = data["health"]
+        villager.max_health = data["max_health"]
+        villager.status = unitStatus(data["status"])
+        villager.is_gathering = data["is_gathering"]
+        villager.gathering_progress = data["gathering_progress"]
+        villager.gathering_speed = data["gathering_speed"]
+        villager.carry_capacity = data["carry_capacity"]
+        villager.carried_resources = data["carried_resources"]
+        villager.resource_type = data["resource_type"]
+        villager.resource_capacity = data["resource_capacity"]
+        villager.resource_gather_rate = data["resource_gather_rate"]
+        villager.current_resources = data["current_resources"]
+        villager.current_resource_type = data["current_resource_type"]
+        return villager

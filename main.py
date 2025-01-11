@@ -1,6 +1,30 @@
 import pygame
 from views.menu import main_menu, pause_menu, settings_menu
 from game_state import GameState
+from views.game_view import GameView
+from controllers.game_controller import GameController
+
+def render_for_load(game_state, screen, TILE_SIZE):
+    """Initialize rendering for loaded game"""
+    game_state.screen = screen
+    game_state.view = GameView(screen, TILE_SIZE)
+    
+    # Load all required sprites
+    game_state.view.load_building_sprite('T', "assets/Buildings/Towncenter.png")
+    game_state.view.load_unit_sprite('Villager', "assets/Sprites/Villager/Stand/Villagerstand001.png")
+    
+    # Initialize game controller with all components
+    game_state.controller = GameController(game_state.model, game_state.view, game_state.carte, TILE_SIZE)
+    game_state.controller.camera_x = game_state.camera_x
+    game_state.controller.camera_y = game_state.camera_y
+    game_state.controller.zoom_level = game_state.zoom_level
+    
+    # Initialize UI and resources
+    #game_state.controller.initialize_ui()
+   # game_state.controller.update_resource_display()
+    
+    # Ensure resource panel is visible
+    game_state.view.show_resource_panel = True
 
 def main():
     
@@ -21,8 +45,8 @@ def main():
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF)
     pygame.display.set_caption('Age of Empires Pygame Clone')
 
-    # Initialize game state
-    game_state = GameState()
+    # Initialize game state with screen
+    game_state = GameState(screen)
 
     # Variable to track the current screen (e.g., "main_menu", "gameplay", "pause")
     current_screen = "main_menu"
@@ -48,12 +72,18 @@ def main():
                     starting_condition=action["starting_condition"]
                 )
                 current_screen = "gameplay"
+                pygame.event.clear()
             elif action == "load":
                 try:
-                    game_state.load_state("save_game.pkl")
-                    current_screen = "gameplay"
-                except FileNotFoundError:
-                    print("No saved game found!")
+                    if game_state.load_state():
+                        
+                        render_for_load(game_state, screen, TILE_SIZE)
+                        current_screen = "gameplay"
+                        pygame.event.clear()
+                    else:
+                        print("Failed to load game state!")
+                except Exception as e:
+                    print(f"Error loading game: {e}")
             elif action == "quit":
                 running = False
 
@@ -111,16 +141,24 @@ def main():
                 game_state.controller.paused = False
                 current_screen = "gameplay"
             elif action == "save":
-                # Save the game
-                game_state.save_state("save_game.pkl")
+                # Save with incremental filename
+                game_state.save_state()  # No filename - will auto-increment
                 print("Game saved!")
             elif action == "load":
-                # Load the game
+                
                 try:
-                    game_state.load_state("save_game.pkl")
-                    print("Game loaded!")
+                    if game_state.load_state():  # No filename - will load latest
+                        # Réinitialise les éléments nécessaires au rendu
+                        render_for_load(game_state, screen, TILE_SIZE)
+
+                        current_screen = "gameplay"
+                        pygame.event.clear()
+                    else:
+                        print("Failed to load game state!")
                 except FileNotFoundError:
                     print("No saved game found!")
+                except Exception as e:
+                    print(f"Error loading game: {e}")
             elif action == "main_menu":
                 # Go to the main menu
                 current_screen = "main_menu"

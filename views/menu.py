@@ -1,13 +1,8 @@
 import pygame
 
 def main_menu(screen, game_state):
-    """
-    Affiche le menu principal.
-    Retourne une action basée sur l'entrée utilisateur.
-    """
+    """Main menu display and handling"""
     bg_image = pygame.image.load("assets/bg_Menu.png").convert()
-    
-    # Create fonts once and store them
     font = pygame.font.SysFont("Cinzel", 48)
 
     buttons = [
@@ -18,7 +13,8 @@ def main_menu(screen, game_state):
     
     for button in buttons:
         text_surface = font.render(button["label"], True, (255, 255, 255))
-        text_rect = text_surface.get_rect(center=(button["rect"].x + button["rect"].width // 2, button["rect"].y + button["rect"].height // 2))
+        text_rect = text_surface.get_rect(center=(button["rect"].x + button["rect"].width // 2, 
+                                                 button["rect"].y + button["rect"].height // 2))
         button["text_surface"] = text_surface
         button["text_rect"] = text_rect
 
@@ -30,16 +26,18 @@ def main_menu(screen, game_state):
             if event.type == pygame.QUIT:
                 return "quit"
 
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Clic gauche
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 for button in buttons:
                     if button["rect"].collidepoint(event.pos):
-                        print(f"Button clicked: {button['label']}")  # Debug message
+                        print(f"Button clicked: {button['label']}")
                         if button["action"] == "start":
                             settings_result = settings_menu(screen)
-                            return settings_result  # Return settings result directly to main.py
+                            return settings_result
                         elif button["action"] == "load":
-                            game_state.load_state()  # Utilise GameState pour charger
-                        return button["action"]
+                            # Return load action instead of handling here
+                            return "load"
+                        else:
+                            return button["action"]
 
         for button in buttons:
             pygame.draw.rect(screen, (90, 42, 42), button["rect"])
@@ -55,7 +53,7 @@ def pause_menu(screen, game_state):
     Retourne une action basée sur l'entrée utilisateur.
     """
     # Charger l'image d'arrière-plan (optionnelle)
-    bg_image = pygame.image.load("assets/bg_Menu2.png").convert()
+    bg_image = pygame.image.load("assets/bg_Menu2.png").convert_alpha()
     font = pygame.font.SysFont("Cinzel", 48)
 
     # Définir les boutons

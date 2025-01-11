@@ -84,19 +84,17 @@ class Building :
         self.useable = False  # Le bâtiment devient inutilisable
 
     def serialize(self):
-            """Retourne une version sérialisable du bâtiment."""
-            return {
-                "name": self.name,
-                "size": self.size,
-                
-                "cost":self.cost,
-                "construction_time": self.construction_time,
-                "hp":self.hp,
-                "useable": self.useable,
-                "symbol": self.symbol,
-                "pos": self.pos
-                
-                # Exclut self.image car ce n'est pas sérialisable
+        """Retourne une version sérialisable du bâtiment."""
+        return {
+            "name": self.name,
+            "size": self.size,
+            "cost": self.cost,
+            "construction_time": self.construction_time,
+            "hp": self.hp,
+            "useable": self.useable,
+            "symbol": self.symbol,
+            "pos": self.pos,
+            "player_id": self.player_id if hasattr(self, 'player_id') else None
         }
     
     @classmethod
