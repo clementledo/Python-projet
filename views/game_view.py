@@ -10,70 +10,104 @@ class GameView:
         self.unit_sprites = {}
         self.building_sprites = {}
         
-        # Load resource panel and icons
-        self.resource_panel = pygame.image.load('assets/resourcecivpanel.png').convert_alpha()
-        self.resource_icons = {
-            "food": pygame.image.load("assets/iconfood.png").convert_alpha(),
-            "wood": pygame.image.load("assets/iconwood.png").convert_alpha(),
-            "gold": pygame.image.load("assets/icongold.png").convert_alpha()
-        }
-        self.font = pygame.font.SysFont('Arial', 24)
-        self.decorations = []  # Liste pour stocker les décorations générées
-        self.decorations_generated = False  # Flag pour vérifier si les décorations ont été générées
-        self.iso_offset_x = 0  # Store isometric offset
-        self.iso_offset_y = 0  # Store isometric offset
+        self.tile_width_half = self.tile_size  # Calculé une seule fois
+        self.tile_height_half = self.tile_size // 2
+
+        # Load resources ONCE in the init
+        try:
+            self.resource_panel = pygame.image.load('assets/resourcecivpanel.png').convert_alpha()
+            self.resource_icons = {
+                "food": pygame.image.load("assets/iconfood.png").convert_alpha(),
+                "wood": pygame.image.load("assets/iconwood.png").convert_alpha(),
+                "gold": pygame.image.load("assets/icongold.png").convert_alpha()
+            }
+            self.decoration_images = {
+                'tree': pygame.image.load('assets/tree.png').convert_alpha(),
+                'gold': pygame.image.load('assets/Gold.png').convert_alpha(),
+                # Ajouter d'autres décorations ici...
+            }
+        except FileNotFoundError as e:
+            print(f"Error loading resources: {e}")
+            # Handle the error appropriately, e.g., exit the game or use placeholder images
+            raise  # Re-raise the exception to stop execution or handle it differently
+
+        try:
+            self.font = pygame.font.Font("assets/fonts/Cinzel-Regular.ttf", 24)
+        except FileNotFoundError:
+            self.font = pygame.font.SysFont('Arial', 24)
+            print("Using default Arial font.")
+
+        self.decorations = []
+        self.decorations_generated = False
+        self.iso_offset_x = 0
+        self.iso_offset_y = 0
+        
+        self.panel_width = 700
+        self.panel_height = 80
+        self.icon_size = 40
+        self.spacing = 150
+        self.panel_x = 1220
+
+        self.scaled_panel = pygame.transform.scale(self.resource_panel, (self.panel_width, self.panel_height))
+
+        self.resource_text_offsets = {} #Stock les offset pour chaque type de ressource
+        for resource_type in self.resource_icons:
+            icon = pygame.transform.scale(self.resource_icons[resource_type], (self.icon_size, self.icon_size))
+            self.resource_icons[resource_type] = icon #Met à jour les icons avec les versions scalées
+            self.resource_text_offsets[resource_type] = self.icon_size + 20
+            
+        
+        self.colorized_surfaces_cache = {}
+
     
     def generate_resources(self, carte):
-        """Génère une liste de décorations (arbres, broussailles et or) sans écraser les ressources."""
-        if getattr(self, "decorations_generated", False):  # Si déjà généré, ne rien faire
+        """Génère les décorations en utilisant les images préchargées."""
+        if self.decorations_generated:
             return
 
-        self.decorations = []  # Réinitialiser la liste des décorations
+        self.decorations = []
 
         for y in range(carte.hauteur):
             for x in range(carte.largeur):
                 tile = carte.grille[y][x]
 
-                if tile.resource:  # Ne pas ajouter de décorations sur des cases avec des ressources
+                if tile.resource:
                     match tile.resource.resource_type:
                         case "Wood":
-                            tree = {
+                            decoration = {
                                 'type': 'tree',
                                 'x': x,
                                 'y': y,
-                                'image': pygame.image.load('assets/tree.png').convert_alpha()
+                                'image': self.decoration_images['tree'] # Utiliser l'image préchargée
                             }
-                            self.decorations.append(tree)
+                            self.decorations.append(decoration)
                         case "Gold":
-                            gold = {
+                            decoration = {
                                 'type': 'gold',
                                 'x': x,
                                 'y': y,
-                                'image': pygame.image.load('assets/Gold.png').convert_alpha()
+                                'image': self.decoration_images['gold'] # Utiliser l'image préchargée
                             }
-                            self.decorations.append(gold)
+                            self.decorations.append(decoration)
                         case _:
                             continue
-
-               
-               
-                    
 
         self.decorations_generated = True
 
 
-
-
     def world_to_screen(self, x, y, camera_x, camera_y, zoom_level):
-        """Convert world coordinates to screen coordinates with isometric projection."""
-        tile_width = int(self.tile_size * 2 * zoom_level)
-        tile_height = int(self.tile_size * zoom_level)
-        
-        # Isometric conversion
-        iso_x = (x - y) * tile_width // 2 - camera_x
-        iso_y = (x + y) * tile_height // 2 - camera_y
-        
+        """Convertit les coordonnées du monde en coordonnées écran avec projection isométrique."""
+
+        # Précalculer les valeurs dépendant du zoom (une seule fois par appel)
+        tile_width_half_zoom = int(self.tile_width_half * zoom_level)
+        tile_height_half_zoom = int(self.tile_height_half * zoom_level)
+
+        # Conversion isométrique (encore plus optimisée)
+        iso_x = (x - y) * tile_width_half_zoom - camera_x
+        iso_y = (x + y) * tile_height_half_zoom - camera_y
+
         return iso_x, iso_y
+
 
     def render_map(self, carte, camera_x, camera_y, zoom_level):
         """
@@ -159,7 +193,7 @@ class GameView:
 
         # Render resource panel last (on top)
         if hasattr(carte, 'resources'):
-            self.render_resources(carte.resources)
+            self.render_resources()
 
 
     def render_minimap(self, map_data, camera_x, camera_y, zoom_level, units, buildings):
@@ -212,7 +246,7 @@ class GameView:
                 'villager': (255, 0, 0),  # Rouge pour les villageois
                 'archer': (0, 0, 255),    # Bleu pour les archers
             }.get(unit.unit_type, (255, 255, 255))  # Blanc par défaut
-            
+
             pygame.draw.rect(
                 minimap_surface,
                 unit_color,
@@ -258,12 +292,19 @@ class GameView:
     )
         
 
-
     def colorize_surface(self, surface, color):
-        """Apply color tint to a surface"""
+        """Applique une teinte de couleur à une surface avec mise en cache."""
+        cache_key = (surface, color)  # Clé unique pour le cache
+
+        if cache_key in self.colorized_surfaces_cache:
+            return self.colorized_surfaces_cache[cache_key]
+
         colorized = surface.copy()
         colorized.fill(color, special_flags=pygame.BLEND_RGBA_MULT)
+
+        self.colorized_surfaces_cache[cache_key] = colorized  # Mettre en cache
         return colorized
+
 
     def render_units(self, units, camera_x, camera_y, zoom_level, selected_unit):
         """Improved unit rendering with isometric projection and player colors."""
@@ -360,48 +401,33 @@ class GameView:
         # ...existing code...
         self.draw_health_bar(surface, unit, x, y, zoom_level)
 
-    def render_resources(self, resources):
-        """Display resource panel with current resources for both players"""
-        # Panel dimensions
-        panel_width = 700
-        panel_height = 80
-        padding = 10
+    def render_resources(self):
+        """Affiche le panneau de ressources avec les ressources actuelles pour les deux joueurs."""
 
-        # Panel positions
-        panel1_x = 1220
+        # Positions des panneaux
         panel1_y = 10
-        panel2_x = 1220
-        panel2_y = 100  # Below player 1's panel
+        panel2_y = 100
 
-        # Resource icon size and spacing
-        icon_size = 40
-        spacing = 150
-
-        # Draw panels for both players
+        # Afficher les panneaux pour les deux joueurs
         for player_id, panel_y in [(1, panel1_y), (2, panel2_y)]:
-            # Draw panel background
-            scaled_panel = pygame.transform.scale(self.resource_panel, (panel_width, panel_height))
-            self.screen.blit(scaled_panel, (panel1_x, panel_y))
+            # Afficher l'arrière-plan du panneau (précalculé)
+            self.screen.blit(self.scaled_panel, (self.panel_x, panel_y))
 
-            # Player label
-            player_text = self.font.render(f"Player {player_id}", True, 
-                                         (255, 215, 0) if player_id == 1 else (0, 191, 255))
-            self.screen.blit(player_text, (panel1_x + 10, panel_y + 5))
+            # Texte du joueur
+            player_text = self.font.render(f"Player {player_id}", True,
+                                           (255, 215, 0) if player_id == 1 else (0, 191, 255))
+            self.screen.blit(player_text, (self.panel_x + 10, panel_y + 5))
 
-            # Display each resource
-            resources_to_display = self.game_state.player_resources[player_id]
+            # Afficher chaque ressource
+            resources_to_display = self.game_state.player_resources[player_id] #Accès direct grace au game_state
             for i, (resource_type, amount) in enumerate(resources_to_display.items()):
-                # Position for this resource
-                x = panel1_x + 40 + (i * spacing)
+                # Position pour cette ressource
+                x = self.panel_x + 40 + (i * self.spacing)
                 y = panel_y + 25
-                
-                # Draw icon
-                resource_type = resource_type.lower()
-                icon = pygame.transform.scale(self.resource_icons[resource_type], (icon_size, icon_size))
-                self.screen.blit(icon, (x, y))
-                
-                # Draw amount
+
+                # Afficher l'icône (déjà mise à l'échelle)
+                self.screen.blit(self.resource_icons[resource_type.lower()], (x, y))
+
+                # Afficher la quantité
                 text = self.font.render(str(amount), True, (255, 255, 255))
-                self.screen.blit(text, (x + icon_size + 20, y + 8))
-
-
+                self.screen.blit(text, (x + self.resource_text_offsets[resource_type.lower()], y + 8))
