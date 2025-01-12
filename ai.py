@@ -261,7 +261,7 @@ class IA:
 
         if len(self.units) + 5 < self.max_unit:
             if self.resources['Wood'] >= 25:
-                position = self.find_building_position('House')
+                position = self.find_nearby_available_position()
                 if position:
                     self.construct_building('House',position)
             else:
@@ -306,25 +306,22 @@ class IA:
         return available_villagers
                 
     
-    def allocate_villagers_for_construction(self, building, building_pos, ai_resources):
+    def allocate_villagers_for_construction(self, building):
         """
         Dynamically allocate Villagers to construct a building.
 
         Args:
         building: The building object being constructed.
-        building_pos: Position of the building on the map.
-        ai_resources: The AI's current resource state.
 
         Returns:
         List of Villagers allocated for the construction.
         """
     # 1. Check building priority
-        priority = building.priority  # Assume each building has a priority attribute (e.g., high, medium, low).
+        if building.name == "TownHall":
+            priority = "high"
 
     # 2. Define the number of Villagers based on priority
         if priority == "high":
-            max_villagers = 6
-        elif priority == "medium":
             max_villagers = 4
         else:  # Low priority
             max_villagers = 2
@@ -336,8 +333,9 @@ class IA:
     # 4. Assign Villagers
         assigned_villagers = available_villagers[:num_villagers]
         for villager in assigned_villagers:
-            villager.start_building(building, num_villlagers)
-
+            villager.start_building(building, len(assigned_villagers))
+        
+    
         return assigned_villagers
 
     def reevaluate_construction(self, building, progress, current_villagers):
@@ -354,3 +352,17 @@ class IA:
             additional_villagers = self.get_idle_villagers()[:2]  # Add 2 more Villagers if needed
             for villager in additional_villagers:
                 villager.start_building(building, building.position)
+
+    def construct_building(self, building_type, position):
+        """
+        Construct a building of the specified type at the given position.
+
+        Args:
+        building_type: The type of building to construct.
+        position: The position on the map to construct the building.
+        """
+        
+        building = building_type(position[0], position[1], self.map_data) 
+        self.allocate_villagers_for_construction(building)
+        self.map_data.place_building(building)
+        self.buildings.append(building)
