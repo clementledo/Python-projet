@@ -196,6 +196,7 @@ class GameView:
             self.render_resources()
 
 
+
     def render_minimap(self, map_data, camera_x, camera_y, zoom_level, units, buildings):
         """
         Rendu avancé de la minimap avec le terrain, les unités et les bâtiments.
@@ -293,16 +294,21 @@ class GameView:
         
 
     def colorize_surface(self, surface, color):
-        """Applique une teinte de couleur à une surface avec mise en cache."""
-        cache_key = (surface, color)  # Clé unique pour le cache
+        """Applique une teinte de couleur à une surface avec mise en cache optimisée."""
+        # Utiliser un identifiant unique pour chaque surface en fonction de ses dimensions et données
+        surface_key = (surface.get_size(), pygame.image.tostring(surface, "RGBA"))
+        cache_key = (surface_key, color)  # Clé unique pour le cache
 
+        # Vérifier si la surface colorisée est déjà en cache
         if cache_key in self.colorized_surfaces_cache:
             return self.colorized_surfaces_cache[cache_key]
 
+        # Colorier la surface
         colorized = surface.copy()
         colorized.fill(color, special_flags=pygame.BLEND_RGBA_MULT)
 
-        self.colorized_surfaces_cache[cache_key] = colorized  # Mettre en cache
+        # Ajouter au cache
+        self.colorized_surfaces_cache[cache_key] = colorized
         return colorized
 
 
@@ -341,8 +347,7 @@ class GameView:
 
     def load_unit_sprite(self, unit_type, image_path):
         """Charge un sprite d'unité."""
-        image = pygame.image.load(image_path).convert_alpha()
-        self.unit_sprites[unit_type] = image
+        self.unit_sprites[unit_type] = pygame.image.load(image_path).convert_alpha()
 
     def load_building_sprite(self, building_name, sprite_path):
         """Charge l'image du bâtiment à partir du chemin donné."""
@@ -371,63 +376,127 @@ class GameView:
                 self.screen.blit(scaled_sprite, (iso_x, iso_y))
 
     def draw_health_bar(self, surface, unit, x, y, zoom_level=1.0):
-        """Dessine une barre de vie proportionnelle aux PV de l'unité avec zoom"""
-        # Ratios pour les dimensions avec zoom
-        LARGEUR_BARRE = self.tile_size * 0.8 * zoom_level
-        HAUTEUR_BARRE = max(2, self.tile_size * 0.08 * zoom_level)
-        OFFSET_Y = self.tile_size * 0.2 * zoom_level
-        BORDER = max(1, int(zoom_level))  # Épaisseur du contour
+        """
+        Dessine une barre de vie proportionnelle aux PV de l'unité avec zoom.
         
-        # Position de la barre
-        pos_x = x - 12 + (self.tile_size * zoom_level - LARGEUR_BARRE) / 8
-        pos_y = y - 3*OFFSET_Y
+        Args:
+            surface: Surface pygame sur laquelle dessiner
+            unit: Unité dont on veut afficher la barre de vie
+            x, y: Position de la barre de vie
+            zoom_level: Niveau de zoom (défaut: 1.0)
+        """
+        # Constantes de style
+        HEALTH_BAR_WIDTH_RATIO = 0.8
+        HEALTH_BAR_HEIGHT_RATIO = 0.08
+        VERTICAL_OFFSET_RATIO = 0.2
+        HORIZONTAL_OFFSET = 12
         
-        # Dessiner le contour noir
-        pygame.draw.rect(surface, (0, 20, 0), 
-                        (pos_x - BORDER, pos_y - BORDER, 
-                         LARGEUR_BARRE + 2*BORDER, HAUTEUR_BARRE + 2*BORDER))
+        # Calcul des dimensions avec zoom
+        bar_width = self.tile_size * HEALTH_BAR_WIDTH_RATIO * zoom_level
+        bar_height = max(2, self.tile_size * HEALTH_BAR_HEIGHT_RATIO * zoom_level)
+        vertical_offset = self.tile_size * VERTICAL_OFFSET_RATIO * zoom_level
+        border_thickness = max(1, int(zoom_level))
         
-        # Barre rouge (fond)
-        pygame.draw.rect(surface, (200, 0, 0), 
-                        (pos_x, pos_y, LARGEUR_BARRE, HAUTEUR_BARRE))
+        # Calcul de la position
+        bar_x = x - HORIZONTAL_OFFSET + (self.tile_size * zoom_level - bar_width) / 8
+        bar_y = y - 3 * vertical_offset
         
-        # Barre verte (PV restants)
+        # Couleurs
+        BORDER_COLOR = (0, 20, 0)
+        BACKGROUND_COLOR = (200, 0, 0)
+        HEALTH_COLOR = (0, 190, 0)
+        
+        # Dimensions des rectangles
+        border_rect = (
+            bar_x - border_thickness,
+            bar_y - border_thickness,
+            bar_width + 2 * border_thickness,
+            bar_height + 2 * border_thickness
+        )
+        
+        base_rect = (bar_x, bar_y, bar_width, bar_height)
+        
+        # Dessin des différentes couches
+        pygame.draw.rect(surface, BORDER_COLOR, border_rect)  # Contour
+        pygame.draw.rect(surface, BACKGROUND_COLOR, base_rect)  # Fond rouge
+        
+        # Barre de vie verte
         if unit.health > 0:
-            ratio_pv = unit.health / unit.max_health
-            pygame.draw.rect(surface, (0, 190, 0),
-                           (pos_x, pos_y, LARGEUR_BARRE * ratio_pv, HAUTEUR_BARRE))
+            health_width = bar_width * (unit.health / unit.max_health)
+            health_rect = (bar_x, bar_y, health_width, bar_height)
+            pygame.draw.rect(surface, HEALTH_COLOR, health_rect)
 
     def draw_unit(self, surface, unit, x, y, zoom_level=1.0):
         # ...existing code...
         self.draw_health_bar(surface, unit, x, y, zoom_level)
 
     def render_resources(self):
-        """Affiche le panneau de ressources avec les ressources actuelles pour les deux joueurs."""
+        """
+        Affiche le panneau de ressources pour les deux joueurs avec leurs ressources actuelles.
+        Inclut le nom du joueur et les icônes/quantités de ressources.
+        """
+        # Constantes de style et de positionnement
+        PANEL_POSITIONS = {
+            1: 10,   # y position pour joueur 1
+            2: 100   # y position pour joueur 2
+        }
 
-        # Positions des panneaux
-        panel1_y = 10
-        panel2_y = 100
+        # Rendu principal pour les deux joueurs
+        for player_id, panel_y in PANEL_POSITIONS.items():
+            self.render_player_panel(player_id, panel_y)
+            
+    def render_resource_icons(self, resources, base_y):
+        """Sous-fonction pour rendre les icônes et quantités de ressources."""
+        
+        TEXT_COLOR = (255, 255, 255)
+        RESOURCE_START_X = 40
+        RESOURCE_Y_OFFSET = 25  
+        
+        for i, (resource_type, amount) in enumerate(resources.items()):
+            resource_key = resource_type.lower()
+            x_pos = self.panel_x + RESOURCE_START_X + (i * self.spacing)
+            y_pos = base_y + RESOURCE_Y_OFFSET
 
-        # Afficher les panneaux pour les deux joueurs
-        for player_id, panel_y in [(1, panel1_y), (2, panel2_y)]:
-            # Afficher l'arrière-plan du panneau (précalculé)
-            self.screen.blit(self.scaled_panel, (self.panel_x, panel_y))
+            # Icône de la ressource
+            self.screen.blit(
+                self.resource_icons[resource_key],
+                (x_pos, y_pos)
+            )
 
-            # Texte du joueur
-            player_text = self.font.render(f"Player {player_id}", True,
-                                           (255, 215, 0) if player_id == 1 else (0, 191, 255))
-            self.screen.blit(player_text, (self.panel_x + 10, panel_y + 5))
+            # Quantité de la ressource
+            amount_text = self.font.render(str(amount), True, TEXT_COLOR)
+            amount_pos = (
+                x_pos + self.resource_text_offsets[resource_key],
+                y_pos + 8
+            )
+            self.screen.blit(amount_text, amount_pos)
 
-            # Afficher chaque ressource
-            resources_to_display = self.game_state.player_resources[player_id] #Accès direct grace au game_state
-            for i, (resource_type, amount) in enumerate(resources_to_display.items()):
-                # Position pour cette ressource
-                x = self.panel_x + 40 + (i * self.spacing)
-                y = panel_y + 25
+    def render_player_panel(self, player_id, panel_y):
+        """Sous-fonction pour rendre le panneau d'un joueur spécifique."""
+        
+        PLAYER_COLORS = {
+            1: (255, 215, 0),    # Or pour joueur 1
+            2: (0, 191, 255)     # Bleu pour joueur 2
+        }
+        
+        PLAYER_NAME_OFFSET_X = 10
+        PLAYER_NAME_OFFSET_Y = 5
+        
+        # Fond du panneau
+        self.screen.blit(self.scaled_panel, (self.panel_x, panel_y))
 
-                # Afficher l'icône (déjà mise à l'échelle)
-                self.screen.blit(self.resource_icons[resource_type.lower()], (x, y))
+        # Nom du joueur
+        player_text = self.font.render(
+            f"Player {player_id}",
+            True,
+            PLAYER_COLORS[player_id]
+        )
+        player_text_pos = (
+            self.panel_x + PLAYER_NAME_OFFSET_X,
+            panel_y + PLAYER_NAME_OFFSET_Y
+        )
+        self.screen.blit(player_text, player_text_pos)
 
-                # Afficher la quantité
-                text = self.font.render(str(amount), True, (255, 255, 255))
-                self.screen.blit(text, (x + self.resource_text_offsets[resource_type.lower()], y + 8))
+        # Rendu des ressources
+        resources = self.game_state.player_resources[player_id]
+        self.render_resource_icons(resources, panel_y)
