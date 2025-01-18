@@ -1,9 +1,8 @@
 from units.unit import Unit 
 from units.villager import Villager
 from Buildings.town_center import Town_center
+from models.map import Map
 
-from unit.unit import Unit 
-from unit.villager import Villager
 from building.town_hall import TownHall
 from resource.tile import Type  
 
@@ -112,6 +111,20 @@ class IA:
                 print(f"AI has spawned a new villager!")
         else:
             print(f"{self.name} cannot afford to spawn a villager.")
+    def get_unit_by_status(self, status):
+        units_with_status = []
+        for unit in self.units:
+            if unit.status == status:  # Assuming unit has a 'status' attribute
+                units_with_status.append(unit)
+        return units_with_status
+ 
+    def change_unit_status(self, unit, new_status):
+        if unit in self.units:
+          unit.status = new_status  
+          print(f"Unit at {unit.position} status changed to {new_status}.")
+        else:
+           print(f"Unit {unit} not found in AI's unit list.")
+
 
     def manage_resources(self):
         """Manage resource gathering by villagers."""
@@ -192,8 +205,22 @@ class IA:
                     if distance < min_distance:
                         min_distance = distance
                         closest_resource = (x, y)
-        print(f"{unit.unit_type} found {resource_type} at {closest_resource}")
+        if closest_resource:
+            print(f"{unit.unit_type} found {resource_type} at {closest_resource}")
         return closest_resource
+
+    def find_nearby_available_position(self, x, y, building_size):
+        max_radius = max(self.map_data.largeur, self.map_data.hauteur)  
+        for radius in range(1, max_radius):
+            for dx in range(-radius, radius + 1):
+                 for dy in range(-radius, radius + 1):
+                    new_x, new_y = x + dx, y + dy 
+                    if 0 <= new_x < self.map_data.largeur and 0 <= new_y < self.map_data.hauteur:
+                        if self.is_area_free(new_x, new_y, building_size[0], building_size[1]):
+                            return new_x, new_y
+
+        print("No valid position found for building.")
+        return None
 
     """actiontype : Attack dans classe uml"""
     def make_decision(self, all_units):
