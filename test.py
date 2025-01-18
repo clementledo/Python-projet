@@ -17,11 +17,11 @@ available_villagers = IA1.get_available_villagers()
 print(available_villagers)
 
 for i in range(3):
-    IA1.allocate_villagers()
+    IA1.execute_begin_phase()
     
 
 game_map.display()
 
-for vila in IA1.units:
+for vila in IA1.units["Villager"]:
     print(vila.position)
 

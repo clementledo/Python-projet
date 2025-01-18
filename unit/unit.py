@@ -1,6 +1,7 @@
 from map import Map
 import time
 from queue import PriorityQueue
+from resource.tile import Type
 
 
 class Unit:
@@ -16,7 +17,7 @@ class Unit:
         self.destination = None
         self.path = [] #
         self.grid = map
-        self.walkable_symbols = {'Food', 'P', None}
+        self.walkable_symbols = {'Food', 'P', None, Type.Farm}
         self.health = hp  # Points de vie
         #map.update_unit_position(self, None, self.position)
     

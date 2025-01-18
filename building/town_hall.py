@@ -18,9 +18,9 @@ class TownHall(Building):
         if not self.is_under_construction:
             self.villager_count += 1
             print(f"Villager {self.villager_count} spawned at the TownHall!")
-            return Villager(self.x, self.y)  # Spawn a new unit (villager)
+            return Villager(self.x, self.y,self.map)  # Spawn a new unit (villager)
         else:
-            print(f"{self.name} is under construction")
+            print(f"{self} is under construction")
             
     def drop_resources(self, resources):
         """

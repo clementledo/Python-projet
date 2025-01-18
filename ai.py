@@ -2,17 +2,24 @@
 from unit.unit import Unit 
 from unit.villager import Villager
 from building.town_hall import TownHall
+from building.farm import Farm
 from resource.tile import Type  
 
 
 class IA:
     def __init__(self, name, map_data):
         self.name = name
-        self.units = []  
+        self.units = {
+            "Villager": []
+        }  
         self.map_data = map_data  # Full map data with obstacles and resources
         self.targets = {}  # Store targets for each unit
         self.resources = {"Food": 0, "Wood": 0, "Gold": 0}  
-        self.buildings = []
+        self.buildings = {
+            "TownHall": [],
+            "Farm": [],
+            "House": []
+        }
         self.max_unit = 5
         
     def initialize_starting_assets(self, x, y):
@@ -21,9 +28,10 @@ class IA:
         self.resources["Wood"] = 350
         self.resources["Gold"] = 100
         
+        self.pos = (x, y)
         town_hall_position = (x, y)  # You can choose a position on the map
         self.place_building(TownHall, town_hall_position)  # Place Town Hall on the map
-
+ 
         # Spawn 3 villagers near the Town Hall
         for i in range(3):
             villager_position = (town_hall_position[0] + i, town_hall_position[1])
@@ -34,7 +42,7 @@ class IA:
             
             if position:
                 villager = Villager(position[0],position[1],self.map_data)
-                self.units.append(villager)
+                self.units["Villager"].append(villager)
                 self.map_data.all_unit.append(villager)
                 self.map_data.update_unit_position(villager, None, position)
             else:
@@ -74,7 +82,7 @@ class IA:
         # First, try to place the building at the initial position
         if self.map_data.is_area_free(x, y, building.size[0], building.size[1]):
             self.map_data.place_building(building)
-            self.buildings.append(building)
+            self.buildings[building_type.__name__].append(building)
             self.deduct_resources(building.cost)
             print(f"AI placed {building_type.__name__} at position ({x}, {y}).")
         else:
@@ -83,12 +91,13 @@ class IA:
             if new_position:
                 building.position = new_position
                 self.map_data.place_building(building)
-                self.buildings.append(building)
+                self.buildings[building_type.__name__].append(building)
                 self.deduct_resources(building.cost)
                 print(f"AI placed {building_type.__name__} near position ({new_position[0]}, {new_position[1]}).")
             else:
                 print("No suitable position found to place the building.")
-
+        return building
+    
     def spawn_villager(self, town_hall):
         """Spawn a new villager if the AI can afford it."""
         villager_cost = {'Food': 50}  # Villager costs 50 Food
@@ -240,15 +249,16 @@ class IA:
 
     def execute_begin_phase(self):
         # 0. Build Farm
-        if self.buildings['Farm'] == 0:
-            position = self.find_nearby_available_position()
+        if len(self.buildings['Farm']) == 0:
+            position = self.find_nearby_available_position(self.pos[0], self.pos[1], (2, 2))
             if position:
-                self.construct_building('Farm', position)
+                self.construct_building(Farm, position)
         
         # 1. Train Villagers if possible
         for town_hall in self.buildings['TownHall']:
             if town_hall.is_idle() and self.resources['Food'] >= 50:
-                town_hall.spawn_villager()
+                villager = town_hall.spawn_villager()
+                self.units["Villager"].append(villager)
 
         # 2. Allocate Villagers to resources
         self.allocate_villagers()
@@ -257,7 +267,7 @@ class IA:
         if len(self.buildings['TownHall']) < 4 and self.resources['Wood'] >= 350:
             position = self.find_building_position('TownHall')
             if position:
-                self.construct_building('TownHall', position)
+                self.construct_building(TownHall, position)
 
         if len(self.units) + 5 < self.max_unit:
             if self.resources['Wood'] >= 25:
@@ -267,42 +277,44 @@ class IA:
             else:
                 self.balance_resources()
         # 4. Adjust strategy if resources are unbalanced
-        self.balance_resources()
-    
+        #self.balance_resources()
+                  
     def allocate_villagers(self):
         available_villagers = self.get_available_villagers()
-        for building in self.buildings:
-            if isinstance(building, TownHall):
-                for _ in range(5):
-                    for villager in available_villagers:
-                        pos = self.find_nearby_resources(villager,Type.Food)
-                        if villager.position != pos:
-                            path = self.find_path(villager, pos)
-                            if path:
-                                next_step = path[0]
-                                villager.move_towards(next_step, self.map_data)
-                        else:
-                            self.gather_resource(villager, pos, 100)
-                        available_villagers.remove(villager)
-                        break
-        if len(available_villagers) > 0:
-            for villager in available_villagers:
-                pos = self.find_nearby_resources(villager,Type.Wood)
+        villager_farm = []
+        for _ in range(len(self.buildings['TownHall'])*4):
+            if available_villagers:
+                villager = available_villagers.pop(0)
+                villager_farm.append(villager)
+        villager_wood = available_villagers
+        
+        for villager in villager_farm:
+            pos = self.find_nearby_resources(villager,Type.Food)
+            if pos:
+                if villager.position != pos:
+                    path = self.find_path(villager, pos)
+                    if path:
+                        next_step = path[0]
+                        villager.move_towards(next_step, self.map_data)
+                else:
+                    self.gather_resource(villager, pos, 100) 
+                         
+        for villager in villager_wood:
+            pos = self.find_nearby_resources(villager,Type.Wood)
+            if pos:
                 if self.get_distance(villager.position, pos) > 1:
                     path = self.find_path(villager, pos)
                     if path:
                         next_step = path[0]
                         villager.move_towards(next_step, self.map_data)
                 else:
-                    self.gather_resource(villager, pos, 100)
-                available_villagers.remove(villager)        
+                    self.gather_resource(villager, pos, 100) 
                     
     def get_available_villagers(self):
         available_villagers = []
-        for villager in self.units: 
-            if isinstance(villager, Villager):
-                if isinstance(villager, Villager) and villager.is_idle():
-                    available_villagers.append(villager)
+        for villager in self.units["Villager"]: 
+            if villager.is_idle():
+                available_villagers.append(villager)
         return available_villagers
                 
     
@@ -317,9 +329,10 @@ class IA:
         List of Villagers allocated for the construction.
         """
     # 1. Check building priority
-        if building.name == "TownHall":
+        if building == TownHall:
             priority = "high"
-
+        else:
+            priority = "low"
     # 2. Define the number of Villagers based on priority
         if priority == "high":
             max_villagers = 4
@@ -362,7 +375,7 @@ class IA:
         position: The position on the map to construct the building.
         """
         
-        building = building_type(position[0], position[1], self.map_data) 
+        building = building_type(position[0], position[1],self, self.map_data) 
         self.allocate_villagers_for_construction(building)
         self.map_data.place_building(building)
-        self.buildings.append(building)
+        self.buildings[building_type.__name__].append(building)

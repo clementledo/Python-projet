@@ -13,7 +13,7 @@ class Building:
         self.cost = cost  # Resource cost to build the building
         self.owner = owner  # Owner of the building (AI or player)
         self.size = size  # Size of the building (width, height)
-        self.is_under_construction = True  # Indicates if the building is being constructed
+        self.is_under_construction = False  # Indicates if the building is being constructed
         self.construction_start_time = None  # Time when construction started
         self.build_time = 0  # Time required to build the building
         self.map = map
@@ -57,6 +57,9 @@ class Building:
             if self.health <= 0:
                 self.destroy()
 
+    def is_idle(self):
+        return True
+    
     def destroy(self):
         print(f"The {self.building_type} at ({self.x}, {self.y}) has been destroyed.")
         self.map.remove_building(self)
