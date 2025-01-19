@@ -310,24 +310,16 @@ class IA:
                     for villager in available_villagers:
                         pos = self.find_nearby_resources(villager,Type.Food)
                         if villager.position != pos:
-                            path = self.find_path(villager, pos)
-                            if path:
-                                next_step = path[0]
-                                villager.move_towards(next_step, self.map_data)
-                        else:
-                            villager.gather_resources()
+                                villager.move_towards(pos, self.map_data)
+                        villager.gather_resources()
                         available_villagers.remove(villager)
                         break
         if len(available_villagers) > 0:
             for villager in available_villagers:
                 pos = self.find_nearby_resources(villager,Type.Wood)
                 if self.get_distance(villager.position, pos) > 1:
-                    path = self.find_path(villager, pos)
-                    if path:
-                        next_step = path[0]
                         villager.move_towards(next_step, self.map_data)
-                else:
-                    villager.gather_resources()
+                villager.gather_resources()
                 available_villagers.remove(villager)        
                     
     def get_available_villagers(self):
