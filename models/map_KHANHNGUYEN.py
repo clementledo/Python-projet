@@ -8,10 +8,11 @@ class Map:
         self.width = width
         self.height = height
         self.grid = [[Tile((x, y), None) for x in range(width)] for y in range(height)]
-        self.all_unit = []
+        self.generer_aleatoire()
+        """self.all_unit = []"""
 
-    def place_tile(self, x, y, tile_type):
-        self.grid[y][x] = Tile((x, y), tile_type)
+    def place_tile(self, x, y):
+        self.grid[y][x] = Tile((x, y))
 
     def get_tile(self, x, y):
         return self.grid[y][x]
@@ -20,8 +21,9 @@ class Map:
         return 0 <= x < self.width and 0 <= y < self.height
 
     def is_tile_occupied(self, x, y):
-        return self.grid[y][x].type != None
+        return self.grid[y][x].resource != None and self.grid[y][x].occupant != None
 
+    
     def is_area_free(self, top_left_x, top_left_y, width, height):
         for i in range(width):
             for j in range(height):
@@ -31,20 +33,15 @@ class Map:
     
     def place_building(self, building):
         """
-        Place a building on the map, marking all the tiles it occupies.
-        Buildings may occupy multiple tiles (e.g., Town Hall is 4x4).
+        Place a building on the map
         """
         x, y = building.position
-        width, height = building.size
 
         # Check if the space is free and within bounds
-        if not self.is_area_free(x, y, width, height):
+        if not self.is_area_free(x, y, 1, 1):
             raise ValueError("Building can't be placed: space is either occupied or out of bounds.")
 
-        # Mark the tiles as occupied by the building
-        for i in range(width):
-            for j in range(height):
-                self.grid[y + j][x + i].type = building.building_type  # Mark the grid with the building reference
+        self.grid[y][x].occupant = building  
 
         #self.buildings_on_map.append(building)
         print(f"Placed {building.__class__.__name__} at position ({x}, {y}).")
@@ -52,13 +49,7 @@ class Map:
     def remove_building(self, building):
         """Remove a building from the map, freeing up its area."""
         x, y = building.position
-        width, height = building.size
-
-        # Mark the area as free
-        for i in range(x, x + width):
-            for j in range(y, y + height):
-                if self.is_within_bounds(i, j):
-                    self.grid[j][i].type = None
+        self.grid[j][i].occupant = None
     
     def update_unit_position(self, unit, old_position, new_position):
         """
@@ -67,12 +58,21 @@ class Map:
         :param old_position: Tuple (x, y) of the unit's previous position.
         :param new_position: Tuple (x, y) of the unit's new position.
         """
+        x, y = old_position 
+        self.grid[y][x].occupant = None
+        x, y = new_position
+        self.grid[y][x].occupant = unit
+        unit.destination = new_position
+        unit.update()
+        
+        """
         if old_position:
             old_tile = self.get_tile(*old_position)
             old_tile.remove_unit(unit)  # Remove the unit from the old tile
         
         new_tile = self.get_tile(*new_position)
         new_tile.add_unit(unit)  # Add the unit to the new tile
+        """
 
     def create_forest(self, nb_tree, pos_x, pos_y):
         radius = int(math.sqrt(nb_tree)) 
@@ -81,8 +81,8 @@ class Map:
             for j in range(pos_y, pos_y + radius):    
                 # Check if the position is within the map boundaries
                 if 0 <= i < self.height and 0 <= j < self.width and self.grid[j][i].type == None:  # Ensure the position is valid
-                    self.place_tile(i, j, Type.Wood) 
-
+                    self.grid[i][j] = Tile(x,y) 
+                    self.grid[i][j].ressource = Resource("Wood", [100, 0, 0])
 
     def create_mine(self, nb_gold, pos_x, pos_y):
         radius = int(math.sqrt(nb_gold))
@@ -90,7 +90,8 @@ class Map:
             for j in range(pos_y, pos_y + radius):    
                 # Check if the position is within the map boundaries
                 if 0 <= i < self.height and 0 <= j < self.width and self.grid[j][i].type == None:  # Ensure the position is valid
-                    self.place_tile(i, j, Type.Gold)
+                    self.grid[i][j] = Tile(x,y) 
+                    self.grid[i][j].ressource = Resource("Gold", [0, 800, 0])
 
     def generer_aleatoire(self, nb_wood = 500, nb_gold = 100, type = 1):
         if type == 1:
