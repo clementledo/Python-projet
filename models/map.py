@@ -9,7 +9,7 @@ class Map:
         self.hauteur = hauteur
         self.grille = [[None for _ in range(largeur)] for _ in range(hauteur)]
         self.generer_aleatoire(type_carte)
-    
+    """l"""
     def get_grid(self):
         return self.grille
     
