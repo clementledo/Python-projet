@@ -191,10 +191,10 @@ class GameView:
             buildings: Liste des bâtiments avec leurs positions et tailles.
         """
         # Dimensions de la minimap
-        minimap_width = 200
-        minimap_height = 200
-        minimap_x = self.screen.get_width() - minimap_width - 10
-        minimap_y = self.screen.get_height() - minimap_height - 10
+        minimap_width = 650  # Anciennement 400
+        minimap_height = 220  # Anciennement 200
+        minimap_x = self.screen.get_width() - minimap_width - 10 + 5  # Ajout de 5 pixels à droite
+        minimap_y = self.screen.get_height() - minimap_height - 10 + 5  # Ajout de 5 pixels en bas
 
         # Couleurs des terrains
         terrain_colors = {
@@ -206,72 +206,61 @@ class GameView:
         minimap_surface = pygame.Surface((minimap_width, minimap_height))
         minimap_surface.fill((50, 50, 50))  # Fond sombre
 
-        # Taille des tuiles sur la minimap
-        tile_width = minimap_width / map_data.largeur
-        tile_height = minimap_height / map_data.hauteur
+        # Calcul dynamique pour que les cases remplissent la minimap
+        tile_width = minimap_width / (map_data.largeur + map_data.hauteur) * 2
+        tile_width = int(tile_width)
+        tile_height = tile_width // 2
 
-        # Rendu du terrain
+        # Décalages pour bien centrer
+        offset_x = minimap_width // 2
+        offset_y = minimap_height // 2 - (map_data.hauteur * tile_height) // 2
+
         for y in range(map_data.hauteur):
             for x in range(map_data.largeur):
                 tile = map_data.grille[y][x]
                 if tile:
-                    color = terrain_colors.get(tile.terrain_type, (100, 100, 100))  # Gris par défaut
-                    pygame.draw.rect(
-                        minimap_surface, 
-                        color, 
-                        (x * tile_width, y * tile_height, tile_width, tile_height)
-                    )
+                    color = terrain_colors.get(tile.terrain_type, (100, 100, 100))
+                    iso_x = (x - y) * tile_width // 2
+                    iso_y = (x + y) * tile_height // 2
+                    iso_x += offset_x
+                    iso_y += offset_y
+                    diamond_points = [
+                        (iso_x, iso_y),
+                        (iso_x + tile_width // 2, iso_y + tile_height // 2),
+                        (iso_x, iso_y + tile_height),
+                        (iso_x - tile_width // 2, iso_y + tile_height // 2),
+                    ]
+                    pygame.draw.polygon(minimap_surface, color, diamond_points)
 
-        # Rendu des unités
+        # Rendu des unités en iso
         for unit in units:
             ux, uy = unit.get_position()
+            iso_ux = (ux - uy) * tile_width // 2 + offset_x
+            iso_uy = (ux + uy) * tile_height // 2 + offset_y
             unit_color = {
-                'villager': (255, 0, 0),  # Rouge pour les villageois
-                'archer': (0, 0, 255),    # Bleu pour les archers
-            }.get(unit.unit_type, (255, 255, 255))  # Blanc par défaut
-            
-            pygame.draw.rect(
-                minimap_surface,
-                unit_color,
-                (ux * tile_width, uy * tile_height, tile_width, tile_height)
-            )
+                'villager': (255, 0, 0),
+                'archer': (0, 0, 255),
+            }.get(unit.unit_type, (255, 255, 255))
+            pygame.draw.circle(minimap_surface, unit_color, (int(iso_ux), int(iso_uy)), 2)
 
-        # Rendu des bâtiments
+        # Rendu des bâtiments en iso
         for building in buildings:
             bx, by = building.pos
-            building_width = building.size[0]-2.5  # Largeur du bâtiment en tuiles
-            building_height = building.size[1]-2.5  # Hauteur du bâtiment en tuiles
+            iso_bx = (bx - by) * tile_width // 2 + offset_x
+            iso_by = (bx + by) * tile_height // 2 + offset_y
+            pygame.draw.rect(minimap_surface, (255, 0, 0),
+                             (iso_bx - 2, iso_by - 2, 4, 4))
 
-            building_color = (255, 0, 0)  # Vert pour les bâtiments
-            
-            pygame.draw.rect(
-                minimap_surface,
-                building_color,
-                (bx * tile_width, by * tile_height, building_width * tile_width, building_height * tile_height)
-            )
-
-        # Rectangle représentant le champ de vision de la caméra
-        map_width_ratio = minimap_width / (map_data.largeur * self.tile_size)
-        map_height_ratio = minimap_height / (map_data.hauteur * self.tile_size)
-        
-        camera_rect_width = self.screen.get_width() * map_width_ratio / zoom_level
-        camera_rect_height = self.screen.get_height() * map_height_ratio / zoom_level
-        camera_rect_x = camera_x * map_width_ratio
-        camera_rect_y = camera_y * map_height_ratio
-
-        # Dessiner le rectangle de la caméra
-        camera_rect = pygame.Rect(camera_rect_x, camera_rect_y, camera_rect_width, camera_rect_height)
-        pygame.draw.rect(minimap_surface, (255, 255, 255), camera_rect, 2)
-        
-        rotated_minimap = pygame.transform.rotate(minimap_surface, -45)
-        
-        # Calculer la position pour blitter la mini-carte
-        minimap_x = self.screen.get_width() - rotated_minimap.get_width() - 10
-        minimap_y = 800
         # Afficher la minimap sur l'écran
-        self.screen.blit(rotated_minimap, (minimap_x, minimap_y))
+        self.screen.blit(minimap_surface, (minimap_x, minimap_y))
 
         # Bordure de la minimap
+        pygame.draw.rect(
+            self.screen,
+            (100, 100, 100),
+            (minimap_x, minimap_y, minimap_width, minimap_height),
+            5  # Anciennement 4
+    )
         
     
         
