@@ -299,9 +299,24 @@ class GameView:
                     tile_height = int(self.tile_size * zoom_level)
                     screen_width, screen_height = self.screen.get_size()
 
-                    x_tile, y_tile = unit.get_position()
-                    iso_x, iso_y = self.world_to_screen(x_tile, y_tile, camera_x, camera_y, zoom_level)
-                    
+                    # Position interpolation for smooth movement
+                    if not hasattr(unit, "display_position"):
+                        unit.display_position = unit.get_position()  # Initialize display position
+
+                    x_target, y_target = unit.get_position()
+                    x_display, y_display = unit.display_position
+
+                    # Interpolation speed
+                    move_speed = 0.1  # Adjust this value for faster/slower interpolation
+
+                    # Linear interpolation towards target position
+                    x_display += (x_target - x_display) * move_speed
+                    y_display += (y_target - y_display) * move_speed
+
+                    # Update the display position
+                    unit.display_position = (x_display, y_display)
+
+                    iso_x, iso_y = self.world_to_screen(x_display, y_display, camera_x, camera_y, zoom_level)
                     iso_x += screen_width // 2
                     iso_y += screen_height // 4
 
@@ -323,6 +338,7 @@ class GameView:
                         (iso_x - scaled_sprite.get_width() // 2, 
                         iso_y - scaled_sprite.get_height() // 2))
                     self.draw_health_bar(self.screen, unit, iso_x, iso_y, zoom_level)
+
 
     def load_unit_sprite(self, unit_type, image_path):
         """Charge un sprite d'unité."""
@@ -461,6 +477,7 @@ class GameView:
                 # Draw amount
                 text = self.font.render(str(amount), True, (255, 255, 255))
                 self.screen.blit(text, (x + icon_size + 20, y + 8))
+                
     def render_game(self, game_state, screen, clock, font):
         """Render the entire game state."""
         controller = game_state.controller
