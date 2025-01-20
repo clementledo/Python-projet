@@ -93,7 +93,7 @@ def handle_load_game(game_state, screen, TILE_SIZE) -> str:
     """Handle loading a game state."""
     try:
         if game_state.load_state(game_state.get_latest_save()):
-            game_state.initialize_game_components(game_state, screen, TILE_SIZE)
+            game_state.initialize_game_components( screen, TILE_SIZE)
             pygame.event.clear()
             return SCREEN_STATES['GAMEPLAY']
         else:
@@ -121,7 +121,7 @@ def handle_pause_menu(screen, game_state, TILE_SIZE) -> tuple[str, bool]:
     elif action == ACTIONS['LOAD']:
         try:
             if game_state.load_state(game_state.get_latest_save()):
-                game_state.initialize_game_components(game_state, screen, TILE_SIZE)
+                game_state.initialize_game_components( screen, TILE_SIZE)
                 pygame.event.clear()
                 return SCREEN_STATES['GAMEPLAY'], True
             else:
