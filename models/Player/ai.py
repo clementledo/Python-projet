@@ -2,7 +2,7 @@ from units.unit import Unit
 from units.villager import Villager
 from Buildings.town_center import Town_center
 from models.map import Map
-<<<<<<< HEAD
+
 from units.unit import unitStatus
 =======
 
@@ -217,20 +217,14 @@ class IA:
         return closest_resource
 
     def find_nearby_available_position(self, x, y, building_size):
-<<<<<<< HEAD
         max_radius = max(self.game_state.largeur, self.game_state.hauteur)  
-=======
         max_radius = max(self.map_data.largeur, self.map_data.hauteur)  
->>>>>>> e908ba706d7d442d2f9a8b51f4da471df092af94
         for radius in range(1, max_radius):
             for dx in range(-radius, radius + 1):
                  for dy in range(-radius, radius + 1):
                     new_x, new_y = x + dx, y + dy 
-<<<<<<< HEAD
                     if 0 <= new_x < self.game_state.largeur and 0 <= new_y < self.game_state.hauteur:
-=======
                     if 0 <= new_x < self.map_data.largeur and 0 <= new_y < self.map_data.hauteur:
->>>>>>> e908ba706d7d442d2f9a8b51f4da471df092af94
                         if self.is_area_free(new_x, new_y, building_size[0], building_size[1]):
                             return new_x, new_y
 
@@ -319,7 +313,6 @@ class IA:
     
     def allocate_villagers(self):
         available_villagers = self.get_available_villagers()
-<<<<<<< HEAD
         villager_farm = []
         for _ in range(len(self.buildings['TownHall'])*4):
             if available_villagers:
@@ -348,7 +341,6 @@ class IA:
                         villager.move_towards(next_step, self.game_state)
                 else:
                     self.gather_resource(villager, pos, 100)
-=======
         for building in self.buildings:
             if building is TownHall:
                 for _ in range(5):
@@ -366,8 +358,6 @@ class IA:
                         villager.move_towards(next_step, self.map_data)
                 villager.gather_resources()
                 available_villagers.remove(villager)        
-                    
->>>>>>> e908ba706d7d442d2f9a8b51f4da471df092af94
     def get_available_villagers(self):
         available_villagers = []
         for villager in self.units: 
