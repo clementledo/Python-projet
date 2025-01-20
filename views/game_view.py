@@ -262,17 +262,18 @@ class GameView:
         # Dessiner le rectangle de la caméra
         camera_rect = pygame.Rect(camera_rect_x, camera_rect_y, camera_rect_width, camera_rect_height)
         pygame.draw.rect(minimap_surface, (255, 255, 255), camera_rect, 2)
-
+        
+        rotated_minimap = pygame.transform.rotate(minimap_surface, -45)
+        
+        # Calculer la position pour blitter la mini-carte
+        minimap_x = self.screen.get_width() - rotated_minimap.get_width() - 10
+        minimap_y = 800
         # Afficher la minimap sur l'écran
-        self.screen.blit(minimap_surface, (minimap_x, minimap_y))
+        self.screen.blit(rotated_minimap, (minimap_x, minimap_y))
 
         # Bordure de la minimap
-        pygame.draw.rect(
-            self.screen,
-            (100, 100, 100),
-            (minimap_x, minimap_y, minimap_width, minimap_height),
-            2
-    )
+        
+    
         
 
 
@@ -471,5 +472,23 @@ class GameView:
                 # Draw amount
                 text = self.font.render(str(amount), True, (255, 255, 255))
                 self.screen.blit(text, (x + icon_size + 20, y + 8))
+    def render_game(self, game_state, screen, clock, font):
+        """Render the entire game state."""
+        controller = game_state.controller
+        view = game_state.view
+        
+        screen.fill((0, 0, 0))
+        
+        self.render_map(game_state.carte, controller.camera_x, controller.camera_y, controller.zoom_level)
+        self.generate_resources(game_state.carte)
+        self.render_units(game_state.model['units'], controller.camera_x, controller.camera_y, 
+                         controller.zoom_level, controller.selected_unit)
+        self.render_buildings(game_state.model['buildings'], controller.camera_x, controller.camera_y, 
+                             controller.zoom_level)
+        self.render_minimap(game_state.carte, controller.camera_x, controller.camera_y,
+                           controller.zoom_level, game_state.model['units'], game_state.model['buildings'])
+        
+        game_state.show_fps(clock=clock, font=font, screen=screen)
+        pygame.display.flip()
 
 

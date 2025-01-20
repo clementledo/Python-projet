@@ -14,8 +14,9 @@ from models.map import Map
 from models.Player.IA import IAPlayer, Strategy
 import pygame
 import traceback
+import json
 
-TILE_SIZE = 50
+TILE_SIZE = 10
 
 
 class GameState:
@@ -192,197 +193,101 @@ class GameState:
             except Exception as e:
                 print(f"Save error: {e}")
                 return False
+            
+################# Load game state from file #################
+    def load_map_and_camera(self, data):
+        """Load map and camera settings."""
+        self.model['map'] = Map.deserialize(data["map"])
+        self.carte = self.model['map']
+        self.camera_x = data["camera_x"]
+        self.camera_y = data["camera_y"]
+        self.zoom_level = data["zoom_level"]
+        print("Map and camera successfully loaded.")
 
-    def load_state(self, filename=None):
-        if filename is None:
-            filename = self.get_latest_save()
-            if filename is None:
-                print("No save files found!")
-                return False
+    def load_buildings(self, data):
+        """Load buildings from saved data."""
+        self.model['buildings'] = []
+        for building_data in data["buildings"]:
+            if building_data["name"] == "Town_center":
+                x, y = building_data["pos"]
+                building = Town_center(pos=(x, y))
+                building.size = building_data["size"]
+                building.hp = building_data["hp"]
+                building.useable = building_data["useable"]
+                self.model['buildings'].append(building)
+        print(f"{len(self.model['buildings'])} buildings successfully loaded.")
+
+    def load_units(self, data):
+        """Load units from saved data."""
+        self.model['units'] = []
+        for unit_data in data["units"]:
+            if unit_data["unit_type"] == "Villager":
+                unit = Villager.deserialize(unit_data, self.model['map'])
+                self.model['units'].append(unit)
+        print(f"{len(self.model['units'])} units successfully loaded.")
+
+    def load_sprites(self):
+        """Load all required sprites."""
+        self.view.load_building_sprite('T', "assets/Buildings/Towncenter.png")
+        self.view.load_unit_sprite('Villager', "assets/Sprites/Villager/Stand/Villagerstand001.png")
+        print("Sprites loaded successfully.")
+
+    def initialize_controller(self):
+        """Initialize the game controller."""
+        self.controller = GameController(self.model, self.view, self.carte, self.tile_size)
+        self.controller.camera_x = self.camera_x
+        self.controller.camera_y = self.camera_y
+        self.controller.zoom_level = self.zoom_level
+
+    def initialize_game_components(self, screen, TILE_SIZE):
+        """Initialize game components after loading."""
+        self.screen = screen
+        self.view = GameView(screen, TILE_SIZE)
         
+        # Load all required sprites
+        self.load_sprites()
+        
+        # Initialize game controller with all components
+        self.initialize_controller()
+        
+        # Ensure resource panel is visible
+        self.view.show_resource_panel = True
+
+    def load_state(self, filepath):
+        """Load game state from a file."""
         try:
-            print(f"Loading save file: {filename}")
-
-            # Charger les données à partir du fichier
-            with open(filename, 'rb') as f:
-                data = pickle.load(f)
+            with open(filepath, 'r') as file:
+                data = json.load(file)
             
-            print("Data successfully loaded from file.")
-
-            # Vérification des données essentielles
-            required_keys = ["map", "camera_x", "camera_y", "zoom_level", "buildings", "units"]
-            for key in required_keys:
-                if key not in data:
-                    raise KeyError(f"Missing required key in saved data: {key}")
+            self.load_map_and_camera(data)
+            self.load_buildings(data)
+            self.load_units(data)
             
-            # Charger la carte
-            self.model['map'] = Map.deserialize(data["map"])
-            self.carte = self.model['map']
-            self.camera_x = data["camera_x"]
-            self.camera_y = data["camera_y"]
-            self.zoom_level = data["zoom_level"]
-            print("Map and camera successfully loaded.")
-
-            # Charger les bâtiments
-            self.model['buildings'] = []
-            for building_data in data["buildings"]:
-                if building_data["name"] == "Town_center":
-                    x, y = building_data["pos"]
-                    building = Town_center(pos=(x, y))
-                    building.size = building_data["size"]
-                    building.hp = building_data["hp"]
-                    building.useable = building_data["useable"]
-                    self.model['buildings'].append(building)
-            print(f"{len(self.model['buildings'])} buildings successfully loaded.")
-
-            # Charger les unités
-            self.model['units'] = []
-            for unit_data in data["units"]:
-                if unit_data["unit_type"] == "Villager":
-                    unit = Villager.deserialize(unit_data, self.model['map'])
-                    self.model['units'].append(unit)
-            print(f"{len(self.model['units'])} units successfully loaded.")
-
-            # Initialiser les composants de jeu
-            if self.screen:
-                print("Initializing game components...")
-                
-                # Effacer l'écran
-                self.screen.fill((0, 0, 0))
-                pygame.display.flip()
-
-                # Charger les sprites et la vue
-                self.view = GameView(self.screen, self.tile_size)
-                self.view.load_building_sprite('T', "assets/Buildings/Towncenter.png")
-                self.view.load_unit_sprite('Villager', "assets/Sprites/Villager/Stand/Villagerstand001.png")
-                print("Sprites loaded successfully.")
-
-                # Initialiser le contrôleur
-                self.controller = GameController(self.model, self.view, self.carte, self.tile_size)
-                self.controller.camera_x = self.camera_x
-                self.controller.camera_y = self.camera_y
-                self.controller.zoom_level = self.zoom_level
-                print("Controller initialized successfully.")
-
-                # Pause pour s'assurer que l'affichage est mis à jour
-                pygame.time.wait(100)
-                print("Game loaded successfully!")
-                return True
-
-        except KeyError as e:
-            print(f"KeyError: {e}")
-            traceback.print_exc()
-        except FileNotFoundError:
-            print(f"File not found: {filename}")
+            print("Game state loaded successfully.")
+            return True
         except Exception as e:
             print(f"Error loading game state: {e}")
-            traceback.print_exc()
-        
-        print("Load sequence failed.")
-        return False
-
-    def load_state1(self, filename):
-        try:
-            print("Starting load sequence...")
-            with open(filename, 'rb') as f:
-                data = pickle.load(f)
-            
-            # Reset game state
-            self.model = {
-                'map': None,
-                'units': [],
-                'buildings': []
-            }
-            
-            # Load map and state
-            self.model['map'] = Map.deserialize(data["map"])
-            self.carte = self.model['map']
-            self.camera_x = data["camera_x"]
-            self.camera_y = data["camera_y"]
-            self.zoom_level = data["zoom_level"]
-            
-            # Load buildings
-            for building_data in data["buildings"]:
-                if building_data["name"] == "Town_center":
-                    x, y = building_data["pos"]
-                    building = Town_center(pos=(x, y))
-                    building.size = building_data["size"]
-                    building.hp = building_data["hp"]
-                    building.useable = building_data["useable"]
-                    building.player_id = building_data.get("player_id", 1)
-                    self.model['buildings'].append(building)
-
-            # Load units
-            for unit_data in data["units"]:
-                if unit_data["unit_type"] == "Villager":
-                    unit = Villager.deserialize(unit_data, self.model['map'])
-                    self.model['units'].append(unit)
-
-            # Initialize game components
-            if self.screen:
-                self.view = GameView(self.screen, self.tile_size)
-                self.controller = GameController(self.model, self.view, self.carte, self.tile_size)
-                self.controller.camera_x = self.camera_x
-                self.controller.camera_y = self.camera_y
-                self.controller.zoom_level = self.zoom_level
-                
-                # Ensure resources are loaded
-                if hasattr(data, 'player_resources'):
-                    self.player_resources = data['player_resources']
-                
-                self.running = True
-                return True
-                
-        except Exception as e:
-            print(f"Error loading game state: {e}")
-            traceback.print_exc()
             return False
 
-    def show_fps(slef,clock,font,screen):
-        
+    
+
+################# END Load game state from file #################
+
+    def show_fps(self, clock, font, screen):
+        """Display FPS on the screen."""
         clock.tick()
-         # Calcul des FPS
         fps = clock.get_fps()
-        
-        # Afficher les FPS sur l'écran
         fps_text = font.render(f"FPS: {int(fps)}", True, (255, 255, 255))
         screen.blit(fps_text, (10, 10))
 
     def update_ai(self):
-        """Update AI players each frame"""
+        """Update AI players each frame."""
         if hasattr(self, 'players'):
             for player in self.players.values():
                 player.update()
 
-    def run_game_loop(self):
-        """Main game loop with AI updates"""
-        clock = pygame.time.Clock()
-        font = pygame.font.Font(None, 36)
-
-        while self.running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-                self.controller.handle_input()
-
-            # Update AI players
-            self.update_ai()
-
-            # Update display
-            if self.view:
-                self.view.render_map(self.carte, self.camera_x, self.camera_y, self.zoom_level)
-                self.view.render_units(self.model['units'], self.camera_x, self.camera_y, self.zoom_level, self.controller.selected_unit)
-                self.view.render_buildings(self.model['buildings'], self.camera_x, self.camera_y, self.zoom_level)
-                self.view.generate_resources(self.carte)
-                self.view.render_minimap(self.carte, self.camera_x, self.camera_y, self.zoom_level, self.model['units'], self.model['buildings'])
-                
-                self.show_fps(clock, font, self.view.screen)
-                pygame.display.flip()
-                
-            clock.tick(60)
-
     def update_and_render(self):
-        """Update game state and render"""
+        """Update game state and render."""
         if self.view and self.controller:
             self.screen.fill((0, 0, 0))
             self.view.render(self.model, self.camera_x, self.camera_y, self.zoom_level)
