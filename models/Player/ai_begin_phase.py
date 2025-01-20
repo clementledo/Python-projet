@@ -1,18 +1,24 @@
 from units.unit import Unit 
 from units.villager import Villager
 from Buildings.town_center import Town_center
+from models.map import Map
 
+<<<<<<< HEAD:models/Player/ai.py
 # from unit.unit import Unit 
 from units.villager import Villager
 from Buildings.town_center import Town_center
+=======
+from units.unit import unitStatus
+from building.town_hall import TownHall
+>>>>>>> origin/premain:models/Player/ai_begin_phase.py
 from resource.tile import Type  
 
 
 class IA:
-    def __init__(self, name, map_data):
-        self.name = name
+    def __init__(self, player_id, game_state):
+        self.player_id = player_id
         self.units = []  
-        self.map_data = map_data  # Full map data with obstacles and resources
+        self.game_state = game_state  # Full map data with obstacles and resources
         self.targets = {}  # Store targets for each unit
         self.resources = {"Food": 0, "Wood": 0, "Gold": 0}  
         self.buildings = []
@@ -30,16 +36,16 @@ class IA:
         # Spawn 3 villagers near the Town Hall
         for i in range(3):
             villager_position = (town_hall_position[0] + i, town_hall_position[1])
-            if self.map_data.is_area_free(villager_position[0], villager_position[1],1,1):
+            if self.game_state.is_area_free(villager_position[0], villager_position[1],1,1):
                 position = villager_position
             else:
                 position = self.find_nearby_available_position(*villager_position, (1, 1))
             
             if position:
-                villager = Villager(position[0],position[1],self.map_data)
+                villager = Villager(position[0],position[1],self.game_state)
                 self.units.append(villager)
-                self.map_data.all_unit.append(villager)
-                self.map_data.update_unit_position(villager, None, position)
+                self.game_state.all_unit.append(villager)
+                self.game_state.update_unit_position(villager, None, position)
             else:
                 print("No valid position found for villager.")
 
@@ -52,14 +58,14 @@ class IA:
 
     def find_nearby_available_position(self, x, y, building_size):
         """Find the nearest available position to build a building."""
-        max_radius = max(self.map_data.width, self.map_data.height)  # Limit search within map bounds
+        max_radius = max(self.game_state.width, self.game_state.height)  # Limit search within map bounds
 
         # Spiral outwards from the target location (x, y)
         for radius in range(1, max_radius):
             for dx in range(-radius, radius + 1):
                 for dy in range(-radius, radius + 1):
                     new_x, new_y = x + dx, y + dy
-                    if self.map_data.is_area_free(new_x, new_y, building_size[0], building_size[1]):
+                    if self.game_state.is_area_free(new_x, new_y, building_size[0], building_size[1]):
                         return new_x, new_y
                     
         return None  # Return None if no suitable area is found
@@ -67,7 +73,7 @@ class IA:
     def place_building(self, building_type, initial_position):
         """Place a building of the specified type at or near the initial position."""
         x, y = initial_position
-        building = building_type(initial_position[0], initial_position[1], "", self.map_data)  # Create the building instance
+        building = building_type(initial_position[0], initial_position[1], "", self.game_state)  # Create the building instance
 
         # Check if there's enough resources to build it
         if not self.can_afford(building.cost):
@@ -75,8 +81,8 @@ class IA:
             return
 
         # First, try to place the building at the initial position
-        if self.map_data.is_area_free(x, y, building.size[0], building.size[1]):
-            self.map_data.place_building(building)
+        if self.game_state.is_area_free(x, y, building.size[0], building.size[1]):
+            self.game_state.place_building(building)
             self.buildings.append(building)
             self.deduct_resources(building.cost)
             print(f"AI placed {building_type.__name__} at position ({x}, {y}).")
@@ -85,7 +91,7 @@ class IA:
             new_position = self.find_nearby_available_position(x, y, building.size)
             if new_position:
                 building.position = new_position
-                self.map_data.place_building(building)
+                self.game_state.place_building(building)
                 self.buildings.append(building)
                 self.deduct_resources(building.cost)
                 print(f"AI placed {building_type.__name__} near position ({new_position[0]}, {new_position[1]}).")
@@ -99,19 +105,33 @@ class IA:
             # Deduct resources and spawn a new villager
             self.deduct_resources(villager_cost)
             villager_position = (town_hall.position[0], town_hall.position[1] + 1)
-            if self.map_data.is_area_free(villager_position[0], villager_position[1],1,1):
+            if self.game_state.is_area_free(villager_position[0], villager_position[1],1,1):
                 position = villager_position
             else:
                 position = self.find_nearby_available_position(*villager_position, (1, 1))
             
             if position:
-                villager = Villager(position[0],position[1],self.map_data)
+                villager = Villager(position[0],position[1],self.game_state)
                 self.units.append(villager)
-                self.map_data.all_unit.append(villager)
-                self.map_data.update_unit_position(villager, None, position)
+                self.game_state.all_unit.append(villager)
+                self.game_state.update_unit_position(villager, None, position)
                 print(f"AI has spawned a new villager!")
         else:
-            print(f"{self.name} cannot afford to spawn a villager.")
+            print(f"{self.player_id} cannot afford to spawn a villager.")
+    def get_unit_by_status(self, status):
+        units_with_status = []
+        for unit in self.units:
+            if unit.status == status:  # Assuming unit has a 'status' attribute
+                units_with_status.append(unit)
+        return units_with_status
+ 
+    def change_unit_status(self, unit, new_status):
+        if unit in self.units:
+          unit.status = new_status  
+          print(f"Unit at {unit.position} status changed to {new_status}.")
+        else:
+           print(f"Unit {unit} not found in AI's unit list.")
+
 
     def manage_resources(self):
         """Manage resource gathering by villagers."""
@@ -133,7 +153,11 @@ class IA:
         """
         self.targets[unit] = target
     
-    def find_nearby_targets(self, unit, all_units, range = 20):
+    def find_nearby_villager(self, enemy_villager):
+        villagers = [u for u in enemy_villager if u.units_type == "Villager"]
+        return villagers[0] if villagers else enemy_villager[0]
+    
+    def find_nearby_targets(self, unit, enemy_units, range = 20):
         """
         Find a nearby target within the given range for a specific unit.
         
@@ -145,7 +169,7 @@ class IA:
         closest_target = None
         min_distance = float('inf')
 
-        for other_unit in all_units:
+        for other_unit in enemy_units:
             if other_unit != unit and other_unit not in self.units:  # Avoid targeting itself or friendly units
                 distance = self.get_distance(unit.position, other_unit.position)
                 if distance <= range and distance < min_distance:
@@ -158,20 +182,19 @@ class IA:
     def gather_resource(self, unit):
 
         x, y = unit.position[0], unit.position[1]
-        resource_type = self.map_data[y][x]  # Check the map tile the unit is on
-        
+        resource_type = self.game_state[y][x]  # Check the map tile the unit is on
         if resource_type == 'F':
-            self.resources["Food"] += 1 
-            print(f"{unit.unit_type} gathered Food. Total: {self.resources['Food']}")
-            self.map_data[y][x] = ' '  # Clear the resource from the map after gathering
+                  self.resources["Food"] += 1 
+                  print(f"{unit.unit_type} gathered Food. Total: {self.resources['Food']}")
+                  self.game_state[y][x] = ' '  # Clear the resource from the map after gathering
         elif resource_type == 'W':
-            self.resources["Wood"] += 1 
-            print(f"{unit.unit_type} gathered Wood. Total: {self.resources['Wood']}")
-            self.map_data[y][x] = ' '
+                  self.resources["Wood"] += 1 
+                  print(f"{unit.unit_type} gathered Wood. Total: {self.resources['Wood']}")
+                  self.game_state[y][x] = ' '
         elif resource_type == 'G':
-            self.resources["Gold"] += 1 
-            print(f"{unit.unit_type} gathered Gold. Total: {self.resources['Gold']}")
-            self.map_data[y][x] = ' '
+                  self.resources["Gold"] += 1 
+                  print(f"{unit.unit_type} gathered Gold. Total: {self.resources['Gold']}")
+                  self.game_state[y][x] = ' '
 
     def find_nearby_resources(self, unit, resource_type):
         """
@@ -185,15 +208,31 @@ class IA:
         min_distance = float('inf')
         
         # Scan the map for nearby resources
-        for y, row in enumerate(self.map_data.grid):
+        for y, row in enumerate(self.game_state.grid):
             for x, tile in enumerate(row):
                 if tile.get_type() == resource_type:
                     distance = self.get_distance(unit.position, (x, y))
                     if distance < min_distance:
                         min_distance = distance
                         closest_resource = (x, y)
-        print(f"{unit.unit_type} found {resource_type} at {closest_resource}")
+        if closest_resource:
+            print(f"{unit.unit_type} found {resource_type} at {closest_resource}")
         return closest_resource
+
+    def find_nearby_available_position(self, x, y, building_size):
+        max_radius = max(self.game_state.largeur, self.game_state.hauteur)  
+        max_radius = max(self.map_data.largeur, self.map_data.hauteur)  
+        for radius in range(1, max_radius):
+            for dx in range(-radius, radius + 1):
+                 for dy in range(-radius, radius + 1):
+                    new_x, new_y = x + dx, y + dy 
+                    if 0 <= new_x < self.game_state.largeur and 0 <= new_y < self.game_state.hauteur:
+                    if 0 <= new_x < self.map_data.largeur and 0 <= new_y < self.map_data.hauteur:
+                        if self.is_area_free(new_x, new_y, building_size[0], building_size[1]):
+                            return new_x, new_y
+
+        print("No valid position found for building.")
+        return None
 
     """actiontype : Attack dans classe uml"""
     def make_decision(self, all_units):
@@ -209,7 +248,7 @@ class IA:
                     path = self.find_path(unit, target.position)
                     if path:
                         next_step = path[0]
-                        unit.move_towards(next_step, self.map_data)
+                        unit.move_towards(next_step, self.game_state)
                 elif target.health > 0:
                     # Attack the target if within range
                     unit.atk(target)
@@ -231,7 +270,7 @@ class IA:
                         path = self.find_path(unit, resource_location)
                         if path:
                             next_step = path[0]
-                            unit.move_towards(next_step, self.map_data)
+                            unit.move_towards(next_step, self.game_state)
                         else:
                             # If the unit is already on the resource tile, gather it
                             self.gather_resource(unit)
@@ -242,7 +281,7 @@ class IA:
 
     def find_path(self, unit, destination):
         #Find the shortest path to the destination using map data.
-        return unit.find_path(destination, self.map_data.grid)
+        return unit.find_path(destination, self.game_state.grid)
 
     def execute_begin_phase(self):
         # 0. Build Farm
@@ -277,32 +316,51 @@ class IA:
     
     def allocate_villagers(self):
         available_villagers = self.get_available_villagers()
+        villager_farm = []
+        for _ in range(len(self.buildings['TownHall'])*4):
+            if available_villagers:
+                villager = available_villagers.pop(0)
+                villager_farm.append(villager)
+        villager_wood = available_villagers
+        
+        for villager in villager_farm:
+            pos = self.find_nearby_resources(villager,Type.Food)
+            if pos:
+                if villager.position != pos:
+                    path = self.find_path(villager, pos)
+                    if path:
+                        next_step = path[0]
+                        villager.move_towards(next_step, self.game_state)
+                else:
+                    self.gather_resource(villager, pos, 100) 
+                         
+        for villager in villager_wood:
+            pos = self.find_nearby_resources(villager,Type.Wood)
+            if pos:
+                if self.get_distance(villager.position, pos) > 1:
+                    path = self.find_path(villager, pos)
+                    if path:
+                        next_step = path[0]
+                        villager.move_towards(next_step, self.game_state)
+                else:
+                    self.gather_resource(villager, pos, 100)
         for building in self.buildings:
             if isinstance(building, Town_center):
                 for _ in range(5):
                     for villager in available_villagers:
                         pos = self.find_nearby_resources(villager,Type.Food)
                         if villager.position != pos:
-                            path = self.find_path(villager, pos)
-                            if path:
-                                next_step = path[0]
-                                villager.move_towards(next_step, self.map_data)
-                        else:
-                            villager.gather_resources()
+                                villager.move_towards(pos, self.map_data)
+                        villager.gather_resources()
                         available_villagers.remove(villager)
                         break
         if len(available_villagers) > 0:
             for villager in available_villagers:
                 pos = self.find_nearby_resources(villager,Type.Wood)
                 if self.get_distance(villager.position, pos) > 1:
-                    path = self.find_path(villager, pos)
-                    if path:
-                        next_step = path[0]
                         villager.move_towards(next_step, self.map_data)
-                else:
-                    villager.gather_resources()
+                villager.gather_resources()
                 available_villagers.remove(villager)        
-                    
     def get_available_villagers(self):
         available_villagers = []
         for villager in self.units: 
@@ -312,25 +370,23 @@ class IA:
         return available_villagers
                 
     
-    def allocate_villagers_for_construction(self, building, building_pos, ai_resources):
+    def allocate_villagers_for_construction(self, building):
         """
         Dynamically allocate Villagers to construct a building.
 
         Args:
         building: The building object being constructed.
-        building_pos: Position of the building on the map.
-        ai_resources: The AI's current resource state.
 
         Returns:
         List of Villagers allocated for the construction.
         """
     # 1. Check building priority
-        priority = building.priority  # Assume each building has a priority attribute (e.g., high, medium, low).
-
+        if building == TownHall:
+            priority = "high"
+        else:
+            priority = "low"
     # 2. Define the number of Villagers based on priority
         if priority == "high":
-            max_villagers = 6
-        elif priority == "medium":
             max_villagers = 4
         else:  # Low priority
             max_villagers = 2
@@ -342,9 +398,16 @@ class IA:
     # 4. Assign Villagers
         assigned_villagers = available_villagers[:num_villagers]
         for villager in assigned_villagers:
+<<<<<<< HEAD:models/Player/ai.py
             villager.start_building(building, num_villagers)
 
+=======
+            villager.start_building(building, len(assigned_villagers))
+        
+    
+>>>>>>> origin/premain:models/Player/ai_begin_phase.py
         return assigned_villagers
+
 
     def reevaluate_construction(self, building, progress, current_villagers):
         """
@@ -360,3 +423,17 @@ class IA:
             additional_villagers = self.get_idle_villagers()[:2]  # Add 2 more Villagers if needed
             for villager in additional_villagers:
                 villager.start_building(building, building.position)
+    
+    def construct_building(self, building_type, position):
+        """
+        Construct a building of the specified type at the given position.
+
+        Args:
+        building_type: The type of building to construct.
+        position: The position on the map to construct the building.
+        """
+        
+        building = building_type(position[0], position[1],self, self.game_state) 
+        self.allocate_villagers_for_construction(building)
+        self.map_data.place_building(building)
+        self.buildings[building_type.__name__].append(building)
