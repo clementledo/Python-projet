@@ -4,9 +4,6 @@ from Buildings.town_center import Town_center
 from models.map import Map
 
 from units.unit import unitStatus
-=======
-
->>>>>>> e908ba706d7d442d2f9a8b51f4da471df092af94
 from building.town_hall import TownHall
 from resource.tile import Type  
 
