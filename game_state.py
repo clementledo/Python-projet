@@ -176,8 +176,7 @@ class GameState:
                 "camera_y": self.camera_y,
                 "zoom_level": self.zoom_level,
                 "player_resources": self.player_resources,
-                "resources_on_map": [(resource.position, resource.serialize()) 
-                                   for resource in self.model['map'].resources]
+                "resources_on_map": [(pos, amount) for pos, amount in self.model['map'].resources.items()]
             }
             
             # Generate new save filename
@@ -186,8 +185,9 @@ class GameState:
                 filepath = os.path.join(self.save_dir, f"save_game{save_num}.pkl")
 
             try:
-                with open(filepath, "wb") as save_file:
-                    pickle.dump(save_data, save_file)
+                os.makedirs(os.path.dirname(filepath), exist_ok=True)
+                with open(filepath, 'wb') as save_file:
+                    pickle.dump(save_data, save_file, protocol=pickle.HIGHEST_PROTOCOL)
                 print(f"Game saved as {filepath}!")
                 return True
             except Exception as e:
@@ -256,15 +256,30 @@ class GameState:
     def load_state(self, filepath):
         """Load game state from a file."""
         try:
-            with open(filepath, 'r') as file:
-                data = json.load(file)
+            
+            
+            # Check if file exists
+            if not os.path.exists(filepath):
+                print(f"Save file not found: {filepath}")
+                return False
+                
+            # Load binary data using pickle
+            with open(filepath, 'rb') as file:
+                data = pickle.load(file)
             
             self.load_map_and_camera(data)
             self.load_buildings(data)
             self.load_units(data)
             
-            print("Game state loaded successfully.")
+            print(f"Game state loaded successfully from {filepath}")
             return True
+            
+        except FileNotFoundError:
+            print(f"Save file not found: {filepath}")
+            return False
+        except pickle.UnpicklingError as e:
+            print(f"Error unpickling save file: {e}")
+            return False
         except Exception as e:
             print(f"Error loading game state: {e}")
             return False
