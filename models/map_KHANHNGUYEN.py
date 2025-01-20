@@ -9,7 +9,7 @@ class Map:
         self.height = height
         self.grid = [[Tile((x, y), None) for x in range(width)] for y in range(height)]
         self.generer_aleatoire()
-        self.all_unit = []
+        """self.all_unit = []"""
 
     def place_tile(self, x, y):
         self.grid[y][x] = Tile((x, y))
