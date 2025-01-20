@@ -62,7 +62,7 @@ def initialize_game() -> tuple:
     SCREEN_HEIGHT = screen_info.current_h
     TILE_SIZE = 70
     
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF)
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption('Age of Empires Pygame Clone')
     
     game_state = GameState(screen)

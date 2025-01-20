@@ -37,6 +37,9 @@ class GameView:
         # Render units
         self.render_units(model['units'], camera_x, camera_y, zoom_level)
         
+        # Render minimap
+        self.render_minimap(model['map'], camera_x, camera_y, zoom_level, model['units'], model['buildings'])  # Appel de la mini carte
+        
         # Update display
         pygame.display.flip()
     
@@ -180,90 +183,88 @@ class GameView:
 
 
     def render_minimap(self, map_data, camera_x, camera_y, zoom_level, units, buildings):
-        """
-        Rendu avancé de la minimap avec le terrain, les unités et les bâtiments.
-        
-        Args:
-            map_data: Carte contenant les données de la grille.
-            camera_x, camera_y: Position de la caméra.
-            zoom_level: Niveau de zoom.
-            units: Liste des unités avec leurs positions.
-            buildings: Liste des bâtiments avec leurs positions et tailles.
-        """
-        # Dimensions de la minimap
-        minimap_width = 650  # Anciennement 400
-        minimap_height = 220  # Anciennement 200
-        minimap_x = self.screen.get_width() - minimap_width - 10 + 5  # Ajout de 5 pixels à droite
-        minimap_y = self.screen.get_height() - minimap_height - 10 + 5  # Ajout de 5 pixels en bas
+        """Dessine une mini carte isométrique 2.5D en bas à droite de l'écran."""
+        minimap_width = 400
+        minimap_height = 400
+        background_height = 200  # Hauteur réduite pour le rectangle gris
+        padding_x = 10  # Padding horizontal inchangé
+        padding_y = -185  # Réduit le padding vertical pour rapprocher la mini carte du bord
+        screen_width, screen_height = self.screen.get_size()
+        minimap_x = screen_width - minimap_width - padding_x
+        minimap_y = screen_height - minimap_height - padding_y  # Mise à jour du padding vertical
 
-        # Couleurs des terrains
-        terrain_colors = {
-            Terrain_type.GRASS: (34, 139, 34),  # Vert pour l'herbe
-            Terrain_type.WATER: (65, 105, 225),  # Bleu pour l'eau
-        }
+        # Surface transparente pour dessiner la mini carte
+        minimap_surface = pygame.Surface((minimap_width, minimap_height), pygame.SRCALPHA)
 
-        # Surface de la minimap
-        minimap_surface = pygame.Surface((minimap_width, minimap_height))
-        minimap_surface.fill((50, 50, 50))  # Fond sombre
+        # Dessiner un rectangle gris plus petit (hauteur = background_height)
+        pygame.draw.rect(
+            minimap_surface,
+            (50, 50, 50, 200),
+            (0, 0, minimap_width, background_height)
+        )
 
-        # Calcul dynamique pour que les cases remplissent la minimap
-        tile_width = minimap_width / (map_data.largeur + map_data.hauteur) * 2
-        tile_width = int(tile_width)
-        tile_height = tile_width // 2
+        # Paramètres de base pour isométrie
+        base_tile_w = 8
+        base_tile_h = 4
 
-        # Décalages pour bien centrer
-        offset_x = minimap_width // 2
-        offset_y = minimap_height // 2 - (map_data.hauteur * tile_height) // 2
+        # 1) Calcul du bounding box isométrique
+        min_ix = float('inf')
+        max_ix = -float('inf')
+        min_iy = float('inf')
+        max_iy = -float('inf')
 
         for y in range(map_data.hauteur):
             for x in range(map_data.largeur):
+                ix = (x - y) * base_tile_w // 2
+                iy = (x + y) * base_tile_h // 2
+                min_ix = min(min_ix, ix)
+                max_ix = max(max_ix, ix)
+                min_iy = min(min_iy, iy)
+                max_iy = max(max_iy, iy)
+
+        # 2) Calcul de l'échelle pour tout faire tenir dans la mini carte
+        iso_width = max_ix - min_ix + 1
+        iso_height = max_iy - min_iy + 1
+        scale_x = minimap_width / (iso_width if iso_width else 1)
+        scale_y = minimap_height / (iso_height if iso_height else 1)
+        scale = min(scale_x, scale_y)
+
+        # Petite fonction pour transformer (x, y) => (iso_x, iso_y) => (scaled_x, scaled_y)
+        def iso_transform(xx, yy):
+            ix = (xx - yy) * base_tile_w // 2
+            iy = (xx + yy) * base_tile_h // 2
+            sx = (ix - min_ix) * scale
+            sy = (iy - min_iy) * scale
+            return int(sx), int(sy)
+
+        # 3) Dessiner la carte avec lignes de grille
+        for y in range(map_data.hauteur):
+            for x in range(map_data.largeur):
                 tile = map_data.grille[y][x]
-                if tile:
-                    color = terrain_colors.get(tile.terrain_type, (100, 100, 100))
-                    iso_x = (x - y) * tile_width // 2
-                    iso_y = (x + y) * tile_height // 2
-                    iso_x += offset_x
-                    iso_y += offset_y
-                    diamond_points = [
-                        (iso_x, iso_y),
-                        (iso_x + tile_width // 2, iso_y + tile_height // 2),
-                        (iso_x, iso_y + tile_height),
-                        (iso_x - tile_width // 2, iso_y + tile_height // 2),
-                    ]
-                    pygame.draw.polygon(minimap_surface, color, diamond_points)
+                if not tile:
+                    continue
+                iso_x, iso_y = iso_transform(x, y)
+                color = (34, 139, 34) if tile.terrain_type == Terrain_type.GRASS else (0, 191, 255)
+                pygame.draw.rect(minimap_surface, color, (iso_x, iso_y, 3, 3))
+                # Dessiner les lignes de grille autour de chaque tuile
+                pygame.draw.rect(minimap_surface, (0, 0, 0), (iso_x, iso_y, 3, 3), 1)
 
-        # Rendu des unités en iso
-        for unit in units:
-            ux, uy = unit.get_position()
-            iso_ux = (ux - uy) * tile_width // 2 + offset_x
-            iso_uy = (ux + uy) * tile_height // 2 + offset_y
-            unit_color = {
-                'villager': (255, 0, 0),
-                'archer': (0, 0, 255),
-            }.get(unit.unit_type, (255, 255, 255))
-            pygame.draw.circle(minimap_surface, unit_color, (int(iso_ux), int(iso_uy)), 2)
+        # Dessiner bâtiments avec lignes de grille
+        for b in buildings:
+            iso_x, iso_y = iso_transform(b.pos[0], b.pos[1])
+            pygame.draw.rect(minimap_surface, (255, 0, 0), (iso_x, iso_y, 4, 4))
+            # Dessiner les lignes de grille autour des bâtiments
+            pygame.draw.rect(minimap_surface, (0, 0, 0), (iso_x, iso_y, 4, 4), 1)
 
-        # Rendu des bâtiments en iso
-        for building in buildings:
-            bx, by = building.pos
-            iso_bx = (bx - by) * tile_width // 2 + offset_x
-            iso_by = (bx + by) * tile_height // 2 + offset_y
-            pygame.draw.rect(minimap_surface, (255, 0, 0),
-                             (iso_bx - 2, iso_by - 2, 4, 4))
+        # Dessiner unités avec lignes de grille
+        for u in units:
+            iso_x, iso_y = iso_transform(u.get_position()[0], u.get_position()[1])
+            pygame.draw.circle(minimap_surface, (0, 255, 0), (iso_x, iso_y), 2)
+            # Dessiner les lignes de grille autour des unités
+            pygame.draw.rect(minimap_surface, (0, 0, 0), (iso_x - 2, iso_y - 2, 4, 4), 1)
 
-        # Afficher la minimap sur l'écran
+        # Affichage final
         self.screen.blit(minimap_surface, (minimap_x, minimap_y))
-
-        # Bordure de la minimap
-        pygame.draw.rect(
-            self.screen,
-            (100, 100, 100),
-            (minimap_x, minimap_y, minimap_width, minimap_height),
-            5  # Anciennement 4
-    )
-        
-    
-        
 
 
     def colorize_surface(self, surface, color):
