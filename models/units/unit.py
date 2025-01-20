@@ -36,14 +36,17 @@ class Unit:
         self.show_path = True   # Toggle path visibility
         self.visited_path = []  # Store visited path points
         self.path_segment_length = 3  # Number of future points to show
-
+        self.movement_accumulator = 0.0  # Stocke la progression du déplacement 
+        self.last_move_time = pygame.time.get_ticks() / 1000.0
    
 
     def update(self):
         """Update unit state"""
         if self.status == unitStatus.MOVING:
             if self.destination:
-                if self.move_towards(self.destination, self.grid):
+                # Appeler move_towards pour effectuer le déplacement progressif
+                self.move_towards(self.destination, self.grid)
+                if not self.current_path:  # Arrivé à destination
                     self.status = unitStatus.IDLE
                     self.destination = None
         elif self.status == unitStatus.ATTACKING:
@@ -152,35 +155,53 @@ class Unit:
         return []
 
     def move_towards(self, goal, grid, search_range=10):
-        """Move unit towards goal using pathfinding with speed control."""
+        """Move unit towards goal using pathfinding and speed control."""
         if self.health <= 0:
             return False
         self.status = unitStatus.MOVING
 
-        current_time = pygame.time.get_ticks() / 1000.0
-        if current_time - self.last_move_time < self.move_cooldown / self.speed:
+        # Calculer le temps écoulé depuis le dernier update
+        current_time = pygame.time.get_ticks() / 1000.0  # Convertir en secondes
+        elapsed_time = current_time - self.last_move_time
+        
+        # Accumuler la progression du mouvement basée sur la vitesse
+        self.movement_accumulator += elapsed_time * self.speed  # self.speed est en tuiles/seconde
+        
+        # Si on n'a pas accumulé assez de mouvement pour avancer d'une tuile
+        if self.movement_accumulator < 1.0:
             return False
 
-        # Find new path if needed
+        # Trouver un nouveau chemin si nécessaire
         if not self.current_path:
             self.current_path = self.find_path(goal, grid, search_range)
-            self.visited_path = [self.position]  # Reset visited path
-        
+            self.visited_path = [self.position]
+
+        # S'il y a un chemin à suivre
         if self.current_path:
-            next_step = self.current_path[0]
-            old_position = self.position
-            try:
-                self.position = next_step
-                self.visited_path.append(next_step)  # Add to visited path
-                self.current_path.pop(0)  # Remove taken step
-                self.last_move_time = current_time
-                return True
-            except Exception as e:
-                print(f"Error moving unit: {e}")
-                self.position = old_position
-                return False
-        
+            # Tant qu'on a assez de mouvement accumulé et qu'il reste du chemin
+            while self.movement_accumulator >= 1.0 and self.current_path:
+                next_step = self.current_path[0]
+                old_position = self.position
+                
+                try:
+                    # Mettre à jour la position
+                    self.position = next_step
+                    self.visited_path.append(next_step)
+                    self.current_path.pop(0)
+                    
+                    # Réduire l'accumulateur d'une unité pour chaque tuile parcourue
+                    self.movement_accumulator -= 1.0
+                    
+                except Exception as e:
+                    print(f"Error moving unit: {e}")
+                    self.position = old_position
+                    return False
+
+            self.last_move_time = current_time
+            return True
+
         return False
+
 
     def get_path_for_rendering(self):
         """Return current visible path segment"""

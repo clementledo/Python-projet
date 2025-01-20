@@ -5,7 +5,7 @@ import os
 
 class Villager(Unit):
     def __init__(self, x, y, map, player_id=1):
-        super().__init__(x, y, "Villager", 0.5, 1.0, 25, map)
+        super().__init__(x, y, "Villager", 0.8, 2, 25, map)
         self.player_id = player_id
         self.is_gathering = False
         self.gathering_progress = 0
