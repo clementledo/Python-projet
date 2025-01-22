@@ -1,8 +1,7 @@
 import math
 import random
-from resource.tile import Tile
-from resource.tile import Type
-from resource.wood import Wood
+from models.Resources.Tile import Tile
+
 class Map:
     def __init__(self, width, height):
         self.width = width
