@@ -1,8 +1,10 @@
-from units.unit import Unit 
-from units.villager import Villager
-from Buildings.town_center import Town_center
-from models.map import Map
+from models.units.unit import Unit 
+from models.units.villager import Villager
+from models.Buildings.town_center import Town_center
+from map_KHANHNGUYEN import Map
 
+from models.units.unit import unitStatus
+from models.Buildings.town_center import Town_center
 <<<<<<< HEAD:models/Player/ai.py
 # from unit.unit import Unit 
 from units.villager import Villager
