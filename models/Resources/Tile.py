@@ -34,15 +34,15 @@ class Tile:
 
     
     def serialize(self):
-        """Sérialise la tuile sous forme de dictionnaire."""
+        """Serialize tile data"""
         return {
-            "terrain_type": self.terrain_type.name,
-            "x":self.x,
-            "y":self.y,
-             "occupant":self.occupant # Supposons que terrain_type est un Enum
+            "terrain_type": self.terrain_type,  # Changed from terrain_type.name
+            "x": self.x,
+            "y": self.y,
+            "occupant": self.occupant,
+            "resource": self.resource.serialize() if hasattr(self, 'resource') and self.resource else None
         }
 
-    @classmethod
     @classmethod
     def deserialize(cls, data):
         """Recrée une tuile à partir des données sérialisées."""

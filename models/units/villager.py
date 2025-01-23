@@ -1,9 +1,19 @@
-from .unit import Unit # type: ignore
+from .unit import Unit
 from .unit import unitStatus
+import pygame
+import os
 
 class Villager(Unit):
-    def __init__(self, x, y,map):
-        super().__init__(x, y, "Villager", 2, 0.8, 25, map)
+    def __init__(self, x, y, map, player_id=1):
+        super().__init__(x, y, "Villager", 0.5, 1.0, 25, map)
+        self.player_id = player_id
+        self.is_gathering = False
+        self.gathering_progress = 0
+        self.gathering_speed = 1
+        self.carry_capacity = 10
+        self.carried_resources = 0
+        self.resource_type = None
+        self.nearest_dropoff = None
         self.resource_capacity = 20  # Peut transporter 20 ressources
         self.resource_gather_rate = 25 / 60  # 25 ressources par minute (en secondes)
         self.training_time = 25  # Temps d'entraînement en secondes
@@ -12,6 +22,68 @@ class Villager(Unit):
         self.current_resource_type = None
         self.building = None
         self.remaining_construction_time = 0
+        self.attack_range = 1
+        self.atk_power = 3  # Villager specific attack power
+
+        # Animation attributes
+        self.walking_sprites = []
+        self.standing_sprites = []
+        self.current_frame = 0
+        self.animation_speed = 0.6  # Seconds per frame
+        self.last_update = pygame.time.get_ticks()
+        self.load_walking_sprites()
+        self.load_standing_sprites()
+    
+    def load_walking_sprites(self):
+        """Load all walking animation sprites"""
+        sprite_dir = "assets/Sprites/Villager/Walk"
+        for i in range(16, 76):  # 75 frames
+            sprite_path = os.path.join(sprite_dir, f"Villagerwalk{i:03d}.png")
+            try:
+                sprite = pygame.image.load(sprite_path).convert_alpha()
+                self.walking_sprites.append(sprite)
+            except pygame.error as e:
+                print(f"Couldn't load sprite: {sprite_path}")
+                print(e)
+
+    def load_standing_sprites(self):
+        """Load all standing animation sprites"""
+        sprite_dir = "assets/Sprites/Villager/Stand"
+        for i in range(53, 75):  # Adjust range based on actual sprite count
+            sprite_path = os.path.join(sprite_dir, f"Villagerstand{i:03d}.png")
+            try:
+                sprite = pygame.image.load(sprite_path).convert_alpha()
+                self.standing_sprites.append(sprite)
+            except pygame.error as e:
+                print(f"Couldn't load sprite: {sprite_path}")
+                print(e)
+    
+    def get_current_sprite(self):
+        """Returns the current sprite based on unit state"""
+        now = pygame.time.get_ticks()
+        if now - self.last_update > self.animation_speed * 1000:
+            self.last_update = now
+            if self.status == unitStatus.MOVING:
+                self.current_frame = (self.current_frame + 1) % len(self.walking_sprites)
+                return self.walking_sprites[self.current_frame]
+            else:
+                self.current_frame = (self.current_frame + 1) % len(self.standing_sprites)
+                return self.standing_sprites[self.current_frame]
+        
+        # Return current frame without updating
+        if self.status == unitStatus.MOVING:
+            return self.walking_sprites[self.current_frame]
+        return self.standing_sprites[self.current_frame]
+
+    def move_towards(self, position, grid):
+        """Handle movement and animation"""
+        result = super().move_towards(position, grid)
+        if result and self.status == unitStatus.MOVING:
+            now = pygame.time.get_ticks()
+            if now - self.last_update > self.animation_speed * 1000:
+                self.last_update = now
+                self.current_frame = (self.current_frame + 1) % len(self.walking_sprites)
+        return result
     
     def start_building(self, building, builders_count):
         """Démarre la construction d'un bâtiment."""
@@ -43,11 +115,81 @@ class Villager(Unit):
             resources_gathered = self.resource_capacity
         print(f"{resources_gathered} unités de {resource_type} collectées.")
     
-    def update(self):
-        """Met à jour le villageois (construction, collecte, etc.)."""
+    def gather(self, resource_pos):
+        tile = self.grid.get_tile(resource_pos[0], resource_pos[1])
+        if tile.resource:
+            self.resource_type = self.get_resource_type(tile.resource)
+            self.status = unitStatus.GATHERING
+            self.is_gathering = True
+            self.destination = resource_pos
+
+    def get_resource_type(self, resource):
+        """Map resource to resource type"""
+        resource_mapping = {
+            "W": "wood",
+            "F": "food",
+            "G": "gold"
+        }
+        return resource_mapping.get(resource.symbol, "food")
+
+    def update_gathering(self):
+        """Update gathering progress"""
+        if self.status == unitStatus.GATHERING:
+            if self.carried_resources >= self.carry_capacity:
+                self.return_resources()
+            else:
+                tile = self.grid.get_tile(self.position[0], self.position[1])
+                if tile.resource:
+                    self.gathering_progress += self.gathering_speed
+                    if self.gathering_progress >= 100:
+                        self.carried_resources += 1
+                        self.gathering_progress = 0
+
+    def update(self, delta_time):
+        """Update unit state and animation"""
+        super().update(delta_time)
+        if self.status == unitStatus.IDLE:
+            self.current_frame = 0
         delta_time = 1 / 60  # Exemple de 60 FPS pour gérer le temps
         
         if self.status == unitStatus.BUILDING:
             self.update_building(delta_time)
         elif self.status == unitStatus.GATHERING:
             self.gather_resources(self.current_resource_type, delta_time)
+
+    def serialize(self):
+        """Serialize villager data"""
+        base_data = super().serialize()
+        villager_data = {
+            "is_gathering": self.is_gathering,
+            "gathering_progress": self.gathering_progress,
+            "gathering_speed": self.gathering_speed,
+            "carry_capacity": self.carry_capacity,
+            "carried_resources": self.carried_resources,
+            "resource_type": self.resource_type,
+            "resource_capacity": self.resource_capacity,
+            "resource_gather_rate": self.resource_gather_rate,
+            "current_resources": self.current_resources,
+            "current_resource_type": self.current_resource_type,
+        }
+        return {**base_data, **villager_data}
+
+    @classmethod
+    def deserialize(cls, data, map):
+        """Deserialize villager data"""
+        villager = cls(data["x"], data["y"], map, data["player_id"])
+        villager.position = data["position"]
+        villager.health = data["health"]
+        villager.max_health = data["max_health"]
+        villager.status = unitStatus(data["status"])
+        villager.is_gathering = data["is_gathering"]
+        villager.gathering_progress = data["gathering_progress"]
+        villager.gathering_speed = data["gathering_speed"]
+        villager.carry_capacity = data["carry_capacity"]
+        villager.carried_resources = data["carried_resources"]
+        villager.resource_type = data["resource_type"]
+        villager.resource_capacity = data["resource_capacity"]
+        villager.resource_gather_rate = data["resource_gather_rate"]
+        villager.current_resources = data["current_resources"]
+        villager.current_resource_type = data["current_resource_type"]
+        return villager

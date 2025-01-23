@@ -16,9 +16,10 @@ class GameController:
         self.selected_unit = None
         self.map_width = carte.largeur
         self.map_height = carte.hauteur
-        self.zoom_level = 1.5
+        self.zoom_level = 0.5
         self.selected_unit = None
         self.selected_building = None
+        self.player_resources = {}
 
         self.paused = False
 
@@ -292,9 +293,9 @@ class GameController:
             # Move all selected units or first unit if none selected
             if self.selected_units:
                 for unit in self.selected_units:
-                    unit.move_towards(town_center.pos, self.carte)
+                    unit.move_to(town_center.pos, self.carte)
             elif self.model['units']:
-                self.model['units'][0].move_towards(town_center.pos, self.carte)
+                self.model['units'][3].move_towards(town_center.pos, self.carte)
 
     def get_unit_at_position(self, screen_pos):
         """Get unit at screen position."""
@@ -353,3 +354,9 @@ class GameController:
         for unit in self.selected_units:
             unit.move_towards(building.pos, self.carte)
         print(f"Moving {len(self.selected_units)} units to building at {building.pos}")
+
+    
+
+    def render_resources(self):
+        """Render resource display"""
+        self.view.render_resource_panel()

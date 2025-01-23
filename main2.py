@@ -8,8 +8,8 @@ from views.terminal_view import TerminalView
 
 def main():
     # Créer une nouvelle partie
-    tiles_x = 10
-    tiles_y = 10
+    tiles_x = 50
+    tiles_y = 50
     game_state = GameState()
     game_state.start_new_game(None, tiles_x, tiles_y, tile_size=1,use_terminal_view=True)
 

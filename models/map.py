@@ -9,7 +9,7 @@ class Map:
         self.hauteur = hauteur
         self.grille = [[None for _ in range(largeur)] for _ in range(hauteur)]
         self.generer_aleatoire(type_carte)
-    
+    """l"""
     def get_grid(self):
         return self.grille
     
@@ -24,6 +24,42 @@ class Map:
         for y in range(self.hauteur):
             for x in range(self.largeur):
                 self.grille[y][x] = Tile(x, y)
+    
+
+    def is_position_occupied(self, x, y, game_state=None):
+        """Vérifie si une position est occupée par une unité ou un bâtiment"""
+        if not game_state:
+            return False
+            
+        # Vérification des unités
+        for unit in game_state.model['units']:
+            if unit.x == x and unit.y == y:
+                return True
+                
+        # Vérification des bâtiments
+        for building in game_state.model['buildings']:
+            bx, by = building.pos
+            width, height = building.size
+            # Vérifie si la position est dans l'emprise du bâtiment
+            if (x >= bx and x < bx + width and 
+                y >= by and y < by + height):
+                return True
+                
+        return False
+
+    def is_walkable(self, x, y):
+        """Vérifie si une position est accessible pour une unité"""
+        # Check map boundaries
+        if x < 0 or x >= self.largeur or y < 0 or y >= self.hauteur:
+            return False
+            
+        # Check if tile exists and is walkable terrain
+        try:
+            tile = self.grille[y][x]
+            return tile.terrain_type == Terrain_type.GRASS
+        except IndexError:
+            return False
+
 
     def generer_aleatoire(self, type_carte="centre_ressources"):
         """
@@ -40,17 +76,19 @@ class Map:
 
         if type_carte in ["ressources_generales","low_ressources"]:
             
-            pourcent = 10 if type_carte == "ressources_generales" else 25
+            pourcent = 50 if type_carte == "ressources_generales" else 65
             
             # Répartition aléatoire des ressources sur toute la carte
             for _ in range((self.largeur * self.hauteur) // pourcent):  # Environ 10% des cases ont des ressources
                 x = random.randint(0, self.largeur - 1)
                 y = random.randint(0, self.hauteur - 1)
-                resource_type = random.choice(["Wood", "Gold"])
-                if resource_type == "Wood":
-                    self.grille[y][x].resource = Resource(resource_type, [100, 0, 0]) 
-                else:
-                    self.grille[y][x].resource = Resource(resource_type, [0, 800, 0]) 
+                if not self.is_position_occupied(x,y):
+
+                    resource_type = random.choice(["Wood", "Gold"])
+                    if resource_type == "Wood":
+                        self.grille[y][x].resource = Resource(resource_type, [100, 0, 0]) 
+                    else:
+                        self.grille[y][x].resource = Resource(resource_type, [0, 800, 0]) 
 
         elif type_carte == "centre_ressources":
             # Concentration des ressources au centre de la carte
@@ -59,9 +97,10 @@ class Map:
             radius_x = self.largeur // 6  # Réduction du rayon horizontal
             radius_y = self.hauteur // 6  # Réduction du rayon vertical
 
-            for _ in range((self.largeur * self.hauteur) // 15):  # Environ 10% des cases ont des ressources
+            for _ in range((self.largeur * self.hauteur) // 25):  # Environ 10% des cases ont des ressources
                 while True:
                     # Générer des positions dans une forme ovale
+
                     x = random.randint(0, self.largeur - 1)
                     y = random.randint(0, self.hauteur - 1)
                     if ((x - centre_x) ** 2) / (radius_x ** 2) + ((y - centre_y) ** 2) / (radius_y ** 2) <= 1:
@@ -70,7 +109,7 @@ class Map:
                 self.grille[y][x].resource = Resource("Gold", [0, 800, 0])  # Exemple de ressources
 
             # Ajouter des ressources "Wood" en dehors du cercle
-            for _ in range((self.largeur * self.hauteur) // 25):  # Environ 10% des cases ont des ressources
+            for _ in range((self.largeur * self.hauteur) // 65):  # Environ 10% des cases ont des ressources
                 while True:
                     # Générer des positions en dehors de l'ovale
                     x = random.randint(0, self.largeur - 1)
@@ -152,6 +191,16 @@ class Map:
             for ligne in data["grille"]
         ]
         return map_instance
+
+    def get_resources(self):
+        """Retourne une liste de positions de ressources sur la carte"""
+        resources = []
+        for y in range(self.hauteur):
+            for x in range(self.largeur):
+                tile = self.get_tile(x, y)
+                if tile and isinstance(tile, Resource):
+                    resources.append((x, y))
+        return resources
 
     def __repr__(self):
         return f"Map({self.largeur}x{self.hauteur})"
