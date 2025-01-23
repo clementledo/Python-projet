@@ -2,8 +2,8 @@
 import pygame
 
 class Building :
-    def __init__(self, name,cost, construction_time, hp, size, symbol, pos) :
-        self.cost = cost
+    def __init__(self, name, construction_time, hp, size, symbol, pos) :
+        self.cost = {"Wood":0,"Gold":0}
         self.construction_time = construction_time
         self.hp = hp
         self.symbol = symbol
