@@ -107,7 +107,8 @@ class Map:
         base_trees = nb_wood // 20
         min_trees = int(base_trees*0.8)  # Allow slight variation
         max_trees = int(base_trees*1.2)        
-    
+        trees_left = nb_wood
+
         for i in range(20):
         # Randomly choose the number of trees for each forest (up to remaining trees)
             nb_tree = random.randint(min_trees, max_trees)  # Ensure we leave enough for the other forests
