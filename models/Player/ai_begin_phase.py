@@ -1,12 +1,7 @@
-<<<<<<< HEAD:models/Player/ai.py
 # from unit.unit import Unit 
 from units.villager import Villager
 from Buildings.town_center import Town_center
-=======
-from units.unit import unitStatus
-from building.town_hall import TownHall
->>>>>>> origin/premain:models/Player/ai_begin_phase.py
-from resource.tile import Type  
+from Resources.Resource_Type import type_resource
 
 
 class IA:
@@ -222,7 +217,6 @@ class IA:
                  for dy in range(-radius, radius + 1):
                     new_x, new_y = x + dx, y + dy 
                     if 0 <= new_x < self.game_state.largeur and 0 <= new_y < self.game_state.hauteur:
-                    if 0 <= new_x < self.map_data.largeur and 0 <= new_y < self.map_data.hauteur:
                         if self.is_area_free(new_x, new_y, building_size[0], building_size[1]):
                             return new_x, new_y
 
@@ -277,7 +271,11 @@ class IA:
     def find_path(self, unit, destination):
         #Find the shortest path to the destination using map data.
         return unit.find_path(destination, self.game_state.grid)
-
+    
+    def get_main_base(self):
+        town_centers = [b for b in self.buildings if b.__class__.__name__ == "Town_center"]
+        return town_centers[0] if town_centers else None
+    
     def execute_begin_phase(self):
         # 0. Build Farm
         if self.buildings['Farm'] == 0:
@@ -319,7 +317,7 @@ class IA:
         villager_wood = available_villagers
         
         for villager in villager_farm:
-            pos = self.find_nearby_resources(villager,Type.Food)
+            pos = self.find_nearby_resources(villager,type_resource.Food)
             if pos:
                 if villager.position != pos:
                     path = self.find_path(villager, pos)
@@ -330,7 +328,7 @@ class IA:
                     self.gather_resource(villager, pos, 100) 
                          
         for villager in villager_wood:
-            pos = self.find_nearby_resources(villager,Type.Wood)
+            pos = self.find_nearby_resources(villager,type_resource.Wood)
             if pos:
                 if self.get_distance(villager.position, pos) > 1:
                     path = self.find_path(villager, pos)
@@ -343,7 +341,7 @@ class IA:
             if isinstance(building, Town_center):
                 for _ in range(5):
                     for villager in available_villagers:
-                        pos = self.find_nearby_resources(villager,Type.Food)
+                        pos = self.find_nearby_resources(villager,type_resource.Food)
                         if villager.position != pos:
                                 villager.move_towards(pos, self.map_data)
                         villager.gather_resources()
@@ -351,7 +349,7 @@ class IA:
                         break
         if len(available_villagers) > 0:
             for villager in available_villagers:
-                pos = self.find_nearby_resources(villager,Type.Wood)
+                pos = self.find_nearby_resources(villager,type_resource.Wood)
                 if self.get_distance(villager.position, pos) > 1:
                         villager.move_towards(next_step, self.map_data)
                 villager.gather_resources()
@@ -376,7 +374,7 @@ class IA:
         List of Villagers allocated for the construction.
         """
     # 1. Check building priority
-        if building == TownHall:
+        if building == Town_center:
             priority = "high"
         else:
             priority = "low"
@@ -392,15 +390,8 @@ class IA:
 
     # 4. Assign Villagers
         assigned_villagers = available_villagers[:num_villagers]
-        for villager in assigned_villagers:
-<<<<<<< HEAD:models/Player/ai.py
+        for villager in assigned_villagers:           
             villager.start_building(building, num_villagers)
-
-=======
-            villager.start_building(building, len(assigned_villagers))
-        
-    
->>>>>>> origin/premain:models/Player/ai_begin_phase.py
         return assigned_villagers
 
 
