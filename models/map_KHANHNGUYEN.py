@@ -1,6 +1,7 @@
 import math
 import random
 from models.Resources.Tile import Tile
+from models.Resources.Resource import Resource
 
 class Map:
     def __init__(self, width, height):
