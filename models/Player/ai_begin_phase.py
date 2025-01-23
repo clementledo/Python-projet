@@ -68,7 +68,7 @@ class IA:
     def place_building(self, building_type, initial_position):
         """Place a building of the specified type at or near the initial position."""
         x, y = initial_position
-        building = building_type(initial_position[0], initial_position[1], "", self.game_state)  # Create the building instance
+        building = building_type(initial_position)  # Create the building instance
 
         # Check if there's enough resources to build it
         if not self.can_afford(building.cost):
