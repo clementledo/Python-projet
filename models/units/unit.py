@@ -26,7 +26,7 @@ class Unit:
         self.destination = None
         self.path = []  # Liste du chemin
         self.grid = map  # Carte sur laquelle l'unité se déplace
-        self.walkable_symbols = {Type.Food, Type.Farm, None} 
+        self.walkable_symbols = {Type.Food, Type.Farm, None, "Farm", "Food"} 
         self.health = hp  # Points de vie
         self.max_health = hp 
         self.status = unitStatus.IDLE
@@ -87,7 +87,7 @@ class Unit:
                         if manhattan_dist > search_range:
                             continue
 
-                    tile_type = grid[neighbor[0]][neighbor[1]].get_type()
+                    
                     tile_occupant = grid[neighbor[0]][neighbor[1]].occupant
 
                     if tile_occupant in self.walkable_symbols :
