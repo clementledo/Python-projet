@@ -217,6 +217,9 @@ class Unit:
         return []
 
     def atk(self, target_unit):
+        current_time = pygame.time.get_ticks() / 1000.0
+        if current_time - self.last_attack_time < 1.0:  # Enforce 1 second cooldown
+            return
         """Simule une attaque contre une autre unité."""
         self.status == unitStatus.ATTACKING
         if self.health <= 0:
