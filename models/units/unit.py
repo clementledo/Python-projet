@@ -2,6 +2,8 @@ import pygame
 from asyncio import PriorityQueue
 from models.Resources.Terrain_type import Terrain_type  # Adjust the import path as necessary
 from enum import Enum
+from models.Buildings.building import Building
+from models.Resources.Tile import Type
 
 class unitStatus(Enum):
     IDLE = "idle"
@@ -24,7 +26,7 @@ class Unit:
         self.destination = None
         self.path = []  # Liste du chemin
         self.grid = map  # Carte sur laquelle l'unité se déplace
-        self.walkable_symbols = {Terrain_type.GRASS} 
+        self.walkable_symbols = {Type.Food, Type.Farm, None} 
         self.health = hp  # Points de vie
         self.max_health = hp 
         self.status = unitStatus.IDLE
@@ -86,8 +88,9 @@ class Unit:
                             continue
 
                     tile_type = grid[neighbor[0]][neighbor[1]].get_type()
+                    tile_occupant = grid[neighbor[0]][neighbor[1]].occupant
 
-                    if tile_type in self.walkable_symbols:
+                    if tile_occupant in self.walkable_symbols :
                         # Adjust movement cost for diagonal movement
                         move_cost = 1.4 if direction[0] != 0 and direction[1] != 0 else 1
                         tentative_g_score = g_score[current] + move_cost
@@ -107,15 +110,16 @@ class Unit:
         """Move unit towards goal using pathfinding with speed control."""
         if self.health <= 0:
             return False
-
+        if self.position == goal:
+            return False  # Already at the goal
         current_time = pygame.time.get_ticks() / 1000.0  # Convert to seconds
         if current_time - self.last_move_time < self.move_cooldown / self.speed:
             return False  # Too soon to move again
-
-        path = self.find_path(goal, map.get_grid(), search_range)
+        if not self.path or self.path[-1] != goal:
+            self.path = self.find_path(goal, map.get_grid(), search_range)
         
-        if path:
-            next_step = path[0]
+        if self.path:
+            next_step = self.path.pop(0)
             old_position = self.position
             try:
                 self.position = next_step

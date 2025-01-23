@@ -3,12 +3,25 @@ from typing import Optional, Union
 from models.Resources.Terrain_type import Terrain_type
 from models.Resources.Ressource import Resource
 
-from ..units.unit import Unit
-from ..Buildings.building import Building
+
+from enum import Enum
+
+class Type(Enum):
+    Wood = "Wood"
+    Food = "Food"
+    Gold = "Gold"
+    Town_center = "Town_center"
+    House = "House"
+    Camp = "Camp"
+    Farm = "Farm"
+    Barracks = "Barracks"
+    Stable = "Stable"
+    Archery_Range = "Archery_Range"
+    Keep = "Keep"
 
 
 class Tile:
-    def __init__(self, x: int, y: int, terrain_type= Terrain_type.GRASS, occupant: Optional[Union["Unit", "Building"]] = None,starting_resources=None):
+    def __init__(self, x: int, y: int, terrain_type= Terrain_type.GRASS, occupant = None,starting_resources=None):
         self.x = x
         self.y = y
         self.tile_type = terrain_type

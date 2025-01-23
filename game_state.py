@@ -6,6 +6,7 @@ from models.Buildings.town_center import Town_center
 from models.Buildings.archery_range import Archery_Range
 from models.Buildings.building import Building
 from models.units.unit import Unit
+from models.Resources.Tile import Type
 from views.game_view import GameView
 from controllers.game_controller import GameController
 from models.map import Map
@@ -35,10 +36,13 @@ class GameState:
         # Create map
         self.carte = Map(tiles_x, tiles_y)
         self.carte.generer_aleatoire(type_carte="ressources_generales") 
-
+        self.carte.get_tile(10,15).occupant = Type.Town_center
+        self.carte.get_tile(10,14).occupant = Type.Town_center
+        self.carte.get_tile(11,15).occupant = Type.Town_center
+        self.carte.get_tile(11,14).occupant = Type.Town_center
         # Initialize units
         units = [
-            Villager(15, 12, self.carte),
+            Villager(18, 12, self.carte),
             Villager(3, 26, self.carte),
             Archer(20, 12, self.carte),
             Horseman(20, 15, self.carte)
@@ -46,7 +50,8 @@ class GameState:
         #Initialize buildings
         buildings =[
             Town_center((10, 10)),
-            Archery_Range((10,26))
+            Archery_Range((10,26)),
+            Archery_Range((14,10))
         ]
         self.model = {'map':self.carte,'units': units,'buildings':buildings}
 
