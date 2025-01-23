@@ -2,6 +2,8 @@ import curses
 from enum import Enum
 from controllers.game_controller import GameController
 from models.Buildings.town_center import Town_center  # Adjust the import path as necessary
+import subprocess
+import sys
 
 
 class GameScreen(Enum):
@@ -194,6 +196,12 @@ class TerminalView:
 
             key = stdscr.getch()
             move_speed = 1
+
+            
+            if key == curses.KEY_F12:
+                # Switch to Pygame view
+                subprocess.Popen([sys.executable, "main.py"])
+                self.running = False
 
             if key == ord('Z'):
                 move_speed = 5
