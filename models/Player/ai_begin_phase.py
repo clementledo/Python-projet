@@ -31,7 +31,7 @@ class IA:
         # Spawn 3 villagers near the Town Hall
         for i in range(3):
             villager_position = (town_hall_position[0] + i, town_hall_position[1])
-            if self.game_state.is_area_free(villager_position[0], villager_position[1],1,1):
+            if self.game_state.carte.is_area_free(villager_position[0], villager_position[1],1,1):
                 position = villager_position
             else:
                 position = self.find_nearby_available_position(*villager_position, (1, 1))
@@ -39,8 +39,8 @@ class IA:
             if position:
                 villager = Villager(position[0],position[1],self.game_state)
                 self.units.append(villager)
-                self.game_state.all_unit.append(villager)
-                self.game_state.update_unit_position(villager, None, position)
+                """self.game_state.all_unit.append(villager)"""
+                self.game_state.carte.update_unit_position(villager, None, position)
             else:
                 print("No valid position found for villager.")
 
