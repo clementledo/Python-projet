@@ -289,10 +289,10 @@ class GameView:
                     pygame.draw.lines(self.screen, (205, 55, 0), False, screen_points, 1)
 
     def render_units(self, units, camera_x, camera_y, zoom_level, selected_unit=None):
-        # Draw paths first
         self.render_unit_paths(units, camera_x, camera_y, zoom_level)
         for unit in units:
             if isinstance(unit, Villager):
+                unit.initialize_sprites()  # Initialize sprites if needed
                 sprite = unit.get_current_sprite()
                 if sprite:
                     tile_width = int(self.tile_size * 2 * zoom_level)

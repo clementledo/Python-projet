@@ -3,7 +3,7 @@ from ..units.villager import Villager
 from ..Resources import Ressource
 
 class Town_center(Building):
-    def __init__(self, pos):
+    def __init__(self, pos,use_terminal_view=False):
         super().__init__("Town_center", 350, 10, 1000, (4, 4), 'T', pos)
         self.training_time = 0
         self.training_cooldown = 50

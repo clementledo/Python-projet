@@ -12,7 +12,7 @@ from views.game_view import GameView
 from controllers.game_controller import GameController
 from models.map import Map
 from models.Player.IA import IAPlayer, Strategy
-import pygame
+#
 import traceback
 import json
 
@@ -26,7 +26,7 @@ class GameState:
     STARTING_CONDITIONS = {
         "Maigre": {
             "resources": {"food": 50, "wood": 200, "gold": 50},
-            "buildings": [("Town_center", (10, 9))],
+            "buildings": [("Town_center", (5, 9))],
             "villagers": 3
         },
         "Moyenne": {
@@ -54,9 +54,8 @@ class GameState:
         }
     }
 
-    def __init__(self, screen=None):
-        self.screen = screen
-        self.tile_size = 32
+    def __init__(self, use_terminal_view=True):
+        self.tile_size = 1 if use_terminal_view else 32
         self.model = {'map': None, 'units': [], 'buildings': []}
         self.view = None
         self.controller = None
@@ -68,6 +67,7 @@ class GameState:
         self.zoom_level = 1
         self.player_resources = {}
         self.save_dir = "save_games"
+        self.use_terminal_view = use_terminal_view
         if not os.path.exists(self.save_dir):
             os.makedirs(self.save_dir)
 
@@ -78,6 +78,10 @@ class GameState:
             self.controller = GameController(self.model, self.view)
 
     def start_new_game(self, screen, map_width, map_height, tile_size, map_type="ressources_generales", starting_condition="Marines", use_terminal_view=False, ai_mode=True):
+        self.use_terminal_view = use_terminal_view
+        # Only import pygame if not in terminal mode
+        if not use_terminal_view:
+            import pygame
         # Initialize map, units, buildings, and resources
         self.carte = Map(map_width, map_height, map_type)  # Corrected constructor call
         condition = self.STARTING_CONDITIONS[starting_condition]
@@ -306,5 +310,5 @@ class GameState:
         if self.view and self.controller:
             self.screen.fill((0, 0, 0))
             self.view.render(self.model, self.camera_x, self.camera_y, self.zoom_level)
-            pygame.display.flip()
+           # pygame.display.flip()
 
