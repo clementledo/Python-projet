@@ -4,7 +4,8 @@ from ..Resources import Ressource
 
 class Town_center(Building):
     def __init__(self, pos):
-        super().__init__("Town_center", 350, 10, 1000, (4, 4), 'T', pos)
+        super().__init__("Town_center", 10, 1000, (4, 4), 'T', pos)
+        self.cost["Wood"] = 350
         self.training_time = 0
         self.training_cooldown = 50
         self.villager_cost = {"food": 50}
