@@ -20,12 +20,12 @@ class IA:
         self.resources["Wood"] = 350
         self.resources["Gold"] = 100
         
-        town_hall_position = (x, y)  # You can choose a position on the map
-        self.place_building(Town_center, town_hall_position)  # Place Town Hall on the map
+        town_center_position = (x, y)  # You can choose a position on the map
+        self.place_building(Town_center, town_center_position)  # Place Town Hall on the map
 
         # Spawn 3 villagers near the Town Hall
         for i in range(3):
-            villager_position = (town_hall_position[0] + i, town_hall_position[1])
+            villager_position = (town_center_position[0] + i, town_center_position[1])
             if self.game_state.carte.is_area_free(villager_position[0], villager_position[1],1,1):
                 position = villager_position
             else:
@@ -88,13 +88,13 @@ class IA:
             else:
                 print("No suitable position found to place the building.")
 
-    def spawn_villager(self, town_hall):
+    def spawn_villager(self, Town_center):
         """Spawn a new villager if the AI can afford it."""
         villager_cost = {'Food': 50}  # Villager costs 50 Food
         if self.can_afford(villager_cost):
             # Deduct resources and spawn a new villager
             self.deduct_resources(villager_cost)
-            villager_position = (town_hall.position[0], town_hall.position[1] + 1)
+            villager_position = (Town_center.position[0], Town_center.position[1] + 1)
             if self.game_state.is_area_free(villager_position[0], villager_position[1],1,1):
                 position = villager_position
             else:
@@ -284,18 +284,18 @@ class IA:
                 self.construct_building('Farm', position)
         
         # 1. Train Villagers if possible
-        for town_hall in self.buildings['TownHall']:
-            if town_hall.is_idle() and self.resources['Food'] >= 50:
-                town_hall.spawn_villager()
+        for Town_center in self.buildings['Town_center']:
+            if Town_center.is_idle() and self.resources['Food'] >= 50:
+                Town_center.train_villager()
 
         # 2. Allocate Villagers to resources
         self.allocate_villagers()
 
         # 3. Build new Town Halls if conditions are met
-        if len(self.buildings['TownHall']) < 4 and self.resources['Wood'] >= 350:
-            position = self.find_building_position('TownHall')
+        if len(self.buildings['Town_center']) < 4 and self.resources['Wood'] >= 350:
+            position = self.find_building_position('Town_center')
             if position:
-                self.construct_building('TownHall', position)
+                self.construct_building('Town_center', position)
 
         if len(self.units) + 5 < self.max_unit:
             if self.resources['Wood'] >= 25:
@@ -310,7 +310,7 @@ class IA:
     def allocate_villagers(self):
         available_villagers = self.get_available_villagers()
         villager_farm = []
-        for _ in range(len(self.buildings['TownHall'])*4):
+        for _ in range(len(self.buildings['Town_center'])*4):
             if available_villagers:
                 villager = available_villagers.pop(0)
                 villager_farm.append(villager)
