@@ -1,11 +1,11 @@
 from models.map_KHANHNGUYEN import Map
 from ai_begin_phase import IA
 
-game_map = map(10,10)
+game_map = Map(10,10)
 
-gstate = game_state()
+gstate = GameState()
 
-gstate.model['map'] = game_map
+gstate.carte = game_map
 
 IA1 = IA(1,gstate)
 
