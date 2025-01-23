@@ -1,7 +1,8 @@
 import pygame
 import math
 from models.Buildings.town_center import Town_center  # Adjust the import path as necessary
-
+import subprocess
+import sys
 class GameController:
     def __init__(self, model, view, carte,tile_size):
         # ... (existing initialization) ...
@@ -82,6 +83,9 @@ class GameController:
                 if event.key == pygame.K_ESCAPE:  # Basculer entre pause et reprise avec 'Échap'
                     self.paused = not self.paused
                     print(f"Game paused: {self.paused}")
+                if event.key == pygame.K_F12:
+                    # Switch to terminal view
+                    subprocess.Popen([sys.executable, "main2.py"])
 
             # Zoom handling
             if event.type == pygame.MOUSEWHEEL:

@@ -1,11 +1,8 @@
-<<<<<<< HEAD:models/Player/ai.py
-# from unit.unit import Unit 
+
+
+
 from units.villager import Villager
 from Buildings.town_center import Town_center
-=======
-from units.unit import unitStatus
-from building.town_hall import TownHall
->>>>>>> origin/premain:models/Player/ai_begin_phase.py
 from resource.tile import Type  
 
 
@@ -393,14 +390,9 @@ class IA:
     # 4. Assign Villagers
         assigned_villagers = available_villagers[:num_villagers]
         for villager in assigned_villagers:
-<<<<<<< HEAD:models/Player/ai.py
-            villager.start_building(building, num_villagers)
-
-=======
             villager.start_building(building, len(assigned_villagers))
         
     
->>>>>>> origin/premain:models/Player/ai_begin_phase.py
         return assigned_villagers
 
 
