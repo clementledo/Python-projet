@@ -4,9 +4,10 @@ import pygame
 import os
 
 class Villager(Unit):
-    def __init__(self, x, y, map, player_id=1):
-        super().__init__(x, y, "Villager", 0.5, 1.0, 25, map)
+    def __init__(self, x, y, map, player_id=1, use_terminal_view=False):
+        super().__init__(x, y, "Villager", 0.8, 2, 25, map)
         self.player_id = player_id
+        self.use_terminal_view = use_terminal_view
         self.is_gathering = False
         self.gathering_progress = 0
         self.gathering_speed = 1
@@ -24,18 +25,29 @@ class Villager(Unit):
         self.remaining_construction_time = 0
         self.attack_range = 1
         self.atk_power = 3  # Villager specific attack power
+        self.symbol = 'V'  # For terminal display
+        self.sprites_initialized = False
 
-        # Animation attributes
+       
+    
+    def initialize_sprites(self):
+        """Initialize sprite-related attributes and load sprites"""
+        if self.use_terminal_view or self.sprites_initialized:
+            return
+
+        import pygame
         self.walking_sprites = []
         self.standing_sprites = []
         self.current_frame = 0
-        self.animation_speed = 0.6  # Seconds per frame
+        self.animation_speed = 0.6
         self.last_update = pygame.time.get_ticks()
         self.load_walking_sprites()
         self.load_standing_sprites()
-    
+        self.sprites_initialized = True
+
     def load_walking_sprites(self):
-        """Load all walking animation sprites"""
+        if self.use_terminal_view:
+            return
         sprite_dir = "assets/Sprites/Villager/Walk"
         for i in range(16, 76):  # 75 frames
             sprite_path = os.path.join(sprite_dir, f"Villagerwalk{i:03d}.png")
@@ -47,7 +59,8 @@ class Villager(Unit):
                 print(e)
 
     def load_standing_sprites(self):
-        """Load all standing animation sprites"""
+        if self.use_terminal_view:
+            return
         sprite_dir = "assets/Sprites/Villager/Stand"
         for i in range(53, 75):  # Adjust range based on actual sprite count
             sprite_path = os.path.join(sprite_dir, f"Villagerstand{i:03d}.png")
@@ -60,6 +73,8 @@ class Villager(Unit):
     
     def get_current_sprite(self):
         """Returns the current sprite based on unit state"""
+        if self.use_terminal_view:
+            return None
         now = pygame.time.get_ticks()
         if now - self.last_update > self.animation_speed * 1000:
             self.last_update = now
@@ -78,7 +93,7 @@ class Villager(Unit):
     def move_towards(self, position, grid):
         """Handle movement and animation"""
         result = super().move_towards(position, grid)
-        if result and self.status == unitStatus.MOVING:
+        if result and self.status == unitStatus.MOVING and not self.use_terminal_view:
             now = pygame.time.get_ticks()
             if now - self.last_update > self.animation_speed * 1000:
                 self.last_update = now
@@ -145,12 +160,13 @@ class Villager(Unit):
                         self.carried_resources += 1
                         self.gathering_progress = 0
 
-    def update(self, delta_time):
+    def update(self):
         """Update unit state and animation"""
-        super().update(delta_time)
+        delta_time = 1 / 60 
+        super().update()
         if self.status == unitStatus.IDLE:
             self.current_frame = 0
-        delta_time = 1 / 60  # Exemple de 60 FPS pour gérer le temps
+         # Exemple de 60 FPS pour gérer le temps
         
         if self.status == unitStatus.BUILDING:
             self.update_building(delta_time)

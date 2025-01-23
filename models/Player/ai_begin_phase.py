@@ -390,8 +390,10 @@ class IA:
 
     # 4. Assign Villagers
         assigned_villagers = available_villagers[:num_villagers]
-        for villager in assigned_villagers:           
-            villager.start_building(building, num_villagers)
+        for villager in assigned_villagers:
+            villager.start_building(building, len(assigned_villagers))
+        
+    
         return assigned_villagers
 
 

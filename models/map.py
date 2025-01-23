@@ -136,6 +136,35 @@ class Map:
             return True
         return False
 
+    def place_building(self, building):
+        """
+        Place a building on the map, marking all the tiles it occupies.
+        Buildings may occupy multiple tiles (e.g., Town Hall is 4x4).
+        """
+        x, y = building.pos
+        width, height = building.size
+
+        # Check if the space is free and within bounds
+        if not self.is_area_free(x, y, width, height):
+            raise ValueError("Building can't be placed: space is either occupied or out of bounds.")
+
+        # Mark the tiles as occupied by the building
+        for i in range(width):
+            for j in range(height):
+                self.grille[y + j][x + i].occupant = building.name  # Mark the grid with the building reference
+    
+    def is_area_free(self, top_left_x, top_left_y, width, height):
+        for i in range(width):
+            for j in range(height):
+                if not self.is_within_bounds(top_left_x + i, top_left_y + j) or self.is_tile_occupied(top_left_x + i, top_left_y + j):
+                    return False
+    
+    def is_within_bounds(self, x, y):
+        return 0 <= x < self.largeur and 0 <= y < self.hauteur
+
+    def is_tile_occupied(self, x, y):
+        return self.grille[y][x].occupant != None
+    
     def serialize(self):
         """Sérialise la carte sous forme de dictionnaire."""
         return {
