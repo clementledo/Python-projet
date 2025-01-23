@@ -76,8 +76,8 @@ class IA:
             return
 
         # First, try to place the building at the initial position
-        if self.game_state.is_area_free(x, y, building.size[0], building.size[1]):
-            self.game_state.place_building(building)
+        if self.game_state.carte.is_area_free(x, y, building.size[0], building.size[1]):
+            self.game_state.carte.place_building(building)
             self.buildings.append(building)
             self.deduct_resources(building.cost)
             print(f"AI placed {building_type.__name__} at position ({x}, {y}).")
@@ -86,7 +86,7 @@ class IA:
             new_position = self.find_nearby_available_position(x, y, building.size)
             if new_position:
                 building.position = new_position
-                self.game_state.place_building(building)
+                self.game_state.carte.place_building(building)
                 self.buildings.append(building)
                 self.deduct_resources(building.cost)
                 print(f"AI placed {building_type.__name__} near position ({new_position[0]}, {new_position[1]}).")
