@@ -1,13 +1,13 @@
 import math
 import random
-from resource.tile import Tile
-from resource.tile import Type
-from resource.wood import Wood
+from models.Resources.Tile import Tile
+from models.Resources.Resource import Resource
+
 class Map:
     def __init__(self, width, height):
         self.width = width
         self.height = height
-        self.grid = [[Tile((x, y), None) for x in range(width)] for y in range(height)]
+        self.grid = [[Tile(x, y) for x in range(width)] for y in range(height)]
         self.generer_aleatoire()
         """self.all_unit = []"""
 
@@ -35,7 +35,7 @@ class Map:
         """
         Place a building on the map
         """
-        x, y = building.position
+        x, y = building.pos
 
         # Check if the space is free and within bounds
         if not self.is_area_free(x, y, 1, 1):
@@ -80,8 +80,7 @@ class Map:
         for i in range(pos_x, pos_x + radius):
             for j in range(pos_y, pos_y + radius):    
                 # Check if the position is within the map boundaries
-                if 0 <= i < self.height and 0 <= j < self.width and self.grid[j][i].type == None:  # Ensure the position is valid
-                    self.grid[i][j] = Tile(x,y) 
+                if 0 <= i < self.height and 0 <= j < self.width:  # Ensure the position is valid 
                     self.grid[i][j].ressource = Resource("Wood", [100, 0, 0])
 
     def create_mine(self, nb_gold, pos_x, pos_y):
@@ -89,8 +88,7 @@ class Map:
         for i in range(pos_x, pos_x + radius):
             for j in range(pos_y, pos_y + radius):    
                 # Check if the position is within the map boundaries
-                if 0 <= i < self.height and 0 <= j < self.width and self.grid[j][i].type == None:  # Ensure the position is valid
-                    self.grid[i][j] = Tile(x,y) 
+                if 0 <= i < self.height and 0 <= j < self.width:  # Ensure the position is valid
                     self.grid[i][j].ressource = Resource("Gold", [0, 800, 0])
 
     def generer_aleatoire(self, nb_wood = 500, nb_gold = 100, type = 1):
@@ -109,7 +107,8 @@ class Map:
         base_trees = nb_wood // 20
         min_trees = int(base_trees*0.8)  # Allow slight variation
         max_trees = int(base_trees*1.2)        
-    
+        trees_left = nb_wood
+
         for i in range(20):
         # Randomly choose the number of trees for each forest (up to remaining trees)
             nb_tree = random.randint(min_trees, max_trees)  # Ensure we leave enough for the other forests

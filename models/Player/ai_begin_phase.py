@@ -1,10 +1,6 @@
-from units.unit import Unit 
-from units.villager import Villager
-from Buildings.town_center import Town_center
-from models.map import Map
 
 
-# from unit.unit import Unit 
+
 from units.villager import Villager
 from Buildings.town_center import Town_center
 from resource.tile import Type  
@@ -32,7 +28,7 @@ class IA:
         # Spawn 3 villagers near the Town Hall
         for i in range(3):
             villager_position = (town_hall_position[0] + i, town_hall_position[1])
-            if self.game_state.is_area_free(villager_position[0], villager_position[1],1,1):
+            if self.game_state.carte.is_area_free(villager_position[0], villager_position[1],1,1):
                 position = villager_position
             else:
                 position = self.find_nearby_available_position(*villager_position, (1, 1))
@@ -40,8 +36,8 @@ class IA:
             if position:
                 villager = Villager(position[0],position[1],self.game_state)
                 self.units.append(villager)
-                self.game_state.all_unit.append(villager)
-                self.game_state.update_unit_position(villager, None, position)
+                """self.game_state.all_unit.append(villager)"""
+                self.game_state.carte.update_unit_position(villager, None, position)
             else:
                 print("No valid position found for villager.")
 
@@ -69,7 +65,7 @@ class IA:
     def place_building(self, building_type, initial_position):
         """Place a building of the specified type at or near the initial position."""
         x, y = initial_position
-        building = building_type(initial_position[0], initial_position[1], "", self.game_state)  # Create the building instance
+        building = building_type(initial_position)  # Create the building instance
 
         # Check if there's enough resources to build it
         if not self.can_afford(building.cost):
@@ -77,8 +73,8 @@ class IA:
             return
 
         # First, try to place the building at the initial position
-        if self.game_state.is_area_free(x, y, building.size[0], building.size[1]):
-            self.game_state.place_building(building)
+        if self.game_state.carte.is_area_free(x, y, building.size[0], building.size[1]):
+            self.game_state.carte.place_building(building)
             self.buildings.append(building)
             self.deduct_resources(building.cost)
             print(f"AI placed {building_type.__name__} at position ({x}, {y}).")
@@ -87,7 +83,7 @@ class IA:
             new_position = self.find_nearby_available_position(x, y, building.size)
             if new_position:
                 building.position = new_position
-                self.game_state.place_building(building)
+                self.game_state.carte.place_building(building)
                 self.buildings.append(building)
                 self.deduct_resources(building.cost)
                 print(f"AI placed {building_type.__name__} near position ({new_position[0]}, {new_position[1]}).")
