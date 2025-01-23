@@ -35,7 +35,7 @@ class Map:
         """
         Place a building on the map
         """
-        x, y = building.position
+        x, y = building.pos
 
         # Check if the space is free and within bounds
         if not self.is_area_free(x, y, 1, 1):
