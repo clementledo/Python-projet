@@ -55,7 +55,7 @@ class IA:
             for dx in range(-radius, radius + 1):
                 for dy in range(-radius, radius + 1):
                     new_x, new_y = x + dx, y + dy
-                    if self.game_state.is_area_free(new_x, new_y, building_size[0], building_size[1]):
+                    if self.game_state.carte.is_area_free(new_x, new_y, building_size[0], building_size[1]):
                         return new_x, new_y
                     
         return None  # Return None if no suitable area is found
