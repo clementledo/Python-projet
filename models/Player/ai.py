@@ -50,7 +50,7 @@ class IA:
 
         # Spawn 3 villagers near the Town Hall
         for i in range(3):
-            villager_position = (town_hall_position[0] + i, town_hall_position[1])
+            villager_position = (town_center_position[0] + i, town_center_position[1])
             if self.game_state.carte.is_area_free(villager_position[0], villager_position[1],1,1):
                 position = villager_position
             else:
@@ -120,7 +120,7 @@ class IA:
         if self.can_afford(villager_cost):
             # Deduct resources and spawn a new villager
             self.deduct_resources(villager_cost)
-            villager_position = (Town_center.position[0], Town_center.position[1] + 1)
+            villager_position = (town_hall.position[0], town_hall.position[1] + 1)
             if self.game_state.carte.is_area_free(villager_position[0], villager_position[1],1,1):
                 position = villager_position
             else:
@@ -424,13 +424,6 @@ class IA:
                 villager_farm.append(villager)
         villager_wood = available_villagers
         
-        for _ in range(len(self.buildings['Town_center'])*4):
-            for _ in range(len(self.buildings['Town_center'])*4):
-                if available_villagers:
-                    villager = available_villagers.pop(0)
-                    villager_farm.append(villager)
-            villager_wood = available_villagers
-            
         for villager in villager_farm:
             pos = self.buildings['Farm'][0].pos
             if pos:
@@ -506,44 +499,6 @@ class IA:
             for villager in additional_villagers:
                 villager.start_building(building, building.position)
     
-    def construct_building(self, building_type, position):
-        """
-        Construct a building of the specified type at the given position.
-
-        Args:
-        building_type: The type of building to construct.
-        position: The position on the map to construct the building.
-        """
-        building = building_type(position)
-        building.player_id = self.player_id
-        self.deduct_resources(building.cost)
-        self.buildings["In_construct"].append(building) 
-        self.map_data.place_building(building)
-        buiilder = self.allocate_villagers_for_construction(building)
-        x = self.get_available_villagers()
-        print(f"AI is constructing a {building_type.__name__} at position {position} with {buiilder} there is {len(x)} villagers disponible in {len(self.units["Villager"])}.")
-        self.buildings[building.name].append(building)
-
-    def update(self):
-        if self.strategy == Strategy.AGGRESSIVE:
-            self.execute_aggressive_strategy()
-        elif self.strategy == Strategy.DEFENSIVE:
-            self.execute_defensive_strategy()
-        else:
-            self.execute_economic_strategy()
-            
-        if len(self.buildings["House"]) < 1:
-            position = (20,5)
-            house = House(position)
-            if position:
-                self.construct_building(House, position)
-                self.game_state.model['buildings'].append(House(position))
-        pos = (19,4)
-        for unit in self.units["Villager"]:
-            unit.move_toward(pos, self.map_data)
-            print(f"Villager at {unit.position} is moving towards {pos}.")
-            print(self.map_data.get_tile(unit.position[0], unit.position[1]).occupant)
-
     def count_villagers_collecting(self, resource_type):
         """
         Count the number of villagers collecting a specific resource.
@@ -686,7 +641,7 @@ class IA:
                     self.gather_resource(villager) 
                          
         for villager in villager_wood:
-            pos = self.find_nearby_resources(villager, Type.Wood)
+            pos = self.find_nearby_resources(villager,Type.Wood)
             if pos:
                 if self.get_distance(villager.position, pos) > 1:
                     path = self.find_path(villager, pos)
@@ -700,43 +655,6 @@ class IA:
         available_villagers = self.get_unit_by_status("Villager", unitStatus.IDLE)
         return available_villagers
                 
-    def allocate_villagers_for_construction(self, building):
-        """
-        Dynamically allocate Villagers to construct a building.
-
-        Args:
-        building: The building object being constructed.
-
-        Returns:
-        List of Villagers allocated for the construction.
-        """
-    # 1. Check building priority
-        if building.name == "Town_center":
-            priority = "high"
-        else:
-            priority = "low"
-    # 2. Define the number of Villagers based on priority
-        if priority == "high":
-            max_villagers = 4
-        else:  # Low priority
-            max_villagers = 2
-
-    # 3. Identify available Villagers
-        available_villagers = self.get_available_villagers()
-        num_villagers = min(len(available_villagers), max_villagers)
-
-    # 4. Assign Villagers
-        assigned_villagers = available_villagers[:num_villagers]
-        building.building(assigned_villagers)
-        for villager in assigned_villagers:
-            villager.start_building(building, len(assigned_villagers))
-            self.change_unit_status(villager, unitStatus.BUILDING)
-            if villager.position != building.pos:
-                villager.move_toward(building.pos, self.map_data)
-        
-    
-        return assigned_villagers
-
     def reevaluate_construction(self, building, progress, current_villagers):
         """
         Reevaluate construction progress and reassign Villagers if needed.
@@ -777,19 +695,9 @@ class IA:
             self.execute_defensive_strategy()
         else:
             self.execute_economic_strategy()
-            
-        if len(self.buildings["House"]) < 1:
-            position = (20,5)
-            house = House(position)
-            if position:
-                self.construct_building(House, position)
-                self.game_state.model['buildings'].append(House(position))
-        pos = (19,4)
-        for unit in self.units["Villager"]:
-            unit.move_toward(pos, self.map_data)
-            print(f"Villager at {unit.position} is moving towards {pos}.")
-            print(self.map_data.get_tile(unit.position[0], unit.position[1]).occupant)
-
+        
+     
+        
     def count_villagers_collecting(self, resource_type):
         """
         Count the number of villagers collecting a specific resource.

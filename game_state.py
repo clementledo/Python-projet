@@ -163,7 +163,7 @@ class GameState:
             self.view.load_building_sprite("A", "assets/Buildings/Archery_range.png")
             self.view.load_building_sprite("B", "assets/Buildings/Barracks.png")
             self.view.load_building_sprite("H", "assets/Buildings/House.png")
-            self.view.load_building_sprite("F", "assets/Buildings/Farm.jpg")
+            self.view.load_building_sprite("F", "assets/Buildings/Farm.png")
             self.controller = GameController(self.model,self.view, self.carte, tile_size)  # Pass required arguments
 
     def change_state(self, new_state):

@@ -54,7 +54,7 @@ class Unit:
         if self.status == unitStatus.MOVING:
             if self.destination:
                 # Appeler move_towards pour effectuer le déplacement progressif
-                self.move_towards(self.destination, self.grid)
+                self.move_toward(self.destination, self.grid)
                 if not self.current_path:  # Arrivé à destination
                     self.status = unitStatus.IDLE
                     self.destination = None
@@ -68,7 +68,14 @@ class Unit:
             else:
                 self.status = unitStatus.IDLE
                 self.target = None
+        elif self.status == unitStatus.BUILDING:
+            if self.distance_to(self.destination) > 1:
+                self.move_toward(self.destination, self.grid)
 
+    def distance_to(self, target):
+        """Calculates distance to target unit"""
+        return abs(self.position[0] - target[0]) + abs(self.position[1] - target[1])
+    
     def heuristic(self, a, b):
         """Fonction heuristique pour A* (distance de Chebyshev)."""
         return max(abs(a[0] - b[0]), abs(a[1] - b[1]))
@@ -201,8 +208,10 @@ class Unit:
         """Move unit towards goal using pathfinding and speed control."""
         if self.health <= 0:
             return False
-        self.status = unitStatus.MOVING
-
+        if self.position == goal:
+            return False
+        #self.status = unitStatus.MOVING
+        
         # Calculer le temps écoulé depuis le dernier update
         current_time = pygame.time.get_ticks() / 1000.0  # Convertir en secondes
         elapsed_time = current_time - self.last_move_time
