@@ -8,11 +8,13 @@ from models.Buildings.archery_range import Archery_Range
 from models.Buildings.building import Building
 from models.Buildings.barrack import Barrack
 from models.units.unit import Unit
+from models.Resources.Tile import Type
 from views.game_view import GameView
 from controllers.game_controller import GameController
 from models.map import Map
 from models.Player.IA import IAPlayer, Strategy
-import pygame
+from models.Player.ai_begin_phase import IA
+#
 import traceback
 import json
 
@@ -26,12 +28,12 @@ class GameState:
     STARTING_CONDITIONS = {
         "Maigre": {
             "resources": {"food": 50, "wood": 200, "gold": 50},
-            "buildings": [("Town_center", (10, 9))],
+            "buildings": [("Town_center", (5, 9))],
             "villagers": 3
         },
         "Moyenne": {
             "resources": {"food": 2000, "wood": 2000, "gold": 2000},
-            "buildings": [("Town_center", (10, 9))],
+            "buildings": [("Town_center", (5, 9))],
             "villagers": 3
         },
         "Marines": {
@@ -54,9 +56,8 @@ class GameState:
         }
     }
 
-    def __init__(self, screen=None):
-        self.screen = screen
-        self.tile_size = 32
+    def __init__(self, use_terminal_view=True):
+        self.tile_size = 1 if use_terminal_view else 32
         self.model = {'map': None, 'units': [], 'buildings': []}
         self.view = None
         self.controller = None
@@ -68,6 +69,7 @@ class GameState:
         self.zoom_level = 1
         self.player_resources = {}
         self.save_dir = "save_games"
+        self.use_terminal_view = use_terminal_view
         if not os.path.exists(self.save_dir):
             os.makedirs(self.save_dir)
 
@@ -78,6 +80,10 @@ class GameState:
             self.controller = GameController(self.model, self.view)
 
     def start_new_game(self, screen, map_width, map_height, tile_size, map_type="ressources_generales", starting_condition="Marines", use_terminal_view=False, ai_mode=True):
+        self.use_terminal_view = use_terminal_view
+        # Only import pygame if not in terminal mode
+        if not use_terminal_view:
+            import pygame
         # Initialize map, units, buildings, and resources
         self.carte = Map(map_width, map_height, map_type)  # Corrected constructor call
         condition = self.STARTING_CONDITIONS[starting_condition]
@@ -85,18 +91,22 @@ class GameState:
         
         units = []
         buildings = []
-
+        
         # Initialize buildings
         for building_type, pos in condition["buildings"]:
             building_class = globals()[building_type]
             building = building_class(pos)
             building.player_id = 1
             buildings.append(building)
+            """placer les bâtiments sur la carte
+            self.carte.place_building(building)"""
 
             mirrored_x = map_width - pos[0] - 1
             building = building_class((mirrored_x, pos[1]))
             building.player_id = 2
             buildings.append(building)
+            """placer les bâtiments sur la carte
+            self.carte.place_building(building)"""
 
         # Initialize units
         for i in range(condition["villagers"]):
@@ -105,11 +115,17 @@ class GameState:
             villager = Villager(10 + x_offset, 12 + y_offset, self.carte)
             villager.player_id = 1
             units.append(villager)
-            
+            """placer les unités sur la carte
+            self.carte.grid[12 + y_offset][10 + x_offset].occupant = villager"""
+
             villager = Villager(map_width - 15 + x_offset, 12 + y_offset, self.carte)
             villager.player_id = 2
             units.append(villager)
+            """placer les unités sur la carte
+            self.carte.grid[12 + y_offset][map_width - 15 + x_offset].occupant = villager"""
 
+        for building in buildings:
+            self.carte.place_building(building)
         self.model = {'map': self.carte, 'units': units, 'buildings': buildings}
         
         # Initialize AI players
@@ -117,6 +133,7 @@ class GameState:
             self.players = {
                 1: IAPlayer(1, self, Strategy.AGGRESSIVE),
                 2: IAPlayer(2, self, Strategy.DEFENSIVE)
+                #2: IA(2, self)
             }
 
         # Initialize view and controller
@@ -132,7 +149,8 @@ class GameState:
             self.view.load_building_sprite("T", "assets/Buildings/Towncenter.png")
             self.view.load_building_sprite("A", "assets/Buildings/Archery_range.png")
             self.view.load_building_sprite("B", "assets/Buildings/Barracks.png")
-
+            self.view.load_building_sprite("H", "assets/Buildings/House.png")
+            
             self.controller = GameController(self.model,self.view, self.carte, tile_size)  # Pass required arguments
 
     def change_state(self, new_state):
@@ -306,5 +324,5 @@ class GameState:
         if self.view and self.controller:
             self.screen.fill((0, 0, 0))
             self.view.render(self.model, self.camera_x, self.camera_y, self.zoom_level)
-            pygame.display.flip()
+           # pygame.display.flip()
 

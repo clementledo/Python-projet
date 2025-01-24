@@ -1,8 +1,8 @@
 import pygame
 from models.Resources.Terrain_type import Terrain_type
-import random
-import math
+
 from models.units.villager import Villager
+from views.asset_manager import AssetManager
 
 class GameView:
     def __init__(self, screen, tile_size=50):
@@ -11,13 +11,11 @@ class GameView:
         self.unit_sprites = {}
         self.building_sprites = {}
         
-        # Load resource panel and icons
-        self.resource_panel = pygame.image.load('assets/resourcecivpanel.png').convert_alpha()
-        self.resource_icons = {
-            "food": pygame.image.load("assets/iconfood.png").convert_alpha(),
-            "wood": pygame.image.load("assets/iconwood.png").convert_alpha(),
-            "gold": pygame.image.load("assets/icongold.png").convert_alpha()
-        }
+        # Get asset manager instance
+        self.asset_manager = AssetManager()
+        self.resource_panel = self.asset_manager.get_ui_asset('resource_panel')
+        self.resource_icons = self.asset_manager.ui_assets['icons']
+        
         self.font = pygame.font.SysFont('Arial', 24)
         self.decorations = []  # Liste pour stocker les décorations générées
         self.decorations_generated = False  # Flag pour vérifier si les décorations ont été générées
@@ -85,7 +83,7 @@ class GameView:
                                 'type': 'tree',
                                 'x': x,
                                 'y': y,
-                                'image': pygame.image.load('assets/tree.png').convert_alpha()
+                                'image': self.asset_manager.decoration_sprites['tree']
                             }
                             self.decorations.append(tree)
                         case "Gold":
@@ -100,8 +98,6 @@ class GameView:
                             continue
 
                
-               
-                    
 
         self.decorations_generated = True
 
@@ -117,7 +113,10 @@ class GameView:
         iso_x = (x - y) * tile_width // 2 - camera_x
         iso_y = (x + y) * tile_height // 2 - camera_y
         
-        return iso_x, iso_y
+        return iso_x-200, iso_y-200
+
+    
+    
 
     def render_map(self, carte, camera_x, camera_y, zoom_level):
         """Rendu optimisé de la carte avec regroupement des tuiles en blocs 5x5."""
@@ -332,19 +331,34 @@ class GameView:
                     pygame.draw.lines(self.screen, (205, 55, 0), False, screen_points, 1)
 
     def render_units(self, units, camera_x, camera_y, zoom_level, selected_unit=None):
-        # Draw paths first
         self.render_unit_paths(units, camera_x, camera_y, zoom_level)
         for unit in units:
             if isinstance(unit, Villager):
+                unit.initialize_sprites()  # Initialize sprites if needed
                 sprite = unit.get_current_sprite()
                 if sprite:
                     tile_width = int(self.tile_size * 2 * zoom_level)
                     tile_height = int(self.tile_size * zoom_level)
                     screen_width, screen_height = self.screen.get_size()
 
-                    x_tile, y_tile = unit.get_position()
-                    iso_x, iso_y = self.world_to_screen(x_tile, y_tile, camera_x, camera_y, zoom_level)
-                    
+                    # Position interpolation for smooth movement
+                    if not hasattr(unit, "display_position"):
+                        unit.display_position = unit.get_position()  # Initialize display position
+
+                    x_target, y_target = unit.get_position()
+                    x_display, y_display = unit.display_position
+
+                    # Interpolation speed
+                    move_speed = 0.1  # Adjust this value for faster/slower interpolation
+
+                    # Linear interpolation towards target position
+                    x_display += (x_target - x_display) * move_speed
+                    y_display += (y_target - y_display) * move_speed
+
+                    # Update the display position
+                    unit.display_position = (x_display, y_display)
+
+                    iso_x, iso_y = self.world_to_screen(x_display, y_display, camera_x, camera_y, zoom_level)
                     iso_x += screen_width // 2
                     iso_y += screen_height // 4
 
@@ -366,6 +380,7 @@ class GameView:
                         (iso_x - scaled_sprite.get_width() // 2, 
                         iso_y - scaled_sprite.get_height() // 2))
                     self.draw_health_bar(self.screen, unit, iso_x, iso_y, zoom_level)
+
 
     def load_unit_sprite(self, unit_type, image_path):
         """Charge un sprite d'unité."""
@@ -504,6 +519,7 @@ class GameView:
                 # Draw amount
                 text = self.font.render(str(amount), True, (255, 255, 255))
                 self.screen.blit(text, (x + icon_size + 20, y + 8))
+                
     def render_game(self, game_state, screen, clock, font):
         """Render the entire game state."""
         controller = game_state.controller

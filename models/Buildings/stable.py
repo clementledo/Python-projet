@@ -5,6 +5,7 @@ class Stable(Building) :
     
     def __init__(self,pos) :
         super().__init__(self,175,50,500,3,'S',pos,'new')
+        self.cost["wood"] = 175
         
     def spawn_horseman(self) :
         self.remove_ressources(self,80,'F')
