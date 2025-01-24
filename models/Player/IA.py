@@ -93,7 +93,7 @@ class IAPlayer:
         if len(military) >= self.attack_threshold and enemy_units:
             target = self.find_best_target(enemy_units)
             for unit in military:
-                unit.move_towards(target.position,self.game_state.carte)
+                unit.move_toward(target.position,self.game_state.carte)
 
     def find_best_target(self, enemy_units):
         # Prioritize villagers and weak units

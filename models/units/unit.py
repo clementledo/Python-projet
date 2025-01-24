@@ -125,7 +125,7 @@ class Unit:
         current_time = pygame.time.get_ticks() / 1000.0
 
         if (current_time - last_calculated < path_update_interval) and not self.is_obstacle_on_path(current_path, grid):
-            print("Pathfinding skipped due to time interval and no obstacle detected.")
+            #print("Pathfinding skipped due to time interval and no obstacle detected.")
             return current_path
         
         """A* pathfinding avec prise en charge des mouvements diagonaux."""

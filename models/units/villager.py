@@ -28,8 +28,7 @@ class Villager(Unit):
         self.atk_power = 3  # Villager specific attack power
         self.symbol = 'V'  # For terminal display
         self.sprites_initialized = False
-
-        
+        self.task = None  # Add this line to initialize the task attribute
 
     def initialize_sprites(self):
         """Initialize sprite-related attributes and load sprites"""
@@ -132,7 +131,7 @@ class Villager(Unit):
                 self.return_resources()
             else:
                 tile = self.grid.get_tile(self.position[0], self.position[1])
-                if tile.resource:
+                if (tile.resource):
                     self.gathering_progress += self.gathering_speed
                     if self.gathering_progress >= 100:
                         self.carried_resources += 1
@@ -187,3 +186,7 @@ class Villager(Unit):
         villager.current_resources = data["current_resources"]
         villager.current_resource_type = data["current_resource_type"]
         return villager
+
+    def collect_resource(self, resource_type):
+        self.task = resource_type  # Set the task attribute when collecting a resource
+        # ... existing code for collecting resources ...

@@ -13,7 +13,7 @@ from views.game_view import GameView
 from controllers.game_controller import GameController
 from models.map import Map
 from models.Player.IA import IAPlayer, Strategy
-from models.Player.ai_begin_phase import IA
+from models.Player.ai import IA
 #
 import traceback
 import json
@@ -115,7 +115,7 @@ class GameState:
             villager = Villager(10 + x_offset, 12 + y_offset, self.carte)
             villager.player_id = 1
             units.append(villager)
-             """placer les unités sur la carte
+            """placer les unités sur la carte
             self.carte.grid[12 + y_offset][10 + x_offset].occupant = villager"""
 
             villager = Villager(map_width - 15 + x_offset, 12 + y_offset, self.carte)
@@ -133,7 +133,7 @@ class GameState:
             self.players = {
                 1: IAPlayer(1, self, Strategy.AGGRESSIVE),
                 #2: IAPlayer(2, self, Strategy.DEFENSIVE)
-                2: IA(2, self)
+                2: IA(2, self, Strategy.ECONOMIC) 
             }
 
         # Initialize view and controller
@@ -144,13 +144,13 @@ class GameState:
             
             self.view.load_unit_sprite('Villager', 'assets/villager.png')
             self.view.load_unit_sprite('Archer', 'assets/archer.png')
-            #self.view.load_unit_sprite('Horseman', 'assets/horseman.png')
+            self.view.load_unit_sprite('Horseman', 'assets/horseman.png')
 
             self.view.load_building_sprite("T", "assets/Buildings/Towncenter.png")
             self.view.load_building_sprite("A", "assets/Buildings/Archery_range.png")
             self.view.load_building_sprite("B", "assets/Buildings/Barracks.png")
             self.view.load_building_sprite("H", "assets/Buildings/House.png")
-            
+            self.view.load_building_sprite("F", "assets/Buildings/Farm.jpg")
             self.controller = GameController(self.model,self.view, self.carte, tile_size)  # Pass required arguments
 
     def change_state(self, new_state):
