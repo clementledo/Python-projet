@@ -44,7 +44,7 @@ class Unit:
         self.path_segment_length = 3  # Number of future points to show
         self.movement_accumulator = 0.0  # Stocke la progression du déplacement 
         self.last_move_time = pygame.time.get_ticks() / 1000.0
-   
+        self.last_attack_time = 0.0
 
     def update(self):
         """Update unit state"""
