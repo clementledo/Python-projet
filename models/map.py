@@ -7,7 +7,7 @@ class Map:
     def __init__(self, largeur, hauteur, type_carte="ressources_generales"):
         self.largeur = largeur
         self.hauteur = hauteur
-        self.grille = [[None for _ in range(largeur)] for _ in range(hauteur)]
+        self.grille = [[Tile(x, y) for x in range(largeur)] for y in range(hauteur)]
         self.generer_aleatoire(type_carte)
     """l"""
     def get_grid(self):
@@ -19,11 +19,6 @@ class Map:
             return self.grille[y][x]
         return None
 
-    def generer_aleatoire2(self, type_carte="ressources_generales"):
-        """Génère une carte où toutes les tuiles sont de type GRASS."""
-        for y in range(self.hauteur):
-            for x in range(self.largeur):
-                self.grille[y][x] = Tile(x, y)
     
 
     def is_position_occupied(self, x, y, game_state=None):
