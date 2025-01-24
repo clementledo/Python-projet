@@ -4,7 +4,8 @@ from ..units.swordsman import Swordsman
 class Barrack(Building) :
     
     def __init__(self,pos) :
-        super().__init__("Barracks",175,20,500,(3,3),'B',pos)
+        super().__init__("Barracks",20,500,(3,3),'B',pos)
+        self.cost["wood"] = 175
         
     def spawn_swordsman(self):
         self.remove_ressources(self,50,'F')

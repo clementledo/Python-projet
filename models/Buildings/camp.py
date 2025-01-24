@@ -3,11 +3,9 @@ from ..Resources import Ressource
 
 """ProblÃ¨me pour le contenant"""
 class Camp(Building) : 
-    
-    cont = 0
-    
     def __init__(self,pos) :
-        super().__init__("castel",100,25,200,2,'C',pos,'new')
+        super().__init__("castel",25,200,2,'C',pos)
+        self.cost["wood"] = 100
         
     def add_ressources(type_ressource) :
         """reprendre le diagramme uml tile pour complÃ©ter le constructeur"""
