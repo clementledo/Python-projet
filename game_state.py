@@ -13,7 +13,7 @@ from views.game_view import GameView
 from controllers.game_controller import GameController
 from models.map import Map
 from models.Player.IA import IAPlayer, Strategy
-#
+
 import traceback
 import json
 
@@ -114,7 +114,7 @@ class GameState:
             villager = Villager(10 + x_offset, 12 + y_offset, self.carte)
             villager.player_id = 1
             units.append(villager)
-             """placer les unités sur la carte
+            """placer les unités sur la carte
             self.carte.grid[12 + y_offset][10 + x_offset].occupant = villager"""
 
             villager = Villager(map_width - 15 + x_offset, 12 + y_offset, self.carte)
