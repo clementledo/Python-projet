@@ -2,6 +2,8 @@
 import pygame
 import time
 
+from views.asset_manager import AssetManager
+
 class Building :
     def __init__(self, name, construction_time, hp, size, symbol, pos) :
         self.cost = {"wood":0,"gold":0}
@@ -14,7 +16,8 @@ class Building :
         self.name=name
         self.counter=0
         self.curr_tick=0
-        self.image = self.worksite(size)
+        self.asset_manager = AssetManager()
+        self.image = self.asset_manager.get_building_sprite(name)
         self.useable=True
         self.player_id = None
         self.builder = []
@@ -86,7 +89,7 @@ class Building :
         return self.useable
 
     def broken(self, size) :
-        return pygame.image.load("Buildings/broken/broken_building_"+str(size)+".png")
+        return self.asset_manager.get_broken_building_sprite(size)
 
     def set_broken(self):
         """Marquer le bâtiment comme cassé et changer l'image."""
@@ -112,6 +115,6 @@ class Building :
         """Recrée un bâtiment à partir des données sérialisées."""
         building = cls(data["name"],data["size"],data["cost"],data["construction_time"],data["hp"],  data["symbol"] ,data["pos"])
         building.useable = data["useable"]
-        building.image = pygame.image.load(f"assets/Buildings/{data['name']}.png")
+        building.image = building.asset_manager.get_building_sprite(data['name'])
         return building
 

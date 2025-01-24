@@ -98,11 +98,15 @@ class GameState:
             building = building_class(pos)
             building.player_id = 1
             buildings.append(building)
+            """placer les bâtiments sur la carte
+            self.carte.place_building(building)"""
 
             mirrored_x = map_width - pos[0] - 1
             building = building_class((mirrored_x, pos[1]))
             building.player_id = 2
             buildings.append(building)
+            """placer les bâtiments sur la carte
+            self.carte.place_building(building)"""
 
         # Initialize units
         for i in range(condition["villagers"]):
@@ -111,10 +115,14 @@ class GameState:
             villager = Villager(10 + x_offset, 12 + y_offset, self.carte)
             villager.player_id = 1
             units.append(villager)
-            
+             """placer les unités sur la carte
+            self.carte.grid[12 + y_offset][10 + x_offset].occupant = villager"""
+
             villager = Villager(map_width - 15 + x_offset, 12 + y_offset, self.carte)
             villager.player_id = 2
             units.append(villager)
+            """placer les unités sur la carte
+            self.carte.grid[12 + y_offset][map_width - 15 + x_offset].occupant = villager"""
 
         for building in buildings:
             self.carte.place_building(building)

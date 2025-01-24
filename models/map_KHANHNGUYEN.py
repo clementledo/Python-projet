@@ -58,21 +58,17 @@ class Map:
         :param old_position: Tuple (x, y) of the unit's previous position.
         :param new_position: Tuple (x, y) of the unit's new position.
         """
-        x, y = old_position 
-        self.grid[y][x].occupant = None
-        x, y = new_position
-        self.grid[y][x].occupant = unit
-        unit.destination = new_position
-        unit.update()
-        
-        """
         if old_position:
             old_tile = self.get_tile(*old_position)
             old_tile.remove_unit(unit)  # Remove the unit from the old tile
         
         new_tile = self.get_tile(*new_position)
         new_tile.add_unit(unit)  # Add the unit to the new tile
-        """
+     
+    """ def update_unit_position(self, unit):
+        #méthode seulement utilisée lors de la création de nouveaux villageois
+        x, y = unit.position 
+        self.grid[y][x].occupant = unit """
 
     def create_forest(self, nb_tree, pos_x, pos_y):
         radius = int(math.sqrt(nb_tree)) 
