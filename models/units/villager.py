@@ -6,7 +6,7 @@ from views.asset_manager import AssetManager
 
 class Villager(Unit):
     def __init__(self, x, y, map, player_id=1, use_terminal_view=False):
-        super().__init__(x, y, "Villager", 0.8, 2, 25, map)
+        super().__init__(x, y, "Villager", 0.3, 2, 25, map)
         self.player_id = player_id
         self.use_terminal_view = use_terminal_view
         self.is_gathering = False
@@ -28,44 +28,63 @@ class Villager(Unit):
         self.atk_power = 3  # Villager specific attack power
         self.symbol = 'V'  # For terminal display
         self.sprites_initialized = False
-
-        
+        self.task = None  # Add this line to initialize the task attribute
 
     def initialize_sprites(self):
         """Initialize sprite-related attributes and load sprites"""
-        if self.use_terminal_view or self.sprites_initialized:
+        if self.use_terminal_view:
+            self.sprites_initialized = True
+            return
+
+        if self.sprites_initialized:
             return
 
         import pygame
         self.asset_manager = AssetManager()
-        self.walking_sprites = self.asset_manager.get_villager_sprites('walking')
-        self.standing_sprites = self.asset_manager.get_villager_sprites('standing')
+        
+        # Safe sprite initialization with empty lists as fallback
+        self.walking_sprites = self.asset_manager.villager_sprites.get('walking', [])
+        self.standing_sprites = self.asset_manager.villager_sprites.get('standing', [])
+        self.building_sprites = self.asset_manager.villager_sprites.get('building', [])
+        
         self.current_frame = 0
         self.animation_speed = 0.6
         self.last_update = pygame.time.get_ticks()
         self.sprites_initialized = True
-        #self.load_walking_sprites()
-        #self.load_standing_sprites()
-        
 
     def get_current_sprite(self):
-        """Returns the current sprite based on unit state"""
+        """Returns the current sprite based on unit state with safety checks"""
         if self.use_terminal_view:
             return None
+            
+        # Safety check for sprite initialization
+        if not self.sprites_initialized:
+            self.initialize_sprites()
+            
         now = pygame.time.get_ticks()
         if now - self.last_update > self.animation_speed * 1000:
             self.last_update = now
-            if self.status == unitStatus.MOVING:
-                self.current_frame = (self.current_frame + 1) % len(self.walking_sprites)
-                return self.walking_sprites[self.current_frame]
-            else:
-                self.current_frame = (self.current_frame + 1) % len(self.standing_sprites)
-                return self.standing_sprites[self.current_frame]
+            
+            # Safe sprite list access with bounds checking
+            if self.status == unitStatus.BUILDING and self.building_sprites:
+                self.current_frame = (self.current_frame + 1) % max(len(self.building_sprites), 1)
+                return self.building_sprites[min(self.current_frame, len(self.building_sprites) - 1)]
+            elif self.status == unitStatus.MOVING and self.walking_sprites:
+                self.current_frame = (self.current_frame + 1) % max(len(self.walking_sprites), 1)
+                return self.walking_sprites[min(self.current_frame, len(self.walking_sprites) - 1)]
+            elif self.standing_sprites:
+                self.current_frame = (self.current_frame + 1) % max(len(self.standing_sprites), 1)
+                return self.standing_sprites[min(self.current_frame, len(self.standing_sprites) - 1)]
         
-        # Return current frame without updating
-        if self.status == unitStatus.MOVING:
-            return self.walking_sprites[self.current_frame]
-        return self.standing_sprites[self.current_frame]
+        # Safe return of current frame
+        if self.status == unitStatus.BUILDING and self.building_sprites:
+            return self.building_sprites[min(self.current_frame, len(self.building_sprites) - 1)]
+        elif self.status == unitStatus.MOVING and self.walking_sprites:
+            return self.walking_sprites[min(self.current_frame, len(self.walking_sprites) - 1)]
+        elif self.standing_sprites:
+            return self.standing_sprites[min(self.current_frame, len(self.standing_sprites) - 1)]
+        
+        return None  # Return None if no valid sprites available
 
     def move_towards(self, position, grid):
         """Handle movement and animation"""
@@ -132,7 +151,7 @@ class Villager(Unit):
                 self.return_resources()
             else:
                 tile = self.grid.get_tile(self.position[0], self.position[1])
-                if tile.resource:
+                if (tile.resource):
                     self.gathering_progress += self.gathering_speed
                     if self.gathering_progress >= 100:
                         self.carried_resources += 1
@@ -187,3 +206,7 @@ class Villager(Unit):
         villager.current_resources = data["current_resources"]
         villager.current_resource_type = data["current_resource_type"]
         return villager
+
+    def collect_resource(self, resource_type):
+        self.task = resource_type  # Set the task attribute when collecting a resource
+        # ... existing code for collecting resources ...

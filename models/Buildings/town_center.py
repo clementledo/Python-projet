@@ -56,8 +56,9 @@ class Town_center(Building):
             self.training_time = 0
             print("Villager training complete!")
             game_state.model['units'].append(self.villager)
-            self.villager = None
-                
+            villager = self.villager
+            return villager
+        return None     
     
     def update(self):
         """Update training cooldown"""

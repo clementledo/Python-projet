@@ -24,6 +24,7 @@ MAP_TYPES = ["ressources_generales","centre_ressources"]
 
 class TerminalView:
     def __init__(self, game_state):
+        self.use_terminal_view = True
         self.game_state = game_state
         self.camera_x = 0
         self.camera_y = 0
@@ -34,6 +35,8 @@ class TerminalView:
         self.selected_starting_condition = "Moyenne"
         self.selected_map_type = "ressources_generales"
         self.game_controller = None
+
+        
 
     def main_menu(self, stdscr):
         """Affiche et gère le menu principal."""
@@ -112,20 +115,11 @@ class TerminalView:
         self.game_state.start_new_game(stdscr, map_width, map_height, TILE_SIZE, map_type, starting_condition, use_terminal_view=True)
         
         
-        self.move_unit_to_town_center() 
+        
         self.screen = GameScreen.GAMEPLAY
         self.gameplay_loop(stdscr)
     
-    def move_unit_to_town_center(self):
-        # Find town center
-        town_center = None
-        for building in self.game_state.model['buildings']:
-            if isinstance(building, Town_center):
-                town_center = building
-                break
-        
-        if town_center:
-                self.game_state.model['units'][3].move_towards(town_center.pos, self.game_state.carte)
+    
 
     def load_game(self, stdscr):
         """Charge une partie sauvegardée."""

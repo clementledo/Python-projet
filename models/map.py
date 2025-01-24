@@ -139,6 +139,8 @@ class Map:
         """
         x, y = building.pos
         width, height = building.size
+        x -= width // 2
+        y -= height // 2
         
         # Check if the space is free and within bounds
         if not self.is_area_free(x, y, width, height):
@@ -147,7 +149,7 @@ class Map:
         # Mark the tiles as occupied by the building
         for i in range(width):
             for j in range(height):
-                self.grille[y + 1 - j][x + 1 - i].occupant = building.name  # Mark the grid with the building reference
+                self.grille[y + j][x + i].occupant = building.name  # Mark the grid with the building reference
     
     def is_area_free(self, top_left_x, top_left_y, width, height):
         top_left_x += 1
@@ -200,6 +202,12 @@ class Map:
                 if tile and isinstance(tile, Resource):
                     resources.append((x, y))
         return resources
+    
+    def set_resources(self):
+        resource = self.get_resources()
+        for r in resource:
+            if self.grille[r[1]][r[0]].occupant == None:
+                self.grille[r[1]][r[0]].occupant = self.grille[r[1]][r[0]].resource.resource_type
 
     def __repr__(self):
         return f"Map({self.largeur}x{self.hauteur})"
