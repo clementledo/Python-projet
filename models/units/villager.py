@@ -2,6 +2,7 @@ from .unit import Unit
 from .unit import unitStatus
 import pygame
 import os
+from views.asset_manager import AssetManager
 
 class Villager(Unit):
     def __init__(self, x, y, map, player_id=1, use_terminal_view=False):
@@ -28,48 +29,24 @@ class Villager(Unit):
         self.symbol = 'V'  # For terminal display
         self.sprites_initialized = False
 
-       
-    
+        
+
     def initialize_sprites(self):
         """Initialize sprite-related attributes and load sprites"""
         if self.use_terminal_view or self.sprites_initialized:
             return
 
-        self.walking_sprites = []
-        self.standing_sprites = []
+        self.asset_manager = AssetManager()
+        self.walking_sprites = self.asset_manager.get_villager_sprites('walking')
+        self.standing_sprites = self.asset_manager.get_villager_sprites('standing')
         self.current_frame = 0
         self.animation_speed = 0.6
         self.last_update = pygame.time.get_ticks()
-        self.load_walking_sprites()
-        self.load_standing_sprites()
         self.sprites_initialized = True
+        #self.load_walking_sprites()
+        #self.load_standing_sprites()
+        
 
-    def load_walking_sprites(self):
-        if self.use_terminal_view:
-            return
-        sprite_dir = "assets/Sprites/Villager/Walk"
-        for i in range(16, 76):  # 75 frames
-            sprite_path = os.path.join(sprite_dir, f"Villagerwalk{i:03d}.png")
-            try:
-                sprite = pygame.image.load(sprite_path).convert_alpha()
-                self.walking_sprites.append(sprite)
-            except pygame.error as e:
-                print(f"Couldn't load sprite: {sprite_path}")
-                print(e)
-
-    def load_standing_sprites(self):
-        if self.use_terminal_view:
-            return
-        sprite_dir = "assets/Sprites/Villager/Stand"
-        for i in range(53, 75):  # Adjust range based on actual sprite count
-            sprite_path = os.path.join(sprite_dir, f"Villagerstand{i:03d}.png")
-            try:
-                sprite = pygame.image.load(sprite_path).convert_alpha()
-                self.standing_sprites.append(sprite)
-            except pygame.error as e:
-                print(f"Couldn't load sprite: {sprite_path}")
-                print(e)
-    
     def get_current_sprite(self):
         """Returns the current sprite based on unit state"""
         if self.use_terminal_view:

@@ -1,8 +1,8 @@
 import pygame
 from models.Resources.Terrain_type import Terrain_type
-import random
-import math
+
 from models.units.villager import Villager
+from views.asset_manager import AssetManager
 
 class GameView:
     def __init__(self, screen, tile_size=50):
@@ -11,35 +11,31 @@ class GameView:
         self.unit_sprites = {}
         self.building_sprites = {}
         
-        # Load resource panel and icons
-        self.resource_panel = pygame.image.load('assets/resourcecivpanel.png').convert_alpha()
-        self.resource_icons = {
-            "food": pygame.image.load("assets/iconfood.png").convert_alpha(),
-            "wood": pygame.image.load("assets/iconwood.png").convert_alpha(),
-            "gold": pygame.image.load("assets/icongold.png").convert_alpha()
-        }
+        # Get asset manager instance
+        self.asset_manager = AssetManager()
+        self.resource_panel = self.asset_manager.get_ui_asset('resource_panel')
+        self.resource_icons = self.asset_manager.ui_assets['icons']
+        
         self.font = pygame.font.SysFont('Arial', 24)
         self.decorations = []  # Liste pour stocker les décorations générées
         self.decorations_generated = False  # Flag pour vérifier si les décorations ont été générées
         self.iso_offset_x = 0  # Store isometric offset
         self.iso_offset_y = 0  # Store isometric offset
 
-    def render(self, model, camera_x, camera_y, zoom_level):
-        """Render game state"""
-        self.screen.fill((0, 0, 0))
+        # Cache for transformed sprites
+        self.sprite_cache = {}
         
-        # Render map
-        self.render_map(model['map'], camera_x, camera_y, zoom_level)
+        # Viewport properties
+        self.viewport_width = screen.get_width()
+        self.viewport_height = screen.get_height()
         
-        # Render buildings
-        self.render_buildings(model['buildings'], camera_x, camera_y, zoom_level)
+        # Dirty rectangles for partial updates
+        self.dirty_rects = []
         
-        # Render units
-        self.render_units(model['units'], camera_x, camera_y, zoom_level)
-        
-        # Update display
-        pygame.display.flip()
-    
+        # Pre-calculate tile dimensions
+        self.half_tile = tile_size // 2
+        self.quarter_tile = tile_size // 4
+
     def generate_resources(self, carte):
         """Génère une liste de décorations (arbres, broussailles et or) sans écraser les ressources."""
         if getattr(self, "decorations_generated", False):  # Si déjà généré, ne rien faire
@@ -58,7 +54,7 @@ class GameView:
                                 'type': 'tree',
                                 'x': x,
                                 'y': y,
-                                'image': pygame.image.load('assets/tree.png').convert_alpha()
+                                'image': self.asset_manager.decoration_sprites['tree']
                             }
                             self.decorations.append(tree)
                         case "Gold":
@@ -73,8 +69,6 @@ class GameView:
                             continue
 
                
-               
-                    
 
         self.decorations_generated = True
 
@@ -90,7 +84,10 @@ class GameView:
         iso_x = (x - y) * tile_width // 2 - camera_x
         iso_y = (x + y) * tile_height // 2 - camera_y
         
-        return iso_x, iso_y
+        return iso_x-200, iso_y-200
+
+    
+    
 
     def render_map(self, carte, camera_x, camera_y, zoom_level):
         """
@@ -101,19 +98,21 @@ class GameView:
             camera_x, camera_y: Position de la caméra.
             zoom_level: Niveau de zoom (1.0 = taille normale).
         """
-        textures = {
-            Terrain_type.GRASS: pygame.image.load('assets/t_grass.png').convert_alpha(),
-            Terrain_type.WATER: pygame.image.load('assets/t_water.png').convert_alpha(),
+        base_textures = {
+        Terrain_type.GRASS: self.asset_manager.terrain_textures[Terrain_type.GRASS],
+        Terrain_type.WATER: self.asset_manager.terrain_textures[Terrain_type.WATER]
         }
 
         # Dimensions des tuiles après application du zoom
         tile_width = int(self.tile_size * 2 * zoom_level)
         tile_height = int(self.tile_size * zoom_level)
 
-        # Redimensionner les textures en fonction du zoom
-        for terrain, texture in textures.items():
-            textures[terrain] = pygame.transform.scale(texture, (tile_width, tile_height))
+        textures = {
+        terrain: pygame.transform.scale(texture, (tile_width, tile_height))
+        for terrain, texture in base_textures.items()
+    }
 
+        
         screen_width, screen_height = self.screen.get_size()
 
         # Vérifier les dimensions de la grille avant de parcourir
@@ -178,11 +177,12 @@ class GameView:
         if hasattr(carte, 'resources'):
             self.render_resources(carte.resources)
 
+    
 
     def render_minimap(self, map_data, camera_x, camera_y, zoom_level, units, buildings):
         """
-        Rendu avancé de la minimap avec le terrain, les unités et les bâtiments.
-        
+        Rendu optimisé de la minimap avec le terrain, les unités et les bâtiments.
+
         Args:
             map_data: Carte contenant les données de la grille.
             camera_x, camera_y: Position de la caméra.
@@ -190,40 +190,44 @@ class GameView:
             units: Liste des unités avec leurs positions.
             buildings: Liste des bâtiments avec leurs positions et tailles.
         """
-        # Dimensions de la minimap
-        minimap_width = 650  # Anciennement 400
-        minimap_height = 220  # Anciennement 200
-        minimap_x = self.screen.get_width() - minimap_width - 10 + 5  # Ajout de 5 pixels à droite
-        minimap_y = self.screen.get_height() - minimap_height - 10 + 5  # Ajout de 5 pixels en bas
+        # Dimensions et position de la minimap
+        minimap_width = 650
+        minimap_height = 220
+        minimap_x = self.screen.get_width() - minimap_width - 5  # Décalage ajusté
+        minimap_y = self.screen.get_height() - minimap_height - 5
 
-        # Couleurs des terrains
+        # Couleurs des terrains (pré-calculées pour éviter des recherches répétées)
         terrain_colors = {
-            Terrain_type.GRASS: (34, 139, 34),  # Vert pour l'herbe
-            Terrain_type.WATER: (65, 105, 225),  # Bleu pour l'eau
+            Terrain_type.GRASS: (34, 139, 34),
+            Terrain_type.WATER: (65, 105, 225),
         }
 
-        # Surface de la minimap
-        minimap_surface = pygame.Surface((minimap_width, minimap_height))
-        minimap_surface.fill((50, 50, 50))  # Fond sombre
+        # Créer une surface avec support alpha pour le rendu de la minimap
+        minimap_surface = pygame.Surface((minimap_width, minimap_height), flags=pygame.SRCALPHA).convert_alpha()
+        minimap_surface.fill((50, 50, 50, 200))  # Fond légèrement transparent pour plus de clarté
 
-        # Calcul dynamique pour que les cases remplissent la minimap
-        tile_width = minimap_width / (map_data.largeur + map_data.hauteur) * 2
-        tile_width = int(tile_width)
+        # Calcul des dimensions des cases
+        total_tiles = map_data.largeur + map_data.hauteur
+        tile_width = int(minimap_width / total_tiles * 2)
         tile_height = tile_width // 2
 
-        # Décalages pour bien centrer
+        # Décalages pour centrer la carte
         offset_x = minimap_width // 2
         offset_y = minimap_height // 2 - (map_data.hauteur * tile_height) // 2
 
+        # Rendu des cases
         for y in range(map_data.hauteur):
             for x in range(map_data.largeur):
                 tile = map_data.grille[y][x]
                 if tile:
+                    # Récupérer la couleur du terrain
                     color = terrain_colors.get(tile.terrain_type, (100, 100, 100))
-                    iso_x = (x - y) * tile_width // 2
-                    iso_y = (x + y) * tile_height // 2
-                    iso_x += offset_x
-                    iso_y += offset_y
+
+                    # Calcul des coordonnées isométriques
+                    iso_x = (x - y) * tile_width // 2 + offset_x
+                    iso_y = (x + y) * tile_height // 2 + offset_y
+
+                    # Dessiner un losange (case)
                     diamond_points = [
                         (iso_x, iso_y),
                         (iso_x + tile_width // 2, iso_y + tile_height // 2),
@@ -232,24 +236,26 @@ class GameView:
                     ]
                     pygame.draw.polygon(minimap_surface, color, diamond_points)
 
-        # Rendu des unités en iso
+        # Rendu des unités
+        unit_colors = {
+            'villager': (255, 0, 0),
+            'archer': (0, 0, 255),
+        }
         for unit in units:
             ux, uy = unit.get_position()
             iso_ux = (ux - uy) * tile_width // 2 + offset_x
             iso_uy = (ux + uy) * tile_height // 2 + offset_y
-            unit_color = {
-                'villager': (255, 0, 0),
-                'archer': (0, 0, 255),
-            }.get(unit.unit_type, (255, 255, 255))
-            pygame.draw.circle(minimap_surface, unit_color, (int(iso_ux), int(iso_uy)), 2)
+            unit_color = unit_colors.get(unit.unit_type, (255, 255, 255))
+            if 0 <= iso_ux < minimap_width and 0 <= iso_uy < minimap_height:  # Limiter aux dimensions de la minimap
+                pygame.draw.circle(minimap_surface, unit_color, (int(iso_ux), int(iso_uy)), 2)
 
-        # Rendu des bâtiments en iso
+        # Rendu des bâtiments
         for building in buildings:
             bx, by = building.pos
             iso_bx = (bx - by) * tile_width // 2 + offset_x
             iso_by = (bx + by) * tile_height // 2 + offset_y
-            pygame.draw.rect(minimap_surface, (255, 0, 0),
-                             (iso_bx - 2, iso_by - 2, 4, 4))
+            if 0 <= iso_bx < minimap_width and 0 <= iso_by < minimap_height:  # Limiter aux dimensions de la minimap
+                pygame.draw.rect(minimap_surface, (255, 0, 0), (iso_bx - 2, iso_by - 2, 4, 4))
 
         # Afficher la minimap sur l'écran
         self.screen.blit(minimap_surface, (minimap_x, minimap_y))
@@ -259,11 +265,10 @@ class GameView:
             self.screen,
             (100, 100, 100),
             (minimap_x, minimap_y, minimap_width, minimap_height),
-            5  # Anciennement 4
-    )
-        
-    
-        
+            5
+        )
+
+
 
 
     def colorize_surface(self, surface, color):

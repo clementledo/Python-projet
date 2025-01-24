@@ -4,8 +4,12 @@ from ..units.archer import Archer
 class Archery_Range(Building) :
     range = 4
     def __init__(self,pos) :
+<<<<<<< HEAD
         super().__init__(name = "Archery_range",construction_time=50, hp=500,size= (3,3), symbol='A',pos=pos)
 
+=======
+        super().__init__("Archery_range",50,500,(3,3),'A',pos)
+>>>>>>> premain
         
     def spawn_archer(self) :
         self.remove_ressources(self,25,'W')

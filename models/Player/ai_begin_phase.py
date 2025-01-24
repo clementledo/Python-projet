@@ -1,7 +1,7 @@
 # from unit.unit import Unit 
-from units.villager import Villager
-from Buildings.town_center import Town_center
-from Resources.Resource_Type import type_resource
+from ..units.villager import Villager
+from ..Buildings.town_center import Town_center
+from ..Resources.Resource_Type import type_resource
 
 
 class IA:
