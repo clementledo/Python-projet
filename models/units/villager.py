@@ -40,22 +40,24 @@ class Villager(Unit):
         self.asset_manager = AssetManager()
         self.walking_sprites = self.asset_manager.get_villager_sprites('walking')
         self.standing_sprites = self.asset_manager.get_villager_sprites('standing')
+        self.building_sprites = self.asset_manager.get_villager_sprites('building')
         self.current_frame = 0
         self.animation_speed = 0.6
         self.last_update = pygame.time.get_ticks()
         self.sprites_initialized = True
-        #self.load_walking_sprites()
-        #self.load_standing_sprites()
-        
 
     def get_current_sprite(self):
         """Returns the current sprite based on unit state"""
         if self.use_terminal_view:
             return None
+            
         now = pygame.time.get_ticks()
         if now - self.last_update > self.animation_speed * 1000:
             self.last_update = now
-            if self.status == unitStatus.MOVING:
+            if self.status == unitStatus.BUILDING:
+                self.current_frame = (self.current_frame + 1) % len(self.building_sprites)
+                return self.building_sprites[self.current_frame]
+            elif self.status == unitStatus.MOVING:
                 self.current_frame = (self.current_frame + 1) % len(self.walking_sprites)
                 return self.walking_sprites[self.current_frame]
             else:
@@ -63,7 +65,9 @@ class Villager(Unit):
                 return self.standing_sprites[self.current_frame]
         
         # Return current frame without updating
-        if self.status == unitStatus.MOVING:
+        if self.status == unitStatus.BUILDING:
+            return self.building_sprites[self.current_frame]
+        elif self.status == unitStatus.MOVING:
             return self.walking_sprites[self.current_frame]
         return self.standing_sprites[self.current_frame]
 
