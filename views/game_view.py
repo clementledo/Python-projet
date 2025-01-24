@@ -312,7 +312,7 @@ class GameView:
                     x_display, y_display = unit.display_position
 
                     # Interpolation speed
-                    move_speed = 0.1  # Adjust this value for faster/slower interpolation
+                    move_speed = 0.05  # Adjust this value for faster/slower interpolation
 
                     # Linear interpolation towards target position
                     x_display += (x_target - x_display) * move_speed
