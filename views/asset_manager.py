@@ -17,7 +17,8 @@ class AssetManager:
             
         self.villager_sprites = {
             'walking': [],
-            'standing': []
+            'standing': [],
+            'building': []  # Add building animation array
         }
         self.ui_assets = {
             'resource_panel': pygame.image.load('assets/resourcecivpanel.png').convert_alpha(),
@@ -71,6 +72,15 @@ class AssetManager:
         }
 
     def load_villager_sprites(self):
+        # Load building sprites
+        for i in range(1, 76):  # 1 to 75
+            sprite_path = f'assets/Sprites/Villager/FarmingVillager/Build & Repair/Act/Villageract{i:03d}.png'
+            try:
+                sprite = pygame.image.load(sprite_path).convert_alpha()
+                self.villager_sprites['building'].append(sprite)
+            except pygame.error as e:
+                print(f"Error loading building sprite {i}: {e}")
+
         # Load walking sprites
         sprite_dir = "assets/Sprites/Villager/Walk"
         for i in range(16, 76):

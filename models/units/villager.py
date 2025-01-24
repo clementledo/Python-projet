@@ -39,32 +39,45 @@ class Villager(Unit):
         self.asset_manager = AssetManager()
         self.walking_sprites = self.asset_manager.get_villager_sprites('walking')
         self.standing_sprites = self.asset_manager.get_villager_sprites('standing')
+        self.building_sprites = self.asset_manager.get_villager_sprites('building')
         self.current_frame = 0
         self.animation_speed = 0.6
         self.last_update = pygame.time.get_ticks()
         self.sprites_initialized = True
-        #self.load_walking_sprites()
-        #self.load_standing_sprites()
-        
 
     def get_current_sprite(self):
-        """Returns the current sprite based on unit state"""
+        """Returns the current sprite based on unit state with safety checks"""
         if self.use_terminal_view:
             return None
+            
+        # Safety check for sprite initialization
+        if not self.sprites_initialized:
+            self.initialize_sprites()
+            
         now = pygame.time.get_ticks()
         if now - self.last_update > self.animation_speed * 1000:
             self.last_update = now
-            if self.status == unitStatus.MOVING:
-                self.current_frame = (self.current_frame + 1) % len(self.walking_sprites)
-                return self.walking_sprites[self.current_frame]
-            else:
-                self.current_frame = (self.current_frame + 1) % len(self.standing_sprites)
-                return self.standing_sprites[self.current_frame]
+            
+            # Safe sprite list access with bounds checking
+            if self.status == unitStatus.BUILDING and self.building_sprites:
+                self.current_frame = (self.current_frame + 1) % max(len(self.building_sprites), 1)
+                return self.building_sprites[min(self.current_frame, len(self.building_sprites) - 1)]
+            elif self.status == unitStatus.MOVING and self.walking_sprites:
+                self.current_frame = (self.current_frame + 1) % max(len(self.walking_sprites), 1)
+                return self.walking_sprites[min(self.current_frame, len(self.walking_sprites) - 1)]
+            elif self.standing_sprites:
+                self.current_frame = (self.current_frame + 1) % max(len(self.standing_sprites), 1)
+                return self.standing_sprites[min(self.current_frame, len(self.standing_sprites) - 1)]
         
-        # Return current frame without updating
-        if self.status == unitStatus.MOVING:
-            return self.walking_sprites[self.current_frame]
-        return self.standing_sprites[self.current_frame]
+        # Safe return of current frame
+        if self.status == unitStatus.BUILDING and self.building_sprites:
+            return self.building_sprites[min(self.current_frame, len(self.building_sprites) - 1)]
+        elif self.status == unitStatus.MOVING and self.walking_sprites:
+            return self.walking_sprites[min(self.current_frame, len(self.walking_sprites) - 1)]
+        elif self.standing_sprites:
+            return self.standing_sprites[min(self.current_frame, len(self.standing_sprites) - 1)]
+        
+        return None  # Return None if no valid sprites available
 
     def move_towards(self, position, grid):
         """Handle movement and animation"""
