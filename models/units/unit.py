@@ -67,53 +67,72 @@ class Unit:
                 self.target = None
 
     def heuristic(self, a, b):
-        """Fonction heuristique pour A* (distance de Manhattan)."""
-        return abs(a[0] - b[0]) + abs(a[1] - b[1])
+        """Fonction heuristique pour A* (distance de Chebyshev)."""
+        return max(abs(a[0] - b[0]), abs(a[1] - b[1]))
 
     def get_position(self):
         """Retourne la position actuelle de l'unité en coordonnées de tuiles."""
         return self.position
 
     def find_path(self, goal, grid, search_range=10):
-        """A* pathfinding with obstacle avoidance"""
+        """A* pathfinding avec prise en charge des mouvements diagonaux."""
         start = self.position
         print(f"Finding path from {start} to {goal}")
-        
+
         open_set = []
         open_set.append((0, start))
-        
+
         came_from = {}
         g_score = {start: 0}
         f_score = {start: self.heuristic(start, goal)}
         visited = set()
 
         def get_neighbors(pos):
-            """Get valid neighbors avoiding obstacles"""
-            # Only cardinal and diagonal moves
-            basic_moves = [(0, 1), (1, 0), (0, -1), (-1, 0)]  # Cardinal
-            diagonal_moves = [(1, 1), (1, -1), (-1, 1), (-1, -1)]  # Diagonal
-            
-            all_moves = basic_moves + diagonal_moves
-            valid_neighbors = []
-            
-            # Try cardinal moves first (straight path)
-            for dx, dy in basic_moves:
+            """Récupère les voisins valides en évitant les obstacles."""
+            # Combinaisons de mouvements (cardinaux et diagonaux)
+            moves = [
+                (0, 1), (1, 0), (0, -1), (-1, 0),  # Mouvements cardinaux
+                (1, 1), (1, -1), (-1, 1), (-1, -1)  # Mouvements diagonaux
+            ]
+
+            neighbors = []
+            for dx, dy in moves:
                 new_pos = (pos[0] + dx, pos[1] + dy)
                 if (0 <= new_pos[0] < grid.largeur and 
                     0 <= new_pos[1] < grid.hauteur and
                     not grid.is_position_occupied(new_pos[0], new_pos[1])):
-                    valid_neighbors.append(new_pos)
-            
-            # If no cardinal moves available, try diagonal
-            if not valid_neighbors:
-                for dx, dy in diagonal_moves:
-                    new_pos = (pos[0] + dx, pos[1] + dy)
-                    if (0 <= new_pos[0] < grid.largeur and 
-                        0 <= new_pos[1] < grid.hauteur and
-                        not grid.is_position_occupied(new_pos[0], new_pos[1])):
-                        valid_neighbors.append(new_pos)
-            
-            return valid_neighbors
+                    neighbors.append(new_pos)
+
+            return neighbors
+
+        while open_set:
+            open_set.sort(key=lambda x: x[0])
+            _, current = open_set.pop(0)
+
+            if current in visited:
+                continue
+
+            visited.add(current)
+
+            if current == goal:
+                path = []
+                while current in came_from:
+                    path.append(current)
+                    current = came_from[current]
+                path.reverse()
+                return path
+
+            for neighbor in get_neighbors(current):
+                tentative_g_score = g_score[current] + 1
+
+                if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
+                    came_from[neighbor] = current
+                    g_score[neighbor] = tentative_g_score
+                    f_score[neighbor] = tentative_g_score + self.heuristic(neighbor, goal)
+
+                    open_set.append((f_score[neighbor], neighbor))
+
+        return None  # Aucun chemin trouvé
 
         def get_tile_cost(pos):
             """Calculate cost penalty for position based on nearby obstacles"""
@@ -161,6 +180,7 @@ class Unit:
         return []
 
     def move_towards(self, goal, grid, search_range=10):
+        
         """Move unit towards goal using pathfinding and speed control."""
         if self.health <= 0:
             return False
