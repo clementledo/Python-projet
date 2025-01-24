@@ -35,7 +35,6 @@ class Villager(Unit):
         if self.use_terminal_view or self.sprites_initialized:
             return
 
-        import pygame
         self.walking_sprites = []
         self.standing_sprites = []
         self.current_frame = 0

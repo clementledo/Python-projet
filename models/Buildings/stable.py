@@ -4,7 +4,7 @@ from ..units.horseman import Horseman
 class Stable(Building) :
     
     def __init__(self,pos) :
-        super().__init__(self,175,50,500,3,'S',pos,'new')
+        super().__init__(name = "Stable",construction_time=50, hp=500,size= (3,3), symbol='S',pos=pos)
         
     def spawn_horseman(self) :
         self.remove_ressources(self,80,'F')

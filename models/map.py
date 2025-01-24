@@ -26,26 +26,15 @@ class Map:
                 self.grille[y][x] = Tile(x, y)
     
 
-    def is_position_occupied(self, x, y, game_state=None):
-        """Vérifie si une position est occupée par une unité ou un bâtiment"""
-        if not game_state:
-            return False
-            
-        # Vérification des unités
-        for unit in game_state.model['units']:
-            if unit.x == x and unit.y == y:
-                return True
-                
-        # Vérification des bâtiments
-        for building in game_state.model['buildings']:
-            bx, by = building.pos
-            width, height = building.size
-            # Vérifie si la position est dans l'emprise du bâtiment
-            if (x >= bx and x < bx + width and 
-                y >= by and y < by + height):
-                return True
-                
-        return False
+    def is_position_occupied(self, x, y):
+        """Vérifie si une position est occupée"""
+        # Vérifier les limites de la carte
+        if not self.is_within_bounds(x, y):
+            return True
+        
+        # Vérifier si la tuile est occupée
+        tile = self.grille[y][x]
+        return tile.occupant is not None
 
     def is_walkable(self, x, y):
         """Vérifie si une position est accessible pour une unité"""
@@ -89,6 +78,7 @@ class Map:
                         self.grille[y][x].resource = Resource(resource_type, [100, 0, 0]) 
                     else:
                         self.grille[y][x].resource = Resource(resource_type, [0, 800, 0]) 
+                        self.grille[y][x].occupant = "Gold"
 
         elif type_carte == "centre_ressources":
             # Concentration des ressources au centre de la carte
@@ -107,6 +97,7 @@ class Map:
                         break
 
                 self.grille[y][x].resource = Resource("Gold", [0, 800, 0])  # Exemple de ressources
+                self.grille[y][x].occupant = "Gold"
 
             # Ajouter des ressources "Wood" en dehors du cercle
             for _ in range((self.largeur * self.hauteur) // 65):  # Environ 10% des cases ont des ressources
