@@ -151,96 +151,64 @@ class Unit:
 
         return None  # Aucun chemin trouvé
 
-        def get_tile_cost(pos):
-            """Calculate cost penalty for position based on nearby obstacles"""
-            base_cost = 1
-            
-            # Check for buildings directly from grid
-            tile = grid.get_tile(pos[0], pos[1])
-            if tile and hasattr(tile, 'occupant'):
-                if tile.occupant and tile.occupant.unit_type == 'Building':
-                    base_cost += 5  # High cost for buildings
-            
-            # Check for resources
-            if tile and hasattr(tile, 'resource_type') and tile.resource_type:
-                base_cost += 3  # Cost penalty for resources
-                
-            return base_cost
-
-        while open_set:
-            current = min(open_set, key=lambda x: x[0])[1]
-            open_set = [x for x in open_set if x[1] != current]
-            
-            if current == goal:
-                path = []
-                while current in came_from:
-                    path.append(current)
-                    current = came_from[current]
-                path.reverse()
-                return path
-
-            visited.add(current)
-            
-            for neighbor in get_neighbors(current):
-                if neighbor not in visited:
-                    tile_cost = get_tile_cost(neighbor)
-                    tentative_g_score = g_score[current] + tile_cost
-                    
-                    if (neighbor not in g_score or 
-                        tentative_g_score < g_score[neighbor]):
-                        came_from[neighbor] = current
-                        g_score[neighbor] = tentative_g_score
-                        f_score[neighbor] = tentative_g_score + self.heuristic(neighbor, goal)
-                        open_set.append((f_score[neighbor], neighbor))
-
-        print(f"No path found - explored positions: {visited}")
-        return []
-
     def move_towards(self, goal, grid, search_range=10):
-        
-        """Move unit towards goal using pathfinding and speed control."""
+        """Move unit towards goal using pathfinding and smooth movement."""
         if self.health <= 0:
             return False
+
         self.status = unitStatus.MOVING
 
         # Calculer le temps écoulé depuis le dernier update
         current_time = pygame.time.get_ticks() / 1000.0  # Convertir en secondes
         elapsed_time = current_time - self.last_move_time
-        
-        # Accumuler la progression du mouvement basée sur la vitesse
-        self.movement_accumulator = elapsed_time * self.speed  # self.speed est en tuiles/seconde
-        
-        # Si on n'a pas accumulé assez de mouvement pour avancer d'une tuile
-        if self.movement_accumulator < 1.0:
+
+        if elapsed_time <= 0:
             return False
 
         # Trouver un nouveau chemin si nécessaire
-        if not self.current_path or self.is_obstacle_on_path(self.current_path, grid) :
+        if not self.current_path or self.is_obstacle_on_path(self.current_path, grid):
             self.current_path = self.find_path(goal, self.current_path, grid, search_range)
             self.visited_path = [self.position]
+            self.path_progress = 0  # Initialiser la progression dans la première tuile
 
         # S'il y a un chemin à suivre
         if self.current_path:
-            # Tant qu'on a assez de mouvement accumulé et qu'il reste du chemin
-            while self.movement_accumulator >= 1.0 and self.current_path and not self.is_obstacle_on_path(self.current_path, grid) :
-                next_step = self.current_path[0]
-                old_position = self.position
-                
-                try:
-                    # Mettre à jour la position
-                    self.position = next_step
-                    self.visited_path.append(next_step)
-                    self.current_path.pop(0)
-                    
-                    # Réduire l'accumulateur d'une unité pour chaque tuile parcourue
-                    self.movement_accumulator -= 1.0
-                    
-                except Exception as e:
-                    print(f"Error moving unit: {e}")
-                    self.position = old_position
-                    return False
+            # Obtenir la prochaine étape dans le chemin
+            next_step = self.current_path[0]
+            start_x, start_y = self.position
+            target_x, target_y = next_step
 
-            self.last_move_time = current_time
+            # Calculer le déplacement nécessaire entre les deux positions
+            dx = target_x - start_x
+            dy = target_y - start_y
+            distance_to_target = (dx**2 + dy**2) ** 0.5
+
+            # Calculer la distance que l'unité peut parcourir pendant le temps écoulé
+            distance_to_move = self.speed * elapsed_time
+
+            # Si l'unité peut atteindre ou dépasser la prochaine tuile
+            if distance_to_move >= distance_to_target:
+                # Déplacer complètement vers la prochaine tuile
+                self.position = next_step
+                self.visited_path.append(next_step)
+                self.current_path.pop(0)
+                self.last_move_time = current_time
+
+                # Réinitialiser la progression
+                self.path_progress = 0
+
+            else:
+                # Mouvement partiel vers la prochaine tuile
+                self.path_progress += distance_to_move / distance_to_target
+
+                # Calculer la nouvelle position interpolée
+                self.position = (
+                    start_x + dx * self.path_progress,
+                    start_y + dy * self.path_progress
+                )
+
+                self.last_move_time = current_time
+
             return True
 
         return False
