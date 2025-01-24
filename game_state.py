@@ -115,14 +115,12 @@ class GameState:
             villager = Villager(10 + x_offset, 12 + y_offset, self.carte)
             villager.player_id = 1
             units.append(villager)
-             """placer les unités sur la carte
-            self.carte.grid[12 + y_offset][10 + x_offset].occupant = villager"""
+            """placer les unités sur la carte self.carte.grid[12 + y_offset][10 + x_offset].occupant = villager"""
 
             villager = Villager(map_width - 15 + x_offset, 12 + y_offset, self.carte)
             villager.player_id = 2
             units.append(villager)
-            """placer les unités sur la carte
-            self.carte.grid[12 + y_offset][map_width - 15 + x_offset].occupant = villager"""
+            """placer les unités sur la carte self.carte.grid[12 + y_offset][map_width - 15 + x_offset].occupant = villager"""
 
         for building in buildings:
             self.carte.place_building(building)
@@ -326,3 +324,22 @@ class GameState:
             self.view.render(self.model, self.camera_x, self.camera_y, self.zoom_level)
            # pygame.display.flip()
 
+    def remove_unit(self, unit):
+        """Remove a unit from game state and cleanup all references"""
+        # Remove from units list
+        if unit in self.model['units']:
+            self.model['units'].remove(unit)
+        
+        # Remove from map occupancy
+        if hasattr(unit, 'x') and hasattr(unit, 'y'):
+            self.carte.grid[unit.y][unit.x].occupant = None
+            
+        # Remove unit status
+        if unit in self.unit_status:
+            del self.unit_status[unit]
+            
+        # Update any relevant player statistics
+        if hasattr(unit, 'player_id'):
+            player_id = unit.player_id
+            if player_id in self.players:
+                self.players[player_id].unit_count = len([u for u in self.model['units'] if u.player_id == player_id])

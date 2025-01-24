@@ -1,9 +1,9 @@
-from units.unit import Unit 
-from units.villager import Villager
-from Buildings.town_center import Town_center
+from models.units.villager import Villager
+from models.Buildings.town_center import Town_center
 from models.map import Map
-
-from units.unit import unitStatus
+from models.units.unit import Unit
+from models.units.unit import unitStatus
+from models.Resources.Tile import *
 import random
 
 class Strategy:
@@ -60,10 +60,9 @@ class Strategy:
         - Build Farms in advance to ensure food availability
         """
         # Generate Villagers until 100
-        for town_center in self.ai_controller.buildings_by_type("Town_center"):
-            if (self.ai_controller.unit_count("Villager") < 100 and
-                    self.ai_controller.resources["Food"] >= 50 and not Town_center.is_training):
-                Town_center.train_unit("Villager")
+        for town_center in self.ai_controller.buildings["Town_center"]:
+            if len(self.ai_controller.unit["Villager"]) < 100 and self.ai_controller.resources["Food"] >= 50 and not Town_center.is_training:
+                    Town_center.train_unit("Villager")
 
         # Gradually transition Villagers to collect Gold
         gold_villagers = self.ai_controller.count_villagers_collecting("Town_center")
@@ -113,11 +112,35 @@ class Strategy:
             self.execute_second_phase()
 
     def execute_attack_phase(self):
-        military = [u for u in self.units if u.unit_type in ["Archer", "Horseman", "Swordsman"]]
-        enemy_units = [u for u in self.game_state.model['units'] if u.player_id != self.player_id]
-        if len(military) >= self.attack_threshold and enemy_units:
-            target = self.find_nearby_targetstargets(enemy_units)
-            for unit in military:
-                unit.move_towards(target.position,self.game_state.carte)
-
+        # Collect military units
+        military_units = []
+        for unit_type in ["Archer", "Swordman", "Horseman","Villager"]:
+            military_units.extend(self.ai_controller.units.get(unit_type, []))
         
+        # Find enemy units
+        enemy_units = [
+            u for u in self.ai_controller.game_state.model['units'] 
+            if u.player_id != self.ai_controller.player_id
+        ]
+        
+        # Attack if enough military units and enemies exist
+        if len(military_units) >= len(enemy_units):
+            # Find a target
+            target = self.ai_controller.find_nearby_targets(military_units[0], enemy_units)
+            if target:
+                print(f"Found Target at {target.position}")
+                position_attack = (target.position[0] + 1, target.position[1]) 
+                for unit in military_units:
+                   unit.move_toward(position_attack, self.ai_controller.game_state.carte)
+                   if self.ai_controller.get_distance(position_attack,unit.position)==0:
+                       unit.atk(target)
+    def die(self, game_state):                  
+        units_to_remove = [unit for unit in self.ai_controller.units if unit.health <= 0]
+        for dead_unit in units_to_remove:
+            self.models.units.remove(dead_unit)  # Remove from model
+            game_state.remove_unit(dead_unit)    # Remove from game state
+            
+            # Update player stats if needed
+            if hasattr(dead_unit, 'player_id'):
+                if dead_unit.player_id in game_state.players:
+                    game_state.players[dead_unit.player_id].update_unit_count()

@@ -5,7 +5,7 @@ from models.Buildings.house import House
 from models.units.villager import Villager
 from models.Buildings.town_center import Town_center
 from models.Resources.Tile import Type
-from strategy import Strategy
+from models.Player.strategy import Strategy
 
 class IA:
     def __init__(self, player_id, game_state):
@@ -17,6 +17,7 @@ class IA:
             "Horseman": [u for u in game_state.model['units'] if u.unit_type == "Horseman" and u.player_id == player_id],
             "Attack": [],
         }
+        self.strategy = Strategy(self)
         self.game_state = game_state  # Full map data with obstacles and resources
         self.targets = {}  # Store targets for each unit
         self.resources = game_state.player_resources[player_id]  
@@ -170,7 +171,7 @@ class IA:
         villagers = [u for u in enemy_villager if u.units_type == "Villager"]
         return villagers[0] if villagers else enemy_villager[0]
     
-    def find_nearby_targets(self, unit, enemy_units, range = 20):
+    def find_nearby_targets(self, unit, enemy_units, range = 100):
         """
         Find a nearby target within the given range for a specific unit.
         
@@ -352,7 +353,6 @@ class IA:
         available_villagers = self.get_available_villagers()
         villager_farm = []
         for _ in range(len(self.buildings['Town_center'])*4):
-        for _ in range(len(self.buildings['Town_center'])*4):
             if available_villagers:
                 villager = available_villagers.pop(0)
                 villager_farm.append(villager)
@@ -470,8 +470,12 @@ class IA:
         self.buildings[building_type.__name__].append(building)
 
     def update(self):
-        self.execute_begin_phase()
+        self.strategy.execute_attack_phase()
         for unit in self.units["Villager"]:
-            if unit.status == unitStatus.IDLE:
-                print(f"Villager at {unit.position} is idle.")
+            if unit.status == unitStatus.ATTACKING:
+                print(f"Villager at {unit.position} is attack.")
+
+    
+   
+        
            
