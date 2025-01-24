@@ -88,7 +88,7 @@ class Unit:
         visited = set()
 
         def get_neighbors(pos):
-            """Récupère les voisins valides en évitant les obstacles."""
+            """Récupère les voisins valides en évitant les obstacles (unités, mines, et bâtiments)."""
             # Combinaisons de mouvements (cardinaux et diagonaux)
             moves = [
                 (0, 1), (1, 0), (0, -1), (-1, 0),  # Mouvements cardinaux
@@ -98,8 +98,7 @@ class Unit:
             neighbors = []
             for dx, dy in moves:
                 new_pos = (pos[0] + dx, pos[1] + dy)
-                if (0 <= new_pos[0] < grid.largeur and 
-                    0 <= new_pos[1] < grid.hauteur and
+                if (grid.is_walkable(new_pos[0], new_pos[1]) and
                     not grid.is_position_occupied(new_pos[0], new_pos[1])):
                     neighbors.append(new_pos)
 
