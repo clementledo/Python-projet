@@ -23,6 +23,30 @@ class GameView:
         self.decorations_generated = False  # Flag pour vérifier si les décorations ont été générées
         self.iso_offset_x = 0  # Store isometric offset
         self.iso_offset_y = 0  # Store isometric offset
+        
+        # Précharger et mettre en cache les textures de terrain
+        self.terrain_textures = {}
+        self._initialize_terrain_textures()
+
+        # Ajout des attributs pour la mini carte
+        self.minimap_surface = None
+        self.minimap_update_counter = 0
+        self.minimap_update_frequency = 30  # Met à jour tous les 30 frames
+        self.cached_minimap = None
+        self.last_minimap_state = None
+
+    def _initialize_terrain_textures(self):
+        """Précharge toutes les textures de terrain une seule fois"""
+        base_textures = {
+            Terrain_type.GRASS: pygame.image.load('assets/t_grass.png').convert_alpha(),
+            Terrain_type.WATER: pygame.image.load('assets/t_water.png').convert_alpha(),
+        }
+        
+        # Créer des versions 5x5 des textures
+        for terrain, texture in base_textures.items():
+            scaled = pygame.transform.scale(texture, 
+                (self.tile_size * 10, self.tile_size * 5))  # 5x5 tiles
+            self.terrain_textures[terrain] = scaled
 
     def render(self, model, camera_x, camera_y, zoom_level):
         """Render game state"""
@@ -96,125 +120,157 @@ class GameView:
         return iso_x, iso_y
 
     def render_map(self, carte, camera_x, camera_y, zoom_level):
-        """
-        Rendu de la carte avec gestion des textures, caméra et décorations.
-        
-        Args:
-            carte: La carte contenant les tuiles.
-            camera_x, camera_y: Position de la caméra.
-            zoom_level: Niveau de zoom (1.0 = taille normale).
-        """
-        textures = {
-            Terrain_type.GRASS: pygame.image.load('assets/t_grass.png').convert_alpha(),
-            Terrain_type.WATER: pygame.image.load('assets/t_water.png').convert_alpha(),
-        }
+        """Rendu optimisé de la carte avec regroupement des tuiles en blocs 5x5."""
+        screen_width, screen_height = self.screen.get_size()
+        map_width = len(carte.grille[0])
+        map_height = len(carte.grille)
 
-        # Dimensions des tuiles après application du zoom
+        # Calculer les dimensions de tuile actuelles avec le zoom
         tile_width = int(self.tile_size * 2 * zoom_level)
         tile_height = int(self.tile_size * zoom_level)
 
-        # Redimensionner les textures en fonction du zoom
-        for terrain, texture in textures.items():
-            textures[terrain] = pygame.transform.scale(texture, (tile_width, tile_height))
+        # Redimensionner les textures pour le zoom actuel (une seule fois par bloc)
+        zoomed_textures = {}
+        for terrain, texture in self.terrain_textures.items():
+            zoomed_textures[terrain] = pygame.transform.scale(texture, 
+                (tile_width * 5, tile_height * 5))
 
-        screen_width, screen_height = self.screen.get_size()
-
-        # Vérifier les dimensions de la grille avant de parcourir
-        if not carte.grille or not carte.grille[0]:
-            print("Erreur : La grille est vide ou mal initialisée.")
-            return
-
-        # Dimensions de la carte
-        map_width = len(carte.grille[0])  # Nombre de colonnes
-        map_height = len(carte.grille)   # Nombre de lignes
-
-        # Rendu des tuiles
-        for y in range(map_height):
-            for x in range(map_width):
-                if not (0 <= x < map_width and 0 <= y < map_height):
-                    continue
-
-                tile = carte.grille[y][x]
-                if not tile:
-                    continue
-
-                # Convertir les coordonnées du monde en coordonnées écran
-                iso_x, iso_y = self.world_to_screen(x, y, camera_x, camera_y, zoom_level)
+        # Parcourir la carte par blocs de 5x5
+        for base_y in range(0, map_height, 5):
+            for base_x in range(0, map_width, 5):
+                # Vérifier le type de terrain dominant dans le bloc 5x5
+                terrain_counts = {Terrain_type.GRASS: 0, Terrain_type.WATER: 0}
                 
-                # Centrer la carte sur l'écran
+                for y in range(base_y, min(base_y + 5, map_height)):
+                    for x in range(base_x, min(base_x + 5, map_width)):
+                        if 0 <= x < map_width and 0 <= y < map_height:
+                            tile = carte.grille[y][x]
+                            if tile:
+                                terrain_counts[tile.terrain_type] = \
+                                    terrain_counts.get(tile.terrain_type, 0) + 1
+
+                # Déterminer le type de terrain dominant
+                dominant_terrain = max(terrain_counts.items(), key=lambda x: x[1])[0]
+                
+                # Calculer la position du bloc
+                iso_x, iso_y = self.world_to_screen(base_x, base_y, camera_x, camera_y, zoom_level)
                 iso_x += screen_width // 2
                 iso_y += screen_height // 4
 
-                # Obtenir la texture de terrain
-                terrain_texture = textures.get(tile.terrain_type, textures[Terrain_type.GRASS])
-                self.screen.blit(terrain_texture, (iso_x, iso_y))
+                # Dessiner le bloc de terrain
+                self.screen.blit(zoomed_textures[dominant_terrain], (iso_x, iso_y))
 
-                # Dessiner un point au centre de la tuile
-                point_color = (0, 255, 0)  # Vert pour les centres
-                point_radius = max(2, int(2 * zoom_level))  # Taille ajustée au zoom
-                pygame.draw.circle(
-                    self.screen,
-                    point_color,
-                    (iso_x + tile_width // 2, iso_y + tile_height // 2),
-                    point_radius
-                )
+        # Dessiner les lignes de grille principales (tous les 5 tiles)
+        for y in range(0, map_height, 5):
+            for x in range(0, map_width, 5):
+                grid_x, grid_y = self.world_to_screen(x, y, camera_x, camera_y, zoom_level)
+                grid_x += screen_width // 2
+                grid_y += screen_height // 4
+                
+                points = [
+                    (grid_x, grid_y + tile_height*2.5),
+                    (grid_x + tile_width*2.5, grid_y),
+                    (grid_x + tile_width*5, grid_y + tile_height*2.5),
+                    (grid_x + tile_width*2.5, grid_y + tile_height*5),
+                    (grid_x, grid_y + tile_height*2.5)
+                ]
+                pygame.draw.lines(self.screen, (100, 100, 100), True, points, 2)
 
-        # Rendu des décorations (arbres, buissons, etc.)
+        # Render decorations
+        self.render_decorations(carte, camera_x, camera_y, zoom_level)
+
+    def render_decorations(self, carte, camera_x, camera_y, zoom_level):
+        """Méthode séparée pour le rendu des décorations."""
+        screen_width, screen_height = self.screen.get_size()
+        tile_width = int(self.tile_size * 2 * zoom_level)
+        tile_height = int(self.tile_size * zoom_level)
+
         for decoration in self.decorations:
             x, y = decoration['x'], decoration['y']
-            if not (0 <= x < map_width and 0 <= y < map_height):
+            if not (0 <= x < carte.largeur and 0 <= y < carte.hauteur):
                 continue
 
             iso_x, iso_y = self.world_to_screen(x, y, camera_x, camera_y, zoom_level)
-            
-            # Centrer la carte et ajuster la hauteur des décorations
             iso_x += screen_width // 2
             iso_y += screen_height // 4 - tile_height
 
-            # Redimensionner et dessiner la décoration
             decoration_image = pygame.transform.scale(
-                decoration['image'], (tile_width, tile_height * 2)
+                decoration['image'], 
+                (tile_width, tile_height * 2)
             )
             self.screen.blit(decoration_image, (iso_x, iso_y))
 
-        # Render resource panel last (on top)
-        if hasattr(carte, 'resources'):
-            self.render_resources(carte.resources)
-
-
     def render_minimap(self, map_data, camera_x, camera_y, zoom_level, units, buildings):
-        """Dessine une mini carte isométrique 2.5D en bas à droite de l'écran."""
+        """Version optimisée de la mini carte avec mise en cache."""
+        # Dimensions de la mini carte
         minimap_width = 400
         minimap_height = 400
-        background_height = 200  # Hauteur réduite pour le rectangle gris
-        padding_x = 10  # Padding horizontal inchangé
-        padding_y = -185  # Réduit le padding vertical pour rapprocher la mini carte du bord
+        background_height = 200
+        padding_x = 10
+        padding_y = -185
         screen_width, screen_height = self.screen.get_size()
         minimap_x = screen_width - minimap_width - padding_x
-        minimap_y = screen_height - minimap_height - padding_y  # Mise à jour du padding vertical
+        minimap_y = screen_height - minimap_height - padding_y
 
-        # Surface transparente pour dessiner la mini carte
-        minimap_surface = pygame.Surface((minimap_width, minimap_height), pygame.SRCALPHA)
+        # Vérifier si une mise à jour est nécessaire
+        current_state = (len(units), len(buildings), camera_x, camera_y)
+        force_update = self.cached_minimap is None or self.last_minimap_state != current_state
+        
+        # Mettre à jour la mini carte périodiquement ou si forcé
+        if self.minimap_update_counter >= self.minimap_update_frequency or force_update:
+            if self.cached_minimap is None:
+                self.cached_minimap = pygame.Surface((minimap_width, minimap_height), pygame.SRCALPHA)
+            
+            self.cached_minimap.fill((0, 0, 0, 0))
+            
+            # Dessiner le fond
+            pygame.draw.rect(
+                self.cached_minimap,
+                (50, 50, 50, 200),
+                (0, 0, minimap_width, background_height)
+            )
 
-        # Dessiner un rectangle gris plus petit (hauteur = background_height)
-        pygame.draw.rect(
-            minimap_surface,
-            (50, 50, 50, 200),
-            (0, 0, minimap_width, background_height)
-        )
+            # Paramètres isométriques simplifiés
+            base_tile_w = 8
+            base_tile_h = 4
 
-        # Paramètres de base pour isométrie
-        base_tile_w = 8
-        base_tile_h = 4
+            # Calcul des limites une seule fois
+            min_ix, max_ix, min_iy, max_iy = self._calculate_minimap_bounds(map_data, base_tile_w, base_tile_h)
+            
+            # Calcul de l'échelle
+            iso_width = max_ix - min_ix + 1
+            iso_height = max_iy - min_iy + 1
+            scale = min(minimap_width / iso_width, minimap_height / iso_height) if iso_width and iso_height else 1
 
-        # 1) Calcul du bounding box isométrique
+            # Fonction de transformation optimisée
+            def iso_transform(x, y):
+                ix = (x - y) * base_tile_w // 2
+                iy = (x + y) * base_tile_h // 2
+                return (int((ix - min_ix) * scale), int((iy - min_iy) * scale))
+
+            # Dessiner le terrain (optimisé)
+            self._draw_minimap_terrain(map_data, iso_transform, self.cached_minimap)
+            
+            # Dessiner les unités et bâtiments (optimisé)
+            self._draw_minimap_entities(units, buildings, iso_transform, self.cached_minimap)
+
+            self.minimap_update_counter = 0
+            self.last_minimap_state = current_state
+        else:
+            self.minimap_update_counter += 1
+
+        # Afficher la mini carte mise en cache
+        self.screen.blit(self.cached_minimap, (minimap_x, minimap_y))
+
+    def _calculate_minimap_bounds(self, map_data, base_tile_w, base_tile_h):
+        """Calcule les limites de la mini carte."""
         min_ix = float('inf')
         max_ix = -float('inf')
         min_iy = float('inf')
         max_iy = -float('inf')
 
-        for y in range(map_data.hauteur):
-            for x in range(map_data.largeur):
+        for y in range(0, map_data.hauteur, 2):  # Optimisé: échantillonnage
+            for x in range(0, map_data.largeur, 2):
                 ix = (x - y) * base_tile_w // 2
                 iy = (x + y) * base_tile_h // 2
                 min_ix = min(min_ix, ix)
@@ -222,50 +278,36 @@ class GameView:
                 min_iy = min(min_iy, iy)
                 max_iy = max(max_iy, iy)
 
-        # 2) Calcul de l'échelle pour tout faire tenir dans la mini carte
-        iso_width = max_ix - min_ix + 1
-        iso_height = max_iy - min_iy + 1
-        scale_x = minimap_width / (iso_width if iso_width else 1)
-        scale_y = minimap_height / (iso_height if iso_height else 1)
-        scale = min(scale_x, scale_y)
+        return min_ix, max_ix, min_iy, max_iy
 
-        # Petite fonction pour transformer (x, y) => (iso_x, iso_y) => (scaled_x, scaled_y)
-        def iso_transform(xx, yy):
-            ix = (xx - yy) * base_tile_w // 2
-            iy = (xx + yy) * base_tile_h // 2
-            sx = (ix - min_ix) * scale
-            sy = (iy - min_iy) * scale
-            return int(sx), int(sy)
-
-        # 3) Dessiner la carte avec lignes de grille
+    def _draw_minimap_terrain(self, map_data, transform_func, surface):
+        """Dessine le terrain sur la mini carte de manière simplifiée."""
         for y in range(map_data.hauteur):
             for x in range(map_data.largeur):
+                if not (0 <= x < map_data.largeur and 0 <= y < map_data.hauteur):
+                    continue
+                    
                 tile = map_data.grille[y][x]
                 if not tile:
                     continue
-                iso_x, iso_y = iso_transform(x, y)
+
+                iso_x, iso_y = transform_func(x, y)
                 color = (34, 139, 34) if tile.terrain_type == Terrain_type.GRASS else (0, 191, 255)
-                pygame.draw.rect(minimap_surface, color, (iso_x, iso_y, 3, 3))
-                # Dessiner les lignes de grille autour de chaque tuile
-                pygame.draw.rect(minimap_surface, (0, 0, 0), (iso_x, iso_y, 3, 3), 1)
+                # Simplement dessiner le rectangle sans bordure
+                pygame.draw.rect(surface, color, (iso_x, iso_y, 2, 2))
 
-        # Dessiner bâtiments avec lignes de grille
+    def _draw_minimap_entities(self, units, buildings, transform_func, surface):
+        """Dessine les unités et bâtiments sur la mini carte."""
+        # Dessiner les bâtiments
         for b in buildings:
-            iso_x, iso_y = iso_transform(b.pos[0], b.pos[1])
-            pygame.draw.rect(minimap_surface, (255, 0, 0), (iso_x, iso_y, 4, 4))
-            # Dessiner les lignes de grille autour des bâtiments
-            pygame.draw.rect(minimap_surface, (0, 0, 0), (iso_x, iso_y, 4, 4), 1)
+            iso_x, iso_y = transform_func(b.pos[0], b.pos[1])
+            pygame.draw.rect(surface, (255, 0, 0), (iso_x, iso_y, 4, 4))
 
-        # Dessiner unités avec lignes de grille
+        # Dessiner les unités
         for u in units:
-            iso_x, iso_y = iso_transform(u.get_position()[0], u.get_position()[1])
-            pygame.draw.circle(minimap_surface, (0, 255, 0), (iso_x, iso_y), 2)
-            # Dessiner les lignes de grille autour des unités
-            pygame.draw.rect(minimap_surface, (0, 0, 0), (iso_x - 2, iso_y - 2, 4, 4), 1)
-
-        # Affichage final
-        self.screen.blit(minimap_surface, (minimap_x, minimap_y))
-
+            x, y = u.get_position()
+            iso_x, iso_y = transform_func(x, y)
+            pygame.draw.circle(surface, (0, 255, 0), (iso_x, iso_y), 2)
 
     def colorize_surface(self, surface, color):
         """Apply color tint to a surface"""
