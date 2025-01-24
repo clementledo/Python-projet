@@ -1,5 +1,5 @@
 import pygame
-from asyncio import PriorityQueue
+from queue import PriorityQueue
 from models.Resources.Terrain_type import Terrain_type  # Adjust the import path as necessary
 from enum import Enum
 from models.Buildings.building import Building
@@ -36,10 +36,11 @@ class Unit:
         self.destination = None
         self.path = []  # Liste du chemin
         self.grid = map  # Carte sur laquelle l'unité se déplace
-        self.walkable_symbols = {Type.Food, Type.Farm, None, "Farm", "Food"} 
+        self.walkable_symbols = {Type.Food, Type.Farm, None, "Farm", "Food", "Unit"} 
         self.health = hp  # Points de vie
         self.max_health = hp 
         self.status = unitStatus.IDLE
+        #map.update_unit_position(self, None, (x, y))
 
         self.current_path = []  # Store current path for visualization
         self.show_path = True   # Toggle path visibility
@@ -54,13 +55,13 @@ class Unit:
         if self.status == unitStatus.MOVING:
             if self.destination:
                 # Appeler move_towards pour effectuer le déplacement progressif
-                self.move_towards(self.destination, self.grid)
+                self.move_toward(self.destination, self.grid)
                 if not self.current_path:  # Arrivé à destination
                     self.status = unitStatus.IDLE
                     self.destination = None
         elif self.status == unitStatus.ATTACKING:
             if self.target and self.target.health > 0:
-                if self.distance_to(self.target) <= self.attack_range:
+                if self.distance_to(self.target.position) <= self.attack_range:
                     self.atk(self.target)
                 else:
                     self.status = unitStatus.MOVING
@@ -68,7 +69,13 @@ class Unit:
             else:
                 self.status = unitStatus.IDLE
                 self.target = None
-
+        elif self.status == unitStatus.BUILDING:
+            if self.distance_to(self.destination) > 1:
+                self.move_toward(self.destination, self.grid)
+    
+    def distance_to(self, target):
+        """Calculate distance to target position"""
+        return abs(self.position[0] - target[0]) + abs(self.position[1] - target[1])
     def heuristic(self, a, b):
         """Fonction heuristique pour A* (distance de Chebyshev)."""
         return max(abs(a[0] - b[0]), abs(a[1] - b[1]))
@@ -77,6 +84,35 @@ class Unit:
         """Retourne la position actuelle de l'unité en coordonnées de tuiles."""
         return self.position
 
+    
+    def find_closest_walkable(self, goal, map):
+        """
+        Find the closest walkable tile to the given goal.
+
+        :param goal: Tuple (x, y) goal position.
+        :param map: 2D list representing the map.
+        :return: Tuple (x, y) closest walkable tile.
+        """
+        from collections import deque
+
+        queue = deque([goal])
+        visited = set()
+        visited.add(goal)
+
+        while queue:
+            current = queue.popleft()
+            if map[current[1]][current[0]].occupant in self.walkable_symbols:
+                return current
+
+            neighbors = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+            for direction in neighbors:
+                neighbor = (current[0] + direction[0], current[1] + direction[1])
+                if 0 <= neighbor[0] < len(map) and 0 <= neighbor[1] < len(map[0]) and neighbor not in visited:
+                    queue.append(neighbor)
+                    visited.add(neighbor)
+
+        return goal  # If no walkable tile is found, return the original goal
+    
     def is_obstacle_on_path(self, current_path, grid):
         """Check if there are obstacles on the current path."""
         for pos in current_path:
@@ -94,6 +130,8 @@ class Unit:
         
         """A* pathfinding avec prise en charge des mouvements diagonaux."""
         start = self.position
+        if start == goal:
+            return []
         print(f"Finding path from {start} to {goal}")
 
         open_set = []
@@ -242,7 +280,7 @@ class Unit:
     def die(self):
         """Gère la mort de l'unité."""
         print(f"L'unité {self.unit_type} est morte.")
-        self.grid.get_tile(self.position[0], self.position[1]).remove_unit(self)
+        #self.grid.get_tile(self.position[0], self.position[1]).remove_unit(self)
 
     def serialize(self):
         """Serialize unit data"""

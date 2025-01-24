@@ -3,9 +3,6 @@ from ..Resources import Ressource
 
 """ProblÃ¨me pour le contenant"""
 class Camp(Building) : 
-    
-    cont = 0
-    
     def __init__(self,pos) :
         super().__init__(name = "castel",construction_time=25, hp=200,size= (2,2), symbol='C',pos=pos)
         

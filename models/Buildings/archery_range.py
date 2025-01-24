@@ -2,7 +2,6 @@ from models.Buildings.building import Building
 from ..units.archer import Archer
 
 class Archery_Range(Building) :
-    range = 4
     def __init__(self,pos) :
         super().__init__(name = "Archery_range",construction_time=50, hp=500,size= (3,3), symbol='A',pos=pos)
         

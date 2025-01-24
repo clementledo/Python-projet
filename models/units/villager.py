@@ -80,7 +80,8 @@ class Villager(Unit):
         """Démarre la construction d'un bâtiment."""
         self.status = unitStatus.BUILDING
         self.building = building
-        nominal_time = building.nominal_construction_time
+        self.destination = building.pos
+        nominal_time = building.construction_time
         self.remaining_construction_time = (3 * nominal_time) / (builders_count + 2)
         print(f"Construction commencée. Temps de construction réel : {self.remaining_construction_time} secondes.")
     
