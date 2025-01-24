@@ -55,7 +55,7 @@ class Unit:
         if self.status == unitStatus.MOVING:
             if self.destination:
                 # Appeler move_towards pour effectuer le déplacement progressif
-                self.move_toward(self.destination, self.grid)
+                self.move_towards(self.destination, self.grid)
                 if not self.current_path:  # Arrivé à destination
                     self.status = unitStatus.IDLE
                     self.destination = None
@@ -71,7 +71,7 @@ class Unit:
                 self.target = None
         elif self.status == unitStatus.BUILDING:
             if self.distance_to(self.destination) > 1:
-                self.move_toward(self.destination, self.grid)
+                self.move_towards(self.destination, self.grid)
     
     def distance_to(self, target):
         """Calculate distance to target position"""
