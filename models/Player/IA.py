@@ -95,6 +95,12 @@ class IAPlayer:
             for unit in military:
                 unit.move_towards(target.position,self.game_state.carte)
 
+            """" 1 cible / attaquant """
+            """ for unit in military:
+                target = self.find_best_target(enemy_units)
+                unit.move_towards(target.position,self.game_state.carte)
+                unit.atk(target) """
+
     def find_best_target(self, enemy_units):
         # Prioritize villagers and weak units
         villagers = [u for u in enemy_units if u.unit_type == "Villager"]
@@ -113,6 +119,10 @@ class IAPlayer:
             new_unit = Horseman(new_pos[0], new_pos[1], self.game_state.carte)
             new_unit.player_id = self.player_id
             self.game_state.model['units'].append(new_unit)
+
+        """ elif self.resources['wood'] >= 175:
+            self.construct_building(Barrack(), (0,0)) """
+        
 
     def train_villager(self):
         """Create villager if possible"""
