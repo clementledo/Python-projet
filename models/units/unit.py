@@ -120,7 +120,7 @@ class Unit:
                 return True
             return False
     
-    def find_path(self, goal, current_path, grid, search_range=10):
+    def find_path(self, goal, current_path, grid):
         global last_calculated
         current_time = pygame.time.get_ticks() / 1000.0
 
@@ -189,7 +189,7 @@ class Unit:
 
         return None  # Aucun chemin trouvé
 
-    def move_towards(self, goal, grid, search_range=10):
+    def move_towards(self, goal, grid):
         """Move unit towards goal using pathfinding and smooth movement."""
         if self.health <= 0:
             return False
@@ -205,7 +205,7 @@ class Unit:
 
         # Trouver un nouveau chemin si nécessaire
         if not self.current_path or self.is_obstacle_on_path(self.current_path, grid):
-            self.current_path = self.find_path(goal, self.current_path, grid, search_range)
+            self.current_path = self.find_path(goal, self.current_path, grid)
             self.visited_path = [self.position]
             self.path_progress = 0  # Initialiser la progression dans la première tuile
 
@@ -280,7 +280,7 @@ class Unit:
     def die(self):
         """Gère la mort de l'unité."""
         print(f"L'unité {self.unit_type} est morte.")
-        #self.grid.get_tile(self.position[0], self.position[1]).remove_unit(self)
+        self.grid.get_tile(self.position[0], self.position[1]).occupant = None
 
     def serialize(self):
         """Serialize unit data"""
@@ -312,4 +312,3 @@ class Unit:
         if "player_id" in data:
             unit.player_id = data["player_id"]
         return unit
-
