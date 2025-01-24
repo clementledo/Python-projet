@@ -31,7 +31,7 @@ def handle_updates(game_state):
     running = game_state.controller.handle_input()
     if running:
         game_state.controller.update()
-        game_state.controller.move_unit_to_town_center()
+        #game_state.controller.move_unit_to_town_center()
     return running
 
 def handle_rendering(game_state, screen, clock, font):

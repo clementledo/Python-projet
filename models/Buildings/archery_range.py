@@ -2,9 +2,9 @@ from models.Buildings.building import Building
 from ..units.archer import Archer
 
 class Archery_Range(Building) :
-    range = 4
     def __init__(self,pos) :
         super().__init__("Archery_range",50,500,(3,3),'A',pos)
+        self.cost["wood"] = 175
         
     def spawn_archer(self) :
         self.remove_ressources(self,25,'W')

@@ -120,14 +120,15 @@ class Map:
     def update_unit_position(self, unit, old_pos, new_pos):
         """Update unit position on the map."""
         # Remove unit from old tile
-        old_tile = self.get_tile(old_pos[0], old_pos[1])
-        if old_tile:
-            old_tile.occupant = None
+        if old_pos:
+            old_tile = self.get_tile(old_pos[0], old_pos[1])
+            if old_tile:
+                old_tile.occupant = None
             
         # Add unit to new tile
         new_tile = self.get_tile(new_pos[0], new_pos[1])
         if new_tile:
-            new_tile.occupant = unit
+            new_tile.occupant = "Unit"
             return True
         return False
 
@@ -138,7 +139,7 @@ class Map:
         """
         x, y = building.pos
         width, height = building.size
-
+        
         # Check if the space is free and within bounds
         if not self.is_area_free(x, y, width, height):
             raise ValueError("Building can't be placed: space is either occupied or out of bounds.")
@@ -146,13 +147,16 @@ class Map:
         # Mark the tiles as occupied by the building
         for i in range(width):
             for j in range(height):
-                self.grille[y + j][x + i].occupant = building.name  # Mark the grid with the building reference
+                self.grille[y + 1 - j][x + 1 - i].occupant = building.name  # Mark the grid with the building reference
     
     def is_area_free(self, top_left_x, top_left_y, width, height):
+        top_left_x += 1
+        top_left_y += 1
         for i in range(width):
             for j in range(height):
-                if not self.is_within_bounds(top_left_x + i, top_left_y + j) or self.is_tile_occupied(top_left_x + i, top_left_y + j):
+                if not self.is_within_bounds(top_left_x - i, top_left_y - j) or self.is_tile_occupied(top_left_x - i, top_left_y - j):
                     return False
+        return True
     
     def is_within_bounds(self, x, y):
         return 0 <= x < self.largeur and 0 <= y < self.hauteur

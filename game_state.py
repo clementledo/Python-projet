@@ -13,6 +13,7 @@ from views.game_view import GameView
 from controllers.game_controller import GameController
 from models.map import Map
 from models.Player.IA import IAPlayer, Strategy
+from models.Player.ai_begin_phase import IA
 #
 import traceback
 import json
@@ -32,7 +33,7 @@ class GameState:
         },
         "Moyenne": {
             "resources": {"food": 2000, "wood": 2000, "gold": 2000},
-            "buildings": [("Town_center", (10, 9))],
+            "buildings": [("Town_center", (5, 9))],
             "villagers": 3
         },
         "Marines": {
@@ -90,7 +91,7 @@ class GameState:
         
         units = []
         buildings = []
-
+        
         # Initialize buildings
         for building_type, pos in condition["buildings"]:
             building_class = globals()[building_type]
@@ -123,13 +124,16 @@ class GameState:
             """placer les unités sur la carte
             self.carte.grid[12 + y_offset][map_width - 15 + x_offset].occupant = villager"""
 
+        for building in buildings:
+            self.carte.place_building(building)
         self.model = {'map': self.carte, 'units': units, 'buildings': buildings}
         
         # Initialize AI players
         if ai_mode:
             self.players = {
                 1: IAPlayer(1, self, Strategy.AGGRESSIVE),
-                2: IAPlayer(2, self, Strategy.DEFENSIVE)
+                #2: IAPlayer(2, self, Strategy.DEFENSIVE)
+                2: IA(2, self)
             }
 
         # Initialize view and controller
@@ -145,7 +149,8 @@ class GameState:
             self.view.load_building_sprite("T", "assets/Buildings/Towncenter.png")
             self.view.load_building_sprite("A", "assets/Buildings/Archery_range.png")
             self.view.load_building_sprite("B", "assets/Buildings/Barracks.png")
-
+            self.view.load_building_sprite("H", "assets/Buildings/House.png")
+            
             self.controller = GameController(self.model,self.view, self.carte, tile_size)  # Pass required arguments
 
     def change_state(self, new_state):
