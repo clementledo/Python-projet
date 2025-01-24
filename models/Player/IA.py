@@ -53,8 +53,8 @@ class IAPlayer:
         # Priorité: Construction d'unités militaires
         if len(military) < self.min_warriors:
             self.train_military_unit()
-        else:
-            self.attack_enemy()
+        #else:
+            #self.attack_enemy()
 
     def execute_defensive_strategy(self):
         # Priorité: Défense de la base et économie
@@ -113,6 +113,10 @@ class IAPlayer:
             new_unit = Horseman(new_pos[0], new_pos[1], self.game_state.carte)
             new_unit.player_id = self.player_id
             self.game_state.model['units'].append(new_unit)
+
+        """ elif self.resources['wood'] >= 175:
+            self.construct_building(Barrack(), (0,0)) """
+        
 
     def train_villager(self):
         """Create villager if possible"""
