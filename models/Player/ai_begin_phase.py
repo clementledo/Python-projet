@@ -5,6 +5,7 @@ from models.Buildings.house import House
 from models.units.villager import Villager
 from models.Buildings.town_center import Town_center
 from models.Resources.Tile import Type
+from strategy import Strategy
 
 class IA:
     def __init__(self, player_id, game_state):
