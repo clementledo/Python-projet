@@ -33,14 +33,21 @@ class Villager(Unit):
 
     def initialize_sprites(self):
         """Initialize sprite-related attributes and load sprites"""
-        if self.use_terminal_view or self.sprites_initialized:
+        if self.use_terminal_view:
+            self.sprites_initialized = True
+            return
+
+        if self.sprites_initialized:
             return
 
         import pygame
         self.asset_manager = AssetManager()
-        self.walking_sprites = self.asset_manager.get_villager_sprites('walking')
-        self.standing_sprites = self.asset_manager.get_villager_sprites('standing')
-        self.building_sprites = self.asset_manager.get_villager_sprites('building')
+        
+        # Safe sprite initialization with empty lists as fallback
+        self.walking_sprites = self.asset_manager.villager_sprites.get('walking', [])
+        self.standing_sprites = self.asset_manager.villager_sprites.get('standing', [])
+        self.building_sprites = self.asset_manager.villager_sprites.get('building', [])
+        
         self.current_frame = 0
         self.animation_speed = 0.6
         self.last_update = pygame.time.get_ticks()

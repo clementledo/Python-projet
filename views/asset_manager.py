@@ -15,26 +15,25 @@ class AssetManager:
         if self.initialized:
             return
             
+        # Initialize empty sprite containers regardless of mode
+        self.building_sprites = {}
+        self.terrain_textures = {}
+        self.broken_building_sprites = {}
+        self.ui_assets = {}  # Add UI assets dictionary
         self.villager_sprites = {
             'walking': [],
             'standing': [],
-            'building': []  # Add building animation array
+            'building': []
         }
-        self.ui_assets = {
-            'resource_panel': pygame.image.load('assets/resourcecivpanel.png').convert_alpha(),
-            'icons': {
-                'food': pygame.image.load('assets/iconfood.png').convert_alpha(),
-                'wood': pygame.image.load('assets/iconwood.png').convert_alpha(),
-                'gold': pygame.image.load('assets/icongold.png').convert_alpha()
-            }
-        }
-        self.terrain_textures = {
-            Terrain_type.GRASS: pygame.image.load('assets/t_grass.png').convert_alpha(),
-            Terrain_type.WATER: pygame.image.load('assets/t_water.png').convert_alpha()
-        }
-        self.decoration_sprites = {}
-        self.building_sprites = {}
-        self.broken_building_sprites = {}
+        
+        self.use_terminal_view = False
+        # Skip asset loading in terminal mode
+        if 'SDL_VIDEODRIVER' in os.environ and os.environ['SDL_VIDEODRIVER'] == 'dummy':
+            self.use_terminal_view = True
+            self.initialized = True
+            return
+            
+        # Only load assets in GUI mode
         self.load_all_assets()
         self.initialized = True
 
@@ -46,11 +45,13 @@ class AssetManager:
         self.load_building_sprites()
 
     def load_ui_elements(self):
-        self.resource_panel = pygame.image.load('assets/resourcecivpanel.png').convert_alpha()
-        self.resource_icons = {
-            "food": pygame.image.load("assets/iconfood.png").convert_alpha(),
-            "wood": pygame.image.load("assets/iconwood.png").convert_alpha(),
-            "gold": pygame.image.load("assets/icongold.png").convert_alpha()
+        self.ui_assets = {
+            'resource_panel': pygame.image.load('assets/resourcecivpanel.png').convert_alpha(),
+            'icons': {
+                "food": pygame.image.load("assets/iconfood.png").convert_alpha(),
+                "wood": pygame.image.load("assets/iconwood.png").convert_alpha(),
+                "gold": pygame.image.load("assets/icongold.png").convert_alpha()
+            }
         }
 
     def load_terrain_textures(self):
@@ -118,7 +119,7 @@ class AssetManager:
             
         # Load broken building sprites
         # Assuming max size is 4
-            self.broken_building_sprites[1] = pygame.image.load(f"assets/Buildings/broken/broken_building_{1}.png").convert_alpha()
+            self.broken_building_sprites[1] = pygame.image.load(f"assets/Buildings/broken/broken_building_1.png").convert_alpha()
 
     def get_building_sprite(self, building_name):
         return self.building_sprites.get(building_name)
