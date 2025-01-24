@@ -5,6 +5,9 @@ from enum import Enum
 from models.Buildings.building import Building
 from models.Resources.Tile import Type
 
+last_calculated = 0
+path_update_interval = 5
+
 class unitStatus(Enum):
     IDLE = "idle"
     GATHERING = "gathering"
@@ -74,7 +77,21 @@ class Unit:
         """Retourne la position actuelle de l'unité en coordonnées de tuiles."""
         return self.position
 
-    def find_path(self, goal, grid, search_range=10):
+    def is_obstacle_on_path(self, current_path, grid):
+        """Check if there are obstacles on the current path."""
+        for pos in current_path:
+            if grid.is_position_occupied(pos[0], pos[1]):
+                return True
+            return False
+    
+    def find_path(self, goal, current_path, grid, search_range=10):
+        global last_calculated
+        current_time = pygame.time.get_ticks() / 1000.0
+
+        if (current_time - last_calculated < path_update_interval) and not self.is_obstacle_on_path(current_path, grid):
+            print("Pathfinding skipped due to time interval and no obstacle detected.")
+            return current_path
+        
         """A* pathfinding avec prise en charge des mouvements diagonaux."""
         start = self.position
         print(f"Finding path from {start} to {goal}")
@@ -120,6 +137,7 @@ class Unit:
                     path.append(current)
                     current = came_from[current]
                 path.reverse()
+                last_calculated = current_time
                 return path
 
             for neighbor in get_neighbors(current):
@@ -191,21 +209,21 @@ class Unit:
         elapsed_time = current_time - self.last_move_time
         
         # Accumuler la progression du mouvement basée sur la vitesse
-        self.movement_accumulator += elapsed_time * self.speed  # self.speed est en tuiles/seconde
+        self.movement_accumulator = elapsed_time * self.speed  # self.speed est en tuiles/seconde
         
         # Si on n'a pas accumulé assez de mouvement pour avancer d'une tuile
         if self.movement_accumulator < 1.0:
             return False
 
         # Trouver un nouveau chemin si nécessaire
-        if not self.current_path:
-            self.current_path = self.find_path(goal, grid, search_range)
+        if not self.current_path or self.is_obstacle_on_path(self.current_path, grid) :
+            self.current_path = self.find_path(goal, self.current_path, grid, search_range)
             self.visited_path = [self.position]
 
         # S'il y a un chemin à suivre
         if self.current_path:
             # Tant qu'on a assez de mouvement accumulé et qu'il reste du chemin
-            while self.movement_accumulator >= 1.0 and self.current_path:
+            while self.movement_accumulator >= 1.0 and self.current_path and not self.is_obstacle_on_path(self.current_path, grid) :
                 next_step = self.current_path[0]
                 old_position = self.position
                 
