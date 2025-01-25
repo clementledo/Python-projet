@@ -162,7 +162,7 @@ class Villager(Unit):
                         self.gathering_progress = 0
 
     """"villageois placé en amont sur la bonne tuile"""
-    def collect_resource(self, resource_type) : 
+    def collect(self, resource_type) : 
         delta_time = 60
         self.start_gathering(resource_type)
         self.gather_resources(resource_type, delta_time)
