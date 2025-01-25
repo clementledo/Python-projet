@@ -32,7 +32,7 @@ class Building :
         for builder in builders :
             builder.is_building = True
             self.builder.append(builder)
-        self.construction_time = (3 * self.construction_time) / (1+len(builders) + 2)
+        self.construction_time = (3 * self.construction_time) / (len(builders) + 2)
         print(f"Construction commencÃ©e. Temps de construction rÃ©el : {self.construction_time} secondes.")
         self.construction_start_time = time.time()  # Log the current time
 
@@ -55,7 +55,6 @@ class Building :
             elapsed_time = time.time() - self.construction_start_time
             if elapsed_time >= self.construction_time:
                 self.useable = True
-                self.builder = []
                 print(f"{self.name} is fully constructed!")
             #else:
                 #print(f"{self.name} is still under construction...")

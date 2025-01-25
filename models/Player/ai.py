@@ -134,6 +134,7 @@ class IA:
                 print(f"AI has spawned a new villager!")
         else:
             print(f"{self.player_id} cannot afford to spawn a villager.")
+    
     def get_unit_by_status(self,type, status):
         units_with_status = []
         for unit in self.units[type]:
@@ -146,7 +147,6 @@ class IA:
         print(f"Unit at {unit.position} status changed to {new_status}.")
         #else:
          #  print(f"Unit {unit} not found in AI's unit list.")
-
 
     def manage_resources(self):
         """Manage resource gathering by villagers."""
@@ -297,7 +297,6 @@ class IA:
         town_centers = [b for b in self.buildings if b.__class__.__name__ == "Town_center"]
         return town_centers[0] if town_centers else None
     
-    
     def execute_aggressive_strategy(self):
         # Implement aggressive strategy logic here
         print("Executing aggressive strategy")
@@ -325,7 +324,7 @@ class IA:
         
         # 1. Train Villagers if possible
         for town_hall in self.buildings['Town_center']:
-            if town_hall.is_idle() and self.resources['food'] >= 50 and self.get_available_villagers():
+            if town_hall.is_idle() and self.resources['food'] >= 50:
                 pos = self.find_nearby_available_position(town_hall.pos[0], town_hall.pos[1], (4, 4))
                 town_hall.train_villager(pos,self.game_state)
                 print(f"AI is training a new Villager at {pos}.")
@@ -360,21 +359,25 @@ class IA:
                 self.buildings["In_construct"].remove(building)
                 self.game_state.model['buildings'].append(building)
                 for villager in building.builder:
-                    self.change_unit_status(villager, "idle")
+                    self.change_unit_status(villager, unitStatus.IDLE)
         for list in self.units.values():
             for unit in list:
                 unit.update()  
     
     def execute_second_phase(self):
-        # Example usage of count_villagers_collecting
-        gold_villagers = self.count_villagers_collecting("Gold")
-        print(f"Number of villagers collecting Gold: {gold_villagers}")
 
         # Generate Villagers until 100
         for town_center in self.buildings["Town_center"]:
             if (len(self.units["Villager"]) < 100 and
                     self.resources["food"] >= 50 and town_center.is_idle()):
-                town_center.train_unit("Villager")
+                pos = self.find_nearby_available_position(town_center.pos[0],town_center.pos[1], (2,2))
+                town_center.train_villager(pos, self.game_state)
+                self.deduct_resources({'food': 50})
+                print(f"AI is training a new Villager at {pos}.")
+            elif town_center.training_time > 0:
+                villa = town_center.check_training(self.game_state)
+                if villa:
+                    self.units["Villager"].append(villa)
 
         # Gradually transition Villagers to collect Gold
         gold_villagers = self.count_villagers_collecting("Town_center")
@@ -387,34 +390,47 @@ class IA:
         for resource_type in ["Wood", "Gold"]:
             for node in self.resource_nodes(resource_type):
                 if self.should_build_camp(node):
-                    self.build_building_near("Camp", node.position)
+                    pos = self.find_nearby_available_position(node.position[0], node.position[1], (3, 3))
+                    self.construct_building("Camp", pos)
 
         # Train a balanced army
-        if self.resources["Food"] >= 50 and self.resources["Gold"] >= 20:
+        if self.resources["food"] >= 50 and self.resources["gold"] >= 20:
             for building_type in ["Barracks", "Stable", "Archery_Range"]:
                 for building in self.buildings[building_type]:
-                    if not building.is_training:
+                    if building.is_idle():
                         building.train_unit(self.next_unit_type(building_type))
 
         # Build Farms in advance
-        if self.buildings["Farm"] < 10:
-            self.construct_building("Farm", self.get_main_base())
-        # Vérifie si la base est menacée
-            enemy_units = [u for u in self.game_state.model['units'] if u.player_id != self.player_id]
-            base = self.get_main_base()
-            if base:
-                nearby_enemies = [u for u in enemy_units if self.get_distance(u.position, base.position) < 10]
-                return len(nearby_enemies) == 0
-            return False
+        if len(self.buildings["Farm"]) < 5:
+            pos = self.buildings["Town_center"][random.randint(1,len(self.buildings["Town_center"]))]
+            self.construct_building("Farm", self.find_nearby_available_position(pos,(3,3)))
 
+        if not self.is_base_secure():
+            self.defend_base()
+        
+        # Update unit and building state
+        for building in self.buildings["In_construct"]:
+            #print(f"Building {building.name} at {building.pos} is building complete in {building.construction_time} turns.")
+            building.check_construction()   
+            if building.useable:
+                self.buildings["In_construct"].remove(building)
+                self.game_state.model['buildings'].append(building)
+                for villager in building.builder:
+                    self.change_unit_status(villager, unitStatus.IDLE)
+        for list in self.units.values():
+            for unit in list:
+                unit.update()  
+        
+        
     def defend_base(self):
-            military = [u for u in self.units if u.unit_type in ["Archer", "Horseman","Swordsman"]]
+            military_units = []
+            for unit_type in ["Archer", "Swordman", "Horseman","Villager"]:
+                military_units.extend(self.units.get(unit_type, []))
             base = self.get_main_base()
             if base:
-                for unit in military:
-                     unit.move_to((base.pos[0] + random.randint(-4,4), base.pos[1] + random.randint(-4,4)))
+                for unit in military_units:
+                     unit.move_toward((base.pos[0] + random.randint(-4,4), base.pos[1] + random.randint(-4,4)))
                         
-        
     def allocate_villagers(self):
         available_villagers = self.get_available_villagers()
         villager_farm = []
@@ -441,7 +457,7 @@ class IA:
                         next_step = path[0]
                         villager.move_towards(next_step, self.game_state)
                 else:
-                    self.gather_resource(villager, pos, 100)
+                    self.gather_resource(villager)
              
     def get_available_villagers(self):
         available_villagers = self.get_unit_by_status("Villager", unitStatus.IDLE)
@@ -512,40 +528,7 @@ class IA:
                 count += 1
         return count
 
-    def execute_second_phase(self):
-        # Example usage of count_villagers_collecting
-        gold_villagers = self.count_villagers_collecting("Gold")
-        print(f"Number of villagers collecting Gold: {gold_villagers}")
-
-        # Generate Villagers until 100
-        for town_center in self.buildings["Town_center"]:
-            if (len(self.units["Villager"]) < 100 and
-                    self.resources["food"] >= 50 and town_center.is_idle()):
-                town_center.train_unit("Villager")
-
-        # Gradually transition Villagers to collect Gold
-        gold_villagers = self.count_villagers_collecting("Town_center")
-        if gold_villagers < len(self.units["Villager"]) * 0.3:  # Target 30% collecting Gold
-            for villager in self.units["Villager"]:
-                if villager.task == "collecting Wood":
-                    villager.collect_resource("Gold")
-
-        # Build Camps near resource nodes
-        for resource_type in ["Wood", "Gold"]:
-            for node in self.resource_nodes(resource_type):
-                if self.should_build_camp(node):
-                    self.build_building_near("Camp", node.position)
-
-        # Train a balanced army
-        if self.resources["Food"] >= 50 and self.resources["Gold"] >= 20:
-            for building_type in ["Barracks", "Stable", "Archery_Range"]:
-                for building in self.buildings[building_type]:
-                    if not building.is_training:
-                        building.train_unit(self.next_unit_type(building_type))
-
-        # Build Farms in advance
-        if self.buildings["Farm"] < 10:
-            self.construct_building("Farm", self.get_main_base())
+    def is_base_secure(self):
         # Vérifie si la base est menacée
             enemy_units = [u for u in self.game_state.model['units'] if u.player_id != self.player_id]
             base = self.get_main_base()
@@ -561,114 +544,25 @@ class IA:
         :param resource_type: The type of resource to find (e.g., "Food", "Wood", "Gold").
         :return: A list of resource nodes of the specified type.
         """
-        nodes = []
+        nodes = set()
+        """
         for y, row in enumerate(self.map_data.grille):
             for x, tile in enumerate(row):
                 if tile.resource != None:
                     if tile.resource.resource_type == resource_type:
-                        nodes.append((x, y))
+                        nodes.add((x, y))
+                        """
+        
+        for villager in self.units["Villager"]:
+            if villager.task == resource_type:
+                pos = villager.position
+                nodes.add(pos)
+        
         return nodes
-
-    def execute_second_phase(self):
-        # Example usage of resource_nodes
-        gold_nodes = self.resource_nodes("Gold")
-        print(f"Gold nodes: {gold_nodes}")
-
-        # Example usage of count_villagers_collecting
-        gold_villagers = self.count_villagers_collecting("Gold")
-        print(f"Number of villagers collecting Gold: {gold_villagers}")
-
-        # Generate Villagers until 100
-        for town_center in self.buildings["Town_center"]:
-            if (len(self.units["Villager"]) < 100 and
-                    self.resources["food"] >= 50 and town_center.is_idle()):
-                town_center.train_unit("Villager")
-
-        # Gradually transition Villagers to collect Gold
-        gold_villagers = self.count_villagers_collecting("Town_center")
-        if gold_villagers < len(self.units["Villager"]) * 0.3:  # Target 30% collecting Gold
-            for villager in self.units["Villager"]:
-                if villager.task == "collecting Wood":
-                    villager.collect_resource("Gold")
-
-        # Build Camps near resource nodes
-        for resource_type in ["Wood", "Gold"]:
-            for node in self.resource_nodes(resource_type):
-                if self.should_build_camp(node):
-                    self.build_building_near("Camp", node.position)
-
-        # Train a balanced army
-        if self.resources["Food"] >= 50 and self.resources["Gold"] >= 20:
-            for building_type in ["Barracks", "Stable", "Archery_Range"]:
-                for building in self.buildings[building_type]:
-                    if not building.is_training:
-                        building.train_unit(self.next_unit_type(building_type))
-
-        # Build Farms in advance
-        if self.buildings["Farm"] < 10:
-            self.construct_building("Farm", self.get_main_base())
-        # Vérifie si la base est menacée
-            enemy_units = [u for u in self.game_state.model['units'] if u.player_id != self.player_id]
-            base = self.get_main_base()
-            if base:
-                nearby_enemies = [u for u in enemy_units if self.get_distance(u.position, base.position) < 10]
-                return len(nearby_enemies) == 0
-            return False
-
-    def defend_base(self):
-            military = [u for u in self.units if u.unit_type in ["Archer", "Horseman","Swordsman"]]
-            base = self.get_main_base()
-            if base:
-                for unit in military:
-                     unit.move_to((base.pos[0] + random.randint(-4,4), base.pos[1] + random.randint(-4,4)))
-                        
-        
-    def allocate_villagers(self):
-        available_villagers = self.get_available_villagers()
-        villager_farm = []
-        for _ in range(len(self.buildings['Town_center'])*4):
-            if available_villagers:
-                villager = available_villagers.pop(0)
-                villager_farm.append(villager)
-        villager_wood = available_villagers
-        
-        for villager in villager_farm:
-            pos = self.buildings['Farm'][0].pos
-            if pos:
-                if villager.position != pos:
-                    villager.move_toward(pos, self.map_data)
-                else:
-                    self.gather_resource(villager) 
-                         
-        for villager in villager_wood:
-            pos = self.find_nearby_resources(villager,Type.Wood)
-            if pos:
-                if self.get_distance(villager.position, pos) > 1:
-                    path = self.find_path(villager, pos)
-                    if path:
-                        next_step = path[0]
-                        villager.move_towards(next_step, self.game_state)
-                else:
-                    self.gather_resource(villager, pos, 100)
              
     def get_available_villagers(self):
         available_villagers = self.get_unit_by_status("Villager", unitStatus.IDLE)
         return available_villagers
-                
-    def reevaluate_construction(self, building, progress, current_villagers):
-        """
-        Reevaluate construction progress and reassign Villagers if needed.
-
-        Args:
-        building: The building under construction.
-        progress: Current construction progress (percentage).
-        current_villagers: List of Villagers already assigned.
-        """
-        # Check if construction is falling behind schedule
-        if progress < 50 and len(current_villagers) < 4:
-            additional_villagers = self.get_available_villagers[:2]  # Add 2 more Villagers if needed
-            for villager in additional_villagers:
-                villager.start_building(building, building.position)
     
     def construct_building(self, building_type, position):
         """
@@ -688,6 +582,24 @@ class IA:
         print(f"AI is constructing a {building_type.__name__} at position {position} with {buiilder} there is {len(x)} villagers disponible in {len(self.units["Villager"])}.")
         self.buildings[building.name].append(building)
 
+    def should_build_camp(self, node):
+        """
+        Determine if a Camp should be built near a resource node.
+
+        Args:
+        node: The resource node to evaluate.
+
+        Returns:
+        True if a Camp should be built, False otherwise.
+        """
+        min_distance = 100
+        for town_center in self.buildings["Town_center"]:
+            distance = self.get_distance(town_center.pos, node)
+            min_distance = min(distance, min_distance)
+        distance_threshold = 10  # Define a threshold distance
+
+        return min_distance > distance_threshold
+        
     def update(self):
         if self.strategy == Strategy.AGGRESSIVE:
             self.execute_aggressive_strategy()
@@ -696,17 +608,6 @@ class IA:
         else:
             self.execute_economic_strategy()
         
-     
-        
-    def count_villagers_collecting(self, resource_type):
-        """
-        Count the number of villagers collecting a specific resource.
-
-        :param resource_type: The type of resource to count (e.g., "Food", "Wood", "Gold").
-        :return: The number of villagers collecting the specified resource.
-        """
-        count = 0
-        for villager in self.units["Villager"]:
-            if villager.task == resource_type:
-                count += 1
-        return count
+        #for villager in self.units["Villager"]:
+         #   print(villager.status)
+              
