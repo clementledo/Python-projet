@@ -194,6 +194,17 @@ class IA:
 
         return closest_target
 
+
+    def collect_resource(self, unit, resource_type) :
+        goal = self.find_nearby_resources(unit, resource_type)
+        if goal :
+            unit.move_toward(goal, self.map_data)
+            unit.collect(resource_type)
+            print(f"{unit.unit_type} gathered resource_type")
+        else :
+            print(f"{unit.unit_type} didn't gather resource_type")
+        
+        
     def gather_resource(self, unit):
 
         x, y = unit.position[0], unit.position[1]
