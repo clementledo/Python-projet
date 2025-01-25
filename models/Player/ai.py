@@ -330,7 +330,7 @@ class IA:
         town_centers = [b for b in self.buildings if b.__class__.__name__ == "Town_center"]
         return town_centers[0] if town_centers else None
     
-    def execute_aggressive_strategy(self):
+    def execute_aggressive_strategy(self, nb_attacks_consecutive):
         # Implement aggressive strategy logic here
         print("Executing aggressive strategy")
         # Example: Focus on training military units and attacking enemies
