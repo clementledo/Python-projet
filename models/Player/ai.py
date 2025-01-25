@@ -339,10 +339,30 @@ class IA:
         town_centers = [b for b in self.buildings if b.__class__.__name__ == "Town_center"]
         return town_centers[0] if town_centers else None
     
-    def execute_aggressive_strategy(self):
+    def execute_aggressive_strategy(self, nb_attacks_consecutive):
         # Implement aggressive strategy logic here
         print("Executing aggressive strategy")
         # Example: Focus on training military units and attacking enemies
+
+        nb_attacks_consecutive_max = 3
+        if len(self.buildings["Barracks"]) < min_nb_barracks and self.resources["wood"] > 350 :
+             self.construct_building("Barracks", self.find_nearby_available_position(pos,(3,3)))
+         elif self.resources["wood"] < 350 :
+             # recolt resources
+         else :
+             if len(self.units["Horseman"])) < min_nb_horsemen and self.resources["food"] > 80 and self.resources["food"] > 20 : 
+                 # create soldiers
+              elif self.resources["food"] < 80 or self.resources["food"] < 20: 
+                 # recolt
+               else : 
+                     if nb_attacks_consecutive < nb_attacks_consecutive_max :  
+                        #attack
+                      else :
+                          i = random.randint(0,2)
+                          if i == 1 :
+                              #recolt
+                            else :
+                                #build
 
     def execute_defensive_strategy(self):
         # Implement defensive strategy logic here
