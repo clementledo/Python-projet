@@ -3,7 +3,7 @@ class Resource:
     def __init__(self,resource_type,STARTING_RESOURCES):
         self.resource_type = resource_type
         self.symbol = self.get_symbol(resource_type)
-        self.starting_resources = {
+        self.quantity = {
             "Wood": STARTING_RESOURCES[0],
             "Gold": STARTING_RESOURCES[1],
             "Food": STARTING_RESOURCES[2]

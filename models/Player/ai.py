@@ -195,6 +195,18 @@ class IA:
 
         return closest_target
 
+
+    def collect_resource(self, unit, resource_type) :
+        goal = self.find_nearby_resources(unit, resource_type)
+        if goal :
+            unit.move_toward(goal, self.map_data)
+            resource_gathered = unit.collect(resource_type)
+            self.resources[resource_type] += resource_gathered 
+            print(f"{unit.unit_type} gathered resource_type")
+        else :
+            print(f"{unit.unit_type} didn't gather resource_type")
+        
+        
     def find_nearby_building(self,pos, building_type):
         min_distance = 1000
         position = None
