@@ -166,6 +166,7 @@ class Villager(Unit):
         delta_time = 60
         self.start_gathering(resource_type)
         self.gather_resources(resource_type, delta_time)
+        return resources_gathered
         
     def update(self):
         """Update unit state and animation"""
