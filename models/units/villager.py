@@ -125,7 +125,11 @@ class Villager(Unit):
         resources_gathered = self.resource_gather_rate * delta_time
         if resources_gathered > self.resource_capacity:
             resources_gathered = self.resource_capacity
-        print(f"{resources_gathered} unités de {resource_type} collectées.")
+        self.carried_resources += resources_gathered
+        if self.carried_resources >= self.resource_capacity:
+            self.carried_resources = self.resource_capacity
+        #self.grid.get_tile(self.destination[0],self.destination[1]).resource.starting_resources[resource_type] -= resources_gathered
+        #print(f"{self.carried_resources} unités de {resource_type} collectées.")
     
     def gather(self, resource_pos):
         tile = self.grid.get_tile(resource_pos[0], resource_pos[1])
@@ -168,8 +172,12 @@ class Villager(Unit):
         if self.status == unitStatus.BUILDING:
             self.update_building(delta_time)
         elif self.status == unitStatus.GATHERING:
-            self.gather_resources(self.current_resource_type, delta_time)
-
+            if self.distance_to(self.destination) > 1:
+                self.move_toward(self.destination,self.grid)
+            else:
+                self.gather_resources(self.current_resource_type, delta_time)
+        elif self.status == unitStatus.RETURNING_RESOURCES:
+            self.move_toward(self.destination,self.grid)
     def serialize(self):
         """Serialize villager data"""
         base_data = super().serialize()

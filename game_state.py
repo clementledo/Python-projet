@@ -144,7 +144,7 @@ class GameState:
         # Initialize AI players
         if ai_mode:
             self.players = {
-                1: IAPlayer(1, self, Strategy.AGGRESSIVE),
+                1: IAPlayer(1, self, Strategy.ECONOMIC),
                 #2: IAPlayer(2, self, Strategy.DEFENSIVE)
                 2: IA(2, self, Strategy.ECONOMIC) 
             }
@@ -164,6 +164,7 @@ class GameState:
             self.view.load_building_sprite("B", "assets/Buildings/Barracks.png")
             self.view.load_building_sprite("H", "assets/Buildings/House.png")
             self.view.load_building_sprite("F", "assets/Buildings/Farm.png")
+            self.view.load_building_sprite("C", "assets/Buildings/castel.png")
             self.controller = GameController(self.model,self.view, self.carte, tile_size)  # Pass required arguments
 
     def change_state(self, new_state):

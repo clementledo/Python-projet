@@ -3,6 +3,7 @@ from models.units.unit import unitStatus
 from models.Player.strategy import Strategy  # Import Strategy from the appropriate module
 from models.Buildings.farm import Farm
 from models.Buildings.house import House
+from models.Buildings.camp import Camp
 from models.units.villager import Villager
 from models.Buildings.town_center import Town_center
 from models.Resources.Tile import Type
@@ -194,19 +195,41 @@ class IA:
 
         return closest_target
 
-    def gather_resource(self, unit):
+    def find_nearby_building(self,pos, building_type):
+        min_distance = 1000
+        position = None
+        for b in self.buildings[building_type]:
+            distance = self.get_distance(pos, b.pos)
+            if distance < min_distance:
+                min_distance = distance
+                position = b.pos
+        return position
 
-        x, y = unit.position[0], unit.position[1]
-        resource_type = self.map_data.grille[y][x].occupant  # Check the map tile the unit is on
-        if resource_type == 'Farm':
-            print(f"{unit.unit_type} gathered Food. Total: {self.resources['food']}")
-        elif resource_type == 'Wood':
-            print(f"{unit.unit_type} gathered Wood. Total: {self.resources['wood']}")
-        elif resource_type == 'Gold':
-            print(f"{unit.unit_type} gathered Gold. Total: {self.resources['gold']}")
-        
-        unit.start_gathering(resource_type) 
+    def gather_resource(self, unit, resource_type):
+        pos = None
+        unit.current_resource_type = resource_type
+        if resource_type == 'Food':
+            pos = self.find_nearby_building(unit.position,"Farm")
+        else:
+            pos = self.find_nearby_resources(unit, resource_type)
+        unit.destination = pos
+        self.change_unit_status(unit, unitStatus.GATHERING)
 
+    def check_gathering(self):
+        unit = self.get_unit_by_status("Villager", unitStatus.GATHERING)
+        for u in unit:
+            if u.carried_resources == u.resource_capacity:
+                self.change_unit_status(u, unitStatus.RETURNING_RESOURCES)
+                u.destination = self.find_nearby_building(u.position,"Town_center")
+    
+    def check_returning(self):
+        unit = self.get_unit_by_status("Villager", unitStatus.RETURNING_RESOURCES)
+        for u in unit:
+            if self.get_distance(u.position, u.destination) <= 1:
+                self.resources[u.current_resource_type.lower()] += u.carried_resources
+                u.carried_resources = 0
+                self.change_unit_status(u, unitStatus.IDLE)
+    
     def find_nearby_resources(self, unit, resource_type):
         """
         Find nearby resources (F, W, G) for a specific unit.
@@ -217,15 +240,13 @@ class IA:
         """
         closest_resource = None
         min_distance = float('inf')
-        
-        # Scan the map for nearby resources
-        for y, row in enumerate(self.map_data.grille):
-            for x, tile in enumerate(row):
-                if tile.get_type() == resource_type:
-                    distance = self.get_distance(unit.position, (x, y))
-                    if distance < min_distance:
-                        min_distance = distance
-                        closest_resource = (x, y)
+        resource = self.map_data.get_resources()
+        for r in resource:
+            if self.map_data.get_tile(r[0], r[1]).resource.resource_type == resource_type:
+                distance = self.get_distance(unit.position, r)
+                if distance < min_distance:
+                    closest_resource = r
+                    min_distance = distance
         if closest_resource:
             print(f"{unit.unit_type} found {resource_type} at {closest_resource}")
         return closest_resource
@@ -318,7 +339,7 @@ class IA:
     def execute_begin_phase(self):
         # 0. Build Farm
         if len(self.buildings['Farm']) <= 4 and self.resources['wood'] >= 100:
-            position = self.find_nearby_available_position(self.pos[0] , self.pos[1], (3, 3))
+            position = self.find_nearby_available_position(self.pos[0] + random.randint(-2,2)*5 , self.pos[1] + random.randint(-2,2)*5, (3, 3))
             if position and self.get_available_villagers():
                 self.construct_building(Farm, position)
         
@@ -363,6 +384,9 @@ class IA:
         for list in self.units.values():
             for unit in list:
                 unit.update()  
+                
+        self.check_returning()
+        self.check_gathering()
     
     def execute_second_phase(self):
 
@@ -378,20 +402,24 @@ class IA:
                 villa = town_center.check_training(self.game_state)
                 if villa:
                     self.units["Villager"].append(villa)
-
+        
+        #  Allocate Villagers to resources
+        self.allocate_villagers()
+        
         # Gradually transition Villagers to collect Gold
         gold_villagers = self.count_villagers_collecting("Town_center")
         if gold_villagers < len(self.units["Villager"]) * 0.3:  # Target 30% collecting Gold
             for villager in self.units["Villager"]:
-                if villager.task == "collecting Wood":
+                if villager.current_resource_type == "Wood":
                     villager.collect_resource("Gold")
 
         # Build Camps near resource nodes
         for resource_type in ["Wood", "Gold"]:
             for node in self.resource_nodes(resource_type):
                 if self.should_build_camp(node):
-                    pos = self.find_nearby_available_position(node.position[0], node.position[1], (3, 3))
-                    self.construct_building("Camp", pos)
+                    pos = self.find_nearby_available_position(node[0], node[1], (3, 3))
+                    if pos:
+                        self.construct_building(Camp, pos)
 
         # Train a balanced army
         if self.resources["food"] >= 50 and self.resources["gold"] >= 20:
@@ -420,7 +448,8 @@ class IA:
         for list in self.units.values():
             for unit in list:
                 unit.update()  
-        
+        self.check_returning()
+        self.check_gathering()
         
     def defend_base(self):
             military_units = []
@@ -432,32 +461,48 @@ class IA:
                      unit.move_toward((base.pos[0] + random.randint(-4,4), base.pos[1] + random.randint(-4,4)))
                         
     def allocate_villagers(self):
+        
         available_villagers = self.get_available_villagers()
-        villager_farm = []
-        for _ in range(len(self.buildings['Town_center'])*4):
+        villager_gather = self.get_unit_by_status("Villager", unitStatus.GATHERING)
+        villager_farm =[]
+        villager_wood =[]
+        villager_gold =[]
+        for v in villager_gather:
+            if v.current_resource_type == "Food":
+                villager_farm.append(v)
+            elif v.current_resource_type == "Wood":
+                villager_wood.append(v)
+            else:
+                villager_gold.append(v)
+        
+        if len(villager_farm) < 4:
+            if available_villagers:
+                villager = available_villagers[0]
+                villager_farm.append(villager)
+                available_villagers.remove(villager)
+        
+        
+        if len(villager_wood) < 3:
             if available_villagers:
                 villager = available_villagers.pop(0)
-                villager_farm.append(villager)
-        villager_wood = available_villagers
+                villager_wood.append(villager)
+        
+        if len(villager_gold) < 3 and self.phase > 1:
+            if available_villagers:
+                villager = available_villagers.pop(0)
+                villager_gold.append(villager)
         
         for villager in villager_farm:
-            pos = self.buildings['Farm'][0].pos
-            if pos:
-                if villager.position != pos:
-                    villager.move_toward(pos, self.map_data)
-                else:
-                    self.gather_resource(villager) 
+            if villager.status == unitStatus.IDLE:
+                self.gather_resource(villager,"Food")
                          
         for villager in villager_wood:
-            pos = self.find_nearby_resources(villager,Type.Wood)
-            if pos:
-                if self.get_distance(villager.position, pos) > 1:
-                    path = self.find_path(villager, pos)
-                    if path:
-                        next_step = path[0]
-                        villager.move_towards(next_step, self.game_state)
-                else:
-                    self.gather_resource(villager)
+            if villager.status == unitStatus.IDLE:
+                self.gather_resource(villager, "Wood")
+        
+        for villager in villager_gold:
+            if villager.status == unitStatus.IDLE:
+                self.gather_resource(villager, "Gold")
              
     def get_available_villagers(self):
         available_villagers = self.get_unit_by_status("Villager", unitStatus.IDLE)
@@ -524,7 +569,7 @@ class IA:
         """
         count = 0
         for villager in self.units["Villager"]:
-            if villager.task == resource_type:
+            if villager.current_resource_type == resource_type:
                 count += 1
         return count
 
@@ -554,7 +599,7 @@ class IA:
                         """
         
         for villager in self.units["Villager"]:
-            if villager.task == resource_type:
+            if villager.current_resource_type == resource_type:
                 pos = villager.position
                 nodes.add(pos)
         
@@ -596,17 +641,23 @@ class IA:
         for town_center in self.buildings["Town_center"]:
             distance = self.get_distance(town_center.pos, node)
             min_distance = min(distance, min_distance)
+        for cam in self.buildings["Camp"]:
+            distance = self.get_distance(cam.pos, node)
+            min_distance = min(min_distance, distance)
+            
         distance_threshold = 10  # Define a threshold distance
 
         return min_distance > distance_threshold
         
     def update(self):
+        """"""
         if self.strategy == Strategy.AGGRESSIVE:
             self.execute_aggressive_strategy()
         elif self.strategy == Strategy.DEFENSIVE:
             self.execute_defensive_strategy()
         else:
             self.execute_economic_strategy()
+        
         
         #for villager in self.units["Villager"]:
          #   print(villager.status)
