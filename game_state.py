@@ -156,6 +156,7 @@ class GameState:
             self.carte.resources = self.player_resources  # Pass both players' resources
             
             self.view.load_unit_sprite('Villager', 'assets/villager.png')
+            self.view.load_unit_sprite('Swordman', 'assets/Axethrower.png')
             self.view.load_unit_sprite('Archer', 'assets/archer.png')
             self.view.load_unit_sprite('Horseman', 'assets/horseman.png')
 
@@ -165,6 +166,7 @@ class GameState:
             self.view.load_building_sprite("H", "assets/Buildings/House.png")
             self.view.load_building_sprite("F", "assets/Buildings/Farm.png")
             self.view.load_building_sprite("C", "assets/Buildings/castel.png")
+            self.view.load_building_sprite("S", "assets/Buildings/Stable.png")
             self.controller = GameController(self.model,self.view, self.carte, tile_size)  # Pass required arguments
 
     def change_state(self, new_state):

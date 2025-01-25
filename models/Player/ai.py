@@ -4,6 +4,9 @@ from models.Player.strategy import Strategy  # Import Strategy from the appropri
 from models.Buildings.farm import Farm
 from models.Buildings.house import House
 from models.Buildings.camp import Camp
+from models.Buildings.barrack import Barrack
+from models.Buildings.archery_range import Archery_Range
+from models.Buildings.stable import Stable
 from models.units.villager import Villager
 from models.Buildings.town_center import Town_center
 from models.Resources.Tile import Type
@@ -195,7 +198,6 @@ class IA:
 
         return closest_target
 
-
     def collect_resource(self, unit, resource_type) :
         goal = self.find_nearby_resources(unit, resource_type)
         if goal :
@@ -205,8 +207,7 @@ class IA:
             print(f"{unit.unit_type} gathered resource_type")
         else :
             print(f"{unit.unit_type} didn't gather resource_type")
-        
-        
+           
     def find_nearby_building(self,pos, building_type):
         min_distance = 1000
         position = None
@@ -216,6 +217,14 @@ class IA:
                 min_distance = distance
                 position = b.pos
         return position
+
+    def find_nearby_dropoint(self, pos):
+        town_pos = self.find_nearby_building(pos, "Town_center")
+        camp_pos = self.find_nearby_building(pos, "Camp")
+        if not camp_pos or self.get_distance(pos, town_pos) < self.get_distance(pos, camp_pos):
+            return town_pos
+        else:
+            return camp_pos
 
     def gather_resource(self, unit, resource_type):
         pos = None
@@ -232,7 +241,7 @@ class IA:
         for u in unit:
             if u.carried_resources == u.resource_capacity:
                 self.change_unit_status(u, unitStatus.RETURNING_RESOURCES)
-                u.destination = self.find_nearby_building(u.position,"Town_center")
+                u.destination = self.find_nearby_dropoint(u.position)
     
     def check_returning(self):
         unit = self.get_unit_by_status("Villager", unitStatus.RETURNING_RESOURCES)
@@ -372,7 +381,7 @@ class IA:
 
         # 3. Build new Town Halls if conditions are met
         if len(self.buildings['Town_center']) < 4 and self.resources['wood'] >= 350:
-            position = self.find_nearby_available_position(self.pos[0] + 20, self.pos[1],(6,6))
+            position = self.find_nearby_available_position(self.pos[0] - 5*random.randint(-2,2), self.pos[1] + 10*random.randint(1,3),(6,6))
             if position and self.get_available_villagers():
                 self.construct_building(Town_center, position)
 
@@ -404,7 +413,7 @@ class IA:
 
         # Generate Villagers until 100
         for town_center in self.buildings["Town_center"]:
-            if (len(self.units["Villager"]) < 100 and
+            if (len(self.units["Villager"]) < 20 and
                     self.resources["food"] >= 50 and town_center.is_idle()):
                 pos = self.find_nearby_available_position(town_center.pos[0],town_center.pos[1], (2,2))
                 town_center.train_villager(pos, self.game_state)
@@ -428,17 +437,44 @@ class IA:
         # Build Camps near resource nodes
         for resource_type in ["Wood", "Gold"]:
             for node in self.resource_nodes(resource_type):
-                if self.should_build_camp(node):
+                if self.should_build_camp(node) and self.can_afford({"wood" : 100}) and self.get_available_villagers():
                     pos = self.find_nearby_available_position(node[0], node[1], (3, 3))
                     if pos:
                         self.construct_building(Camp, pos)
 
+        # Build building to train army
+        if len(self.buildings["Barracks"]) < 1 and self.can_afford({"wood" : 175}) and self.get_available_villagers():
+            x,y = self.buildings["Town_center"][random.randint(0,len(self.buildings["Town_center"]) - 1)].pos
+            pos = self.find_nearby_available_position(x, y, (4,4))
+            if pos:
+                self.construct_building(Barrack, pos)
+        
+        if len(self.buildings["Stable"]) < 1 and self.can_afford({"wood" : 175}) and self.get_available_villagers():
+            x,y = self.buildings["Town_center"][random.randint(0,len(self.buildings["Town_center"]) - 1)].pos
+            pos = self.find_nearby_available_position(x, y, (4,4))
+            if pos:
+                self.construct_building(Stable, pos)
+        
+        if len(self.buildings["Archery_Range"]) < 1 and self.can_afford({"wood" : 175}) and self.get_available_villagers():
+            x,y = self.buildings["Town_center"][random.randint(0,len(self.buildings["Town_center"]) - 1)].pos
+            pos = self.find_nearby_available_position(x, y, (4,4))
+            if pos:
+                self.construct_building(Archery_Range, pos)
+        
         # Train a balanced army
         if self.resources["food"] >= 50 and self.resources["gold"] >= 20:
             for building_type in ["Barracks", "Stable", "Archery_Range"]:
                 for building in self.buildings[building_type]:
-                    if building.is_idle():
-                        building.train_unit(self.next_unit_type(building_type))
+                    if building.is_idle() and self.can_afford(building.unit_cost):
+                        pos = self.find_nearby_available_position(building.pos[0], building.pos[1], (2,2))
+                        if pos:
+                            building.train_unit(pos, self.game_state)
+                            self.deduct_resources(building.unit_cost)
+                            print(f"AI is training a new {building.unit_type} at {pos}.")
+                    elif building.training_time > 0:
+                        unit = building.check_training(self.game_state)
+                        if unit:
+                            self.units[building.unit_type].append(unit)
 
         # Build Farms in advance
         if len(self.buildings["Farm"]) < 5:
@@ -611,7 +647,7 @@ class IA:
                         """
         
         for villager in self.units["Villager"]:
-            if villager.current_resource_type == resource_type:
+            if villager.current_resource_type == resource_type and villager.status == unitStatus.GATHERING:
                 pos = villager.position
                 nodes.add(pos)
         
@@ -629,6 +665,8 @@ class IA:
         building_type: The type of building to construct.
         position: The position on the map to construct the building.
         """
+        if not self.get_available_villagers:
+            return False
         building = building_type(position)
         building.player_id = self.player_id
         self.deduct_resources(building.cost)

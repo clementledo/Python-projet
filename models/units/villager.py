@@ -126,7 +126,7 @@ class Villager(Unit):
         if resources_gathered > self.resource_capacity:
             resources_gathered = self.resource_capacity
         
-        self.grid[self.y][self.x].resource.quantity[resource_type] -= resources_gathered
+        #self.grid[self.y][self.x].resource.quantity[resource_type] -= resources_gathered
         """reste à actualiser ressources de IA"""
         self.carried_resources += resources_gathered
         if self.carried_resources >= self.resource_capacity:
