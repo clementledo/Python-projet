@@ -9,9 +9,9 @@ class Villager(Unit):
         super().__init__(x, y, "Villager", 0.3, 2, 25, map)
         self.player_id = player_id
         self.use_terminal_view = use_terminal_view
-        self.is_gathering = False
+        """self.is_gathering = False"""
         self.gathering_progress = 0
-        self.gathering_speed = 1
+        """self.gathering_speed = 1"""
         self.carry_capacity = 10
         self.carried_resources = 0
         self.resource_type = None
@@ -125,6 +125,9 @@ class Villager(Unit):
         resources_gathered = self.resource_gather_rate * delta_time
         if resources_gathered > self.resource_capacity:
             resources_gathered = self.resource_capacity
+        self.status = unitStatus.IDLE
+        self.grid[self.y][self.x].resource.quantity[resource_type] -= resources_gathered
+        """reste à actualiser ressources de IA"""
         print(f"{resources_gathered} unités de {resource_type} collectées.")
     
     def gather(self, resource_pos):
@@ -134,6 +137,7 @@ class Villager(Unit):
             self.status = unitStatus.GATHERING
             self.is_gathering = True
             self.destination = resource_pos
+            
 
     def get_resource_type(self, resource):
         """Map resource to resource type"""
@@ -157,6 +161,15 @@ class Villager(Unit):
                         self.carried_resources += 1
                         self.gathering_progress = 0
 
+    """"villageois placé en amont sur la bonne tuile"""
+    def collect_resource(self, resource_type) : 
+        delta_time = 60
+        self.start_gathering(resource_type)
+        self.gather_resources(resource_type, delta_time)
+        x = self.x
+        y = self.y
+        self.grid[y][x].resource
+        
     def update(self):
         """Update unit state and animation"""
         delta_time = 1 / 60 
