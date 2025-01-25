@@ -246,6 +246,13 @@ class GameState:
                 building.hp = building_data["hp"]
                 building.useable = building_data["useable"]
                 self.model['buildings'].append(building)
+            elif building_data["name"] == "Farm" :
+                x, y = building_data["pos"]
+                building = Farm(pos=(x, y))
+                building.size = building_data["size"]
+                building.hp = building_data["hp"]
+                building.useable = building_data["useable"]
+                self.model['buildings'].append(building)
         print(f"{len(self.model['buildings'])} buildings successfully loaded.")
 
     def load_units(self, data):
@@ -260,6 +267,7 @@ class GameState:
     def load_sprites(self):
         """Load all required sprites."""
         self.view.load_building_sprite('T', "assets/Buildings/Towncenter.png")
+        self.view.load_building_sprite('F',"assets/Buildings/Farm.png")
         self.view.load_unit_sprite('Villager', "assets/Sprites/Villager/Stand/Villagerstand001.png")
         print("Sprites loaded successfully.")
 
