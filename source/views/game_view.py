@@ -32,19 +32,21 @@ class GameView:
         iso_y = (x + y) * tile_height // 2 - camera_y
 
         return iso_x, iso_y
-    
-    def screen_to_world(self, x, y, camera_x, camera_y):
-        """Convert screen coordinates to world coordinates with isometric projection."""
+
+    def screen_to_world(self, screen_x, screen_y, camera_x, camera_y):
+        """Inverse de world_to_screen, retourne (x, y) en coordonnées cartésiennes."""
         tile_width = self.tile_size * 2
         tile_height = self.tile_size
-
-        x += camera_x
-        y += camera_y
-
-        world_x = (2 * y + x) // tile_width
-        world_y = (2 * y - x) // tile_width
-
-        return world_x, world_y
+        # Annuler le décalage central de la carte
+        screen_x -= self.viewport_width // 2
+        screen_y -= self.viewport_height // 4
+        # Retrouver les coordonnées iso
+        # iso_x = (x - y) * tile_width // 2 - camera_x
+        # iso_y = (x + y) * tile_height // 2 - camera_y
+        # On applique la formule inverse
+        x = ((screen_x + camera_x) // (tile_width // 2) + (screen_y + camera_y) // (tile_height // 2)) // 2
+        y = ((screen_y + camera_y) // (tile_height // 2) - (screen_x + camera_x) // (tile_width // 2)) // 2
+        return x, y
     
     def render_map(self, carte, camera_x, camera_y):
         """Render the map to the screen."""
@@ -69,9 +71,24 @@ class GameView:
         map_width = len(carte.grid[0])  # Nombre de colonnes
         map_height = len(carte.grid)   # Nombre de lignes
 
+        # Calcul du rectangle visible en coordonnées cartésiennes
+        min_x, min_y = self.screen_to_world(0, 0, camera_x, camera_y)
+        max_x, max_y = self.screen_to_world(screen_width, screen_height, camera_x, camera_y)
+        min_x, min_y = int(min_x), int(min_y)
+        max_x, max_y = int(max_x), int(max_y)
+
+        padding_x = int(screen_width / tile_width) + 2
+        padding_y = int(screen_height / tile_height) + 2
+
+        # Bornes valides
+        min_x = max(min_x - padding_x, 0)
+        min_y = max(min_y - padding_y, 0)
+        max_x = min(max_x + padding_x, map_width - 1)
+        max_y = min(max_y + padding_y, map_height - 1)
+
         # Rendu des tuiles
-        for y in range(map_height):
-            for x in range(map_width):
+        for y in range(min_y, max_y + 1):
+            for x in range(min_x, max_x + 1):
                 tile = carte.get_tile(x, y)
                 if not tile:
                     continue
@@ -98,4 +115,3 @@ class GameView:
         #afficher position de la camera en dessous du compteur de FPS
         camera_pos = self.font.render(f"Camera: {int(camera_x)}, {int(camera_y)}", True, pygame.Color('white'))
         self.screen.blit(camera_pos, (10, 40))
-     

@@ -41,7 +41,7 @@ def main():
         game_view.render_game(game_map, camera_x, camera_y, clock)
 
         pygame.display.flip()
-        clock.tick(60)
+        clock.tick(200)
     
     pygame.quit()
 
