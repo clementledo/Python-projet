@@ -145,7 +145,7 @@ class GameState:
         # Initialize AI players
         if ai_mode:
             self.players = {
-                1: IAPlayer(1, self, Strategy[player1_strategy]),
+                1: IA(1, self, player1_strategy),
                 #2: IAPlayer(2, self, Strategy.DEFENSIVE)
                 2: IA(2, self, Strategy[player2_strategy]) 
             }

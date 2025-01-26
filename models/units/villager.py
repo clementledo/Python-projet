@@ -130,7 +130,7 @@ class Villager(Unit):
         """reste à actualiser ressources de IA"""
         self.carried_resources += resources_gathered
         if self.carried_resources >= self.resource_capacity:
-            resources_gathered = self.resource_capacity + resources_gathered - self.carried_resource 
+            resources_gathered = self.resource_capacity + resources_gathered - self.carried_resources 
             self.carried_resources = self.resource_capacity
         return resources_gathered 
             
