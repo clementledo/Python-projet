@@ -1,4 +1,4 @@
-from resource_type import ResourceType
+from .resource_type import ResourceType
 
 class Resource:
     def __init__(self, type: ResourceType, quantity: int):

@@ -1,14 +1,13 @@
 from .resource import Resource
 
 class Tile:
-    def __init__(self, x, y, occupant=None, resource: Resource = None):
-        self.x = x
-        self.y = y
+    def __init__(self, position, occupant=None, resource: Resource = None):
+        self.position = position
         self.occupant = occupant
         self.resource = resource
 
     def __repr__(self):
-        return f"Tile(x={self.x}, y={self.y}, occupant={self.occupant}, resource={self.resource})"
+        return f"Tile(position={self.position}, occupant={self.occupant}, resource={self.resource})"
 
     def is_occupied(self):
         return self.occupant is not None
