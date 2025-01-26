@@ -4,10 +4,12 @@ from views.game_view import GameView
 from views.camera import Camera
 from views.assets_manager import AssetManager
 from main import initialize_game
+from models.game import Game
 
 def test_specific_resources():
     screen, clock, font, TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT = initialize_game()
-    test_map = Map.generate_random_map(1000, 1000)  # Générer une carte aléatoire de 1000x1000
+    game = Game(50, 50, "Moyenne", "central_gold")  # Initialiser le jeu avec les paramètres spécifiés
+    test_map = game.map
     asset_manager = AssetManager()
     game_view = GameView(screen, TILE_SIZE, asset_manager)
     camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT, test_map.width, test_map.height)

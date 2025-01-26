@@ -95,10 +95,7 @@ class GameView:
                 iso_x, iso_y = self.world_to_screen(x, y, camera_x, camera_y)
                 terrain_texture = textures.get(tile.terrain_type, textures[Terrain_type.GRASS])
                 self.screen.blit(terrain_texture, (iso_x, iso_y))
-        # Deuxième boucle : dessiner les ressources
-        for y in range(min_y, max_y + 1):
-            for x in range(min_x, max_x + 1):
-                tile = carte.get_tile(x, y)
+
                 if not tile or not tile.has_resource():
                     continue
                 iso_x, iso_y = self.world_to_screen(x, y, camera_x, camera_y)
