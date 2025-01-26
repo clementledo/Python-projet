@@ -1,9 +1,11 @@
 from .resource import Resource
+from .terrain_type import Terrain_type
 
 class Tile:
-    def __init__(self, x, y, occupant=None, resource: Resource = None):
+    def __init__(self, x, y, terrain_type = Terrain_type.GRASS, occupant=None, resource: Resource = None):
         self.x = x
         self.y = y
+        self.terrain_type = terrain_type
         self.occupant = occupant
         self.resource = resource
 
