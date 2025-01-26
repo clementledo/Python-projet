@@ -144,9 +144,9 @@ class GameState:
         # Initialize AI players
         if ai_mode:
             self.players = {
-                1: IA(1, self, Strategy.AGGRESSIVE),
+                1: IA(1, self, "AGGRESSIVE"),
                 #2: IAPlayer(2, self, Strategy.DEFENSIVE)
-                2: IA(2, self, Strategy.ECONOMIC) 
+                2: IA(2, self, "ECONOMIC") 
             }
 
         # Initialize view and controller

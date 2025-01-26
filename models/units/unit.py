@@ -159,8 +159,7 @@ class Unit:
 
         return None  # Aucun chemin trouvé
 
-        def get_tile_cost(pos):
-       
+    def get_tile_cost(pos):
             base_cost = 1
             
             # Check for buildings directly from grid
@@ -175,35 +174,36 @@ class Unit:
                 
             return base_cost
 
-        while open_set:
-            current = min(open_set, key=lambda x: x[0])[1]
-            open_set = [x for x in open_set if x[1] != current]
+            while open_set:
+                current = min(open_set, key=lambda x: x[0])[1]
+                open_set = [x for x in open_set if x[1] != current]
             
-            if current == goal:
-                path = []
-                while current in came_from:
-                    path.append(current)
-                    current = came_from[current]
-                path.reverse()
-                return path
+                if current == goal:
+                    path = []
+                    while current in came_from:
+                        path.append(current)
+                        current = came_from[current]
+                    path.reverse()
+                    return path
 
-            visited.add(current)
+                visited.add(current)
             
-            for neighbor in get_neighbors(current):
-                if neighbor not in visited:
-                    tile_cost = get_tile_cost(neighbor)
-                    tentative_g_score = g_score[current] + tile_cost
+                for neighbor in get_neighbors(current):
+                    if neighbor not in visited:
+                        tile_cost = get_tile_cost(neighbor)
+                        tentative_g_score = g_score[current] + tile_cost
                     
-                    if (neighbor not in g_score or 
-                        tentative_g_score < g_score[neighbor]):
-                        came_from[neighbor] = current
-                        g_score[neighbor] = tentative_g_score
-                        f_score[neighbor] = tentative_g_score + self.heuristic(neighbor, goal)
-                        open_set.append((f_score[neighbor], neighbor))
+                        if (neighbor not in g_score or 
+                            tentative_g_score < g_score[neighbor]):
+                            came_from[neighbor] = current
+                            g_score[neighbor] = tentative_g_score
+                            f_score[neighbor] = tentative_g_score + self.heuristic(neighbor, goal)
+                            open_set.append((f_score[neighbor], neighbor))
 
-        print(f"No path found - explored positions: {visited}")
-        return []
-    def move_toward(self, goal, grid, search_range=10):
+            print(f"No path found - explored positions: {visited}")
+            return []
+    
+    def move_toward(self, goal, grid, search_range=100):
         
         """Move unit towards goal using pathfinding and speed control."""
         if self.health <= 0:
@@ -270,7 +270,7 @@ class Unit:
         self.status == unitStatus.ATTACKING
         if self.health <= 0:
             return
-        print(f"{self.unit_type} Attacked {target_unit.unit_type} at {target_unit.position}, new health: {target_unit.health - self.atk_power}")
+        print(f"{self.unit_type} Attacked {target_unit} at {target_unit.position}, new health: {target_unit.health - self.atk_power}")
         target_unit.take_damage(self.atk_power)
         self.last_attack_time = current_time
 

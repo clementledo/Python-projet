@@ -9,10 +9,11 @@ class Building :
         self.cost = {"wood":0,"gold":0}
         self.construction_time = construction_time
         self.hp = hp
+        self.health = hp
         self.symbol = symbol
         self.size = size
         self.pos = pos
-
+        self.position = pos
         self.name=name
         self.counter=0
         self.curr_tick=0
@@ -61,10 +62,14 @@ class Building :
                 #print(f"Elapsed time: {elapsed_time} seconds")
     
     def destroy(self) :
-        self.hp = 0
+        self.health = 0
+        self.set_broken()
         
-    def damage(self, unit) :
-        self.hp -= unit.attack
+    def take_damage(self, atk) :
+        self.health -=  atk
+        if self.health <= 0 :
+            self.destroy()
+        print(f"{self.name} has {self.health} HP left.")
 
     def print_building(self) :
         print(self.symbol)

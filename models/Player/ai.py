@@ -118,26 +118,19 @@ class IA:
             else:
                 print("No suitable position found to place the building.")
 
-    def spawn_villager(self, Town_center):
+    def spawn_villager(self):
         """Spawn a new villager if the AI can afford it."""
-        villager_cost = {'Food': 50}  # Villager costs 50 Food
-        if self.can_afford(villager_cost):
-            # Deduct resources and spawn a new villager
-            self.deduct_resources(villager_cost)
-            villager_position = (town_hall.position[0], town_hall.position[1] + 1)
-            if self.game_state.carte.is_area_free(villager_position[0], villager_position[1],1,1):
-                position = villager_position
-            else:
-                position = self.find_nearby_available_position(*villager_position, (1, 1))
-            
-            if position:
-                villager = Villager(position[0],position[1],self.game_state)
-                self.units["Villager"].append(villager)
-                #self.game_state.all_unit.append(villager)
-                self.map_data.update_unit_position(villager, None, position)
-                print(f"AI has spawned a new villager!")
-        else:
-            print(f"{self.player_id} cannot afford to spawn a villager.")
+        for town_hall in self.buildings['Town_center']:
+            if town_hall.is_idle() and self.resources['food'] >= 50:
+                pos = self.find_nearby_available_position(town_hall.pos[0], town_hall.pos[1], (4, 4))
+                town_hall.train_villager(pos,self.game_state)
+                print(f"AI is training a new Villager at {pos}.")
+                self.deduct_resources({'food': 50})
+            elif town_hall.training_time > 0:
+                villa = town_hall.check_training(self.game_state)
+                if villa:
+                    self.units["Villager"].append(villa)
+                
     
     def get_unit_by_status(self,type, status):
         units_with_status = []
@@ -176,7 +169,7 @@ class IA:
         villagers = [u for u in enemy_villager if u.units_type == "Villager"]
         return villagers[0] if villagers else enemy_villager[0]
     
-    def find_nearby_targets(self, unit, enemy_units, range = 20):
+    def find_nearby_targets(self, unit, enemy_units, range = 100):
         """
         Find a nearby target within the given range for a specific unit.
         
@@ -336,67 +329,17 @@ class IA:
         return unit.find_path(destination, self.game_state.grid)
     
     def get_main_base(self):
-        town_centers = [b for b in self.buildings if b.__class__.__name__ == "Town_center"]
-        return town_centers[0] if town_centers else None
+        return self.buildings["Town_center"][0]
         
-    """
-    def execute_aggressive_strategy(self, #nb_attacks_consecutive):
-        # Implement aggressive strategy logic here
-        print("Executing aggressive strategy")
-        # Example: Focus on training military units and attacking enemies
-        villager_nb_min = 50
-        building_nb_min = 5
-        resource_level_min = 500
-        resource_level = len(self.resources["food"]) + len(self.resources["wood"]) + len(self.resources["gold"])
-        #non-military building/unit
-        towncenter_nb = len(self.units["TownCenter"]
-        house_nb = len(self.units["House"]
-        farm_nb = len(self.units["Farm"]
-        villager_nb = len(self.units["Villager"]
-        nb_attacks_consecutive_max = 3
-        
-        if len(self.buildings["Barracks"]) < min_nb_building and self.resources["wood"] > 350 :
-             self.construct_building("Barracks", self.find_nearby_available_position(pos,(3,3)))
-        elif self.resources["wood"] < 350 :
-            return# recolt resources
-        else :
-            if len(self.units["Horseman"]) < min_nb_horsemen and self.resources["food"] > 80 and self.resources["food"] > 20 : 
-                return# create soldiers
-            elif self.resources["food"] < 80 or self.resources["food"] < 20: 
-                 return# recolt
-            else: 
-                if nb_attacks_consecutive < nb_attacks_consecutive_max :  
-                    return    #attack
-                #defense or spawn or recolt or build
-                else :
-                    if towncenter_nb < building_nb_min or house_nb < building_nb_min or farm_nb < building_nb_min or villager_nb < villager_nb_min or resource_level < resource_level_min :
-                        #determine priority
-                        l = list((towncenter_nb - building_nb_min, house_nb - building_nb_min or farm_nb - building_nb_min, villager_nb - villager_nb_min, resource_level - resource_level_min))
-                        urg = min(l)
-                        index = l.index(urg)
-                        if index == 0 :
-                            #construct towncenter
-                        elif index == 1 :
-                             #construct farm
-                        elif index == 2 :
-                             #construct house
-                        elif index == 3 :
-                             #spawn villager
-                        else :
-                             #collect ressource
+   
+    
+    def execute_aggressive_strategy(self):
+        military_units = []
+        for unit_type in ["Archer", "Swordman", "Horseman", "Villager"]:
+            military_units.extend(self.units.get(unit_type, []))
+        self.spawn_villager()
+        self.execute_attack_phase()
 
-                        #defense
-                        
-                             
-                        
-    """
-    
-    """
-    def nb_building(self) :
-        return len(self.buildings["Barracks"]) + len(self.buildings["Town_center"]) + len(self.buildings["House"]) + len(self.buildings["Farm"]) + len(self.buildings["Stable"] + len(self.buildings["Archery_Range"] + len(self.buildings["Keep"] + len(self.buildings["Camp"]
-    """ 
-    
-    
     def execute_defensive_strategy(self):
         # Implement defensive strategy logic here
         print("Executing defensive strategy")
@@ -409,6 +352,8 @@ class IA:
                 self.phase = 2
         elif self.phase == 2:
             self.execute_second_phase()
+        if not self.is_base_secure():
+            self.defend_base()
             
     def execute_begin_phase(self):
         # 0. Build Farm
@@ -559,7 +504,8 @@ class IA:
             base = self.get_main_base()
             if base:
                 for unit in military_units:
-                     unit.move_toward((base.pos[0] + random.randint(-4,4), base.pos[1] + random.randint(-4,4)))
+                     unit.move_toward((base.pos[0] + random.randint(-4,4), base.pos[1] + random.randint(-4,4)), self.map_data)
+                self.execute_attack_phase()
                         
     def allocate_villagers(self):
         
@@ -679,7 +625,7 @@ class IA:
             enemy_units = [u for u in self.game_state.model['units'] if u.player_id != self.player_id]
             base = self.get_main_base()
             if base:
-                nearby_enemies = [u for u in enemy_units if self.get_distance(u.position, base.position) < 10]
+                nearby_enemies = [u for u in enemy_units if self.get_distance(u.position, base.position) < 20]
                 return len(nearby_enemies) == 0
             return False
 
@@ -727,7 +673,7 @@ class IA:
         self.map_data.place_building(building)
         buiilder = self.allocate_villagers_for_construction(building)
         x = self.get_available_villagers()
-        print(f"AI is constructing a {building_type.__name__} at position {position} with {buiilder} there is {len(x)} villagers disponible in {len(self.units["Villager"])}.")
+        #print(f"AI is constructing a {building_type.__name__} at position {position} with {buiilder} there is {len(x)} villagers disponible in {len(self.units["Villager"])}.")
         self.buildings[building.name].append(building)
 
     def should_build_camp(self, node):
@@ -754,8 +700,9 @@ class IA:
         
     def update(self):
         """"""
-        if self.strategy == Strategy.AGGRESSIVE:
+        if self.strategy == "AGGRESSIVE":
             self.execute_aggressive_strategy()
+            #print("Aggressive strategy executed.")
         elif self.strategy == Strategy.DEFENSIVE:
             self.execute_defensive_strategy()
         else:
@@ -792,14 +739,13 @@ class IA:
         military_units = []
         for unit_type in ["Archer", "Swordman", "Horseman", "Villager"]:
             military_units.extend(self.units.get(unit_type, []))
-    
-        # Find all enemy units
-        enemy_units = [
-            u for u in self.game_state.model['units'] 
-            if u.player_id != self.player_id
-        ]
-    
-        if not military_units or not enemy_units:
+
+        # Find all enemy units and buildings
+        enemy_units = [u for u in self.game_state.model['units'] if u.player_id != self.player_id]
+        enemy_buildings = [u for u in self.game_state.model['buildings'] if u.player_id != self.player_id]
+        enemy_targets = enemy_units + enemy_buildings
+
+        if not military_units or not enemy_targets:
             print("No military units or no enemies to attack.")
             return
 
@@ -808,35 +754,53 @@ class IA:
         squads = [military_units[i:i + squad_size] for i in range(0, len(military_units), squad_size)]
     
         for squad in squads:
+            remaining_targets = enemy_targets.copy()
+        
             for unit in squad:
-                unit.target = self.find_nearby_targets(squad[0], enemy_units, 100)
+                if not remaining_targets:
+                    break
+            
+                # Find target for the unit
+                unit.target = self.find_nearby_targets(unit, remaining_targets, 100)
                 if not unit.target:
                     continue
+            
                 if not self.is_valid_target_position(unit.target.position):
                     print(f"Invalid target position {unit.target.position}. Skipping.")
                     continue
 
-                # Move units towards the attack position
-                if self.get_distance(unit.target.position, unit.position) > unit.attack_range:
-                    unit.move_toward(unit.target.position, self.game_state.carte)
+                # Move or attack based on distance
+                distance_to_target = self.get_distance(unit.target.position, unit.position)
             
-                # Check if unit is close enough to attack
-                if self.get_distance(unit.target.position, unit.position) <= unit.attack_range:
+                if distance_to_target > unit.attack_range:
+                    unit.move_toward(unit.target.position, self.game_state.carte)
+                elif distance_to_target <= unit.attack_range:
                     unit.atk(unit.target)
                 
-                # Check if target is destroyed
-                if unit.target.health <= 0:
-                    print(f"Target at {unit.target.position} destroyed.")
-                    enemy_units.remove(unit.target)
-                    self.remove_dead_units()
-                    break
-                # Handle unit death
+                    # Check if target is destroyed
+                    if unit.target.health <= 0:
+                        print(f"Target at {unit.target.position} destroyed.")
+                    
+                        # Remove from appropriate list
+                        if unit.target in enemy_units:
+                            enemy_units.remove(unit.target)
+                            self.game_state.model['units'].remove(unit.target)
+                        elif unit.target in enemy_buildings:
+                            enemy_buildings.remove(unit.target)
+                            self.game_state.model['buildings'].remove(unit.target)
+                    
+                        remaining_targets.remove(unit.target)
+            
+                #Handle unit death
                 if unit.health <= 0:
                     print(f"{unit.unit_type} died at {unit.position}.")
-                    self.units[unit.unit_type].remove(unit)
-                    self.game_state.model['units'].remove(unit)
+                    if unit in self.units[unit.unit_type]:
+                        self.units[unit.unit_type].remove(unit)
+                    if unit in self.game_state.model['units']:
+                        self.game_state.model['units'].remove(unit)
 
         print("Attack phase completed.")
+
 
     def is_valid_target_position(self, position):
         # Add checks to verify the target's position is valid
