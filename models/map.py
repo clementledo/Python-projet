@@ -199,7 +199,7 @@ class Map:
         for y in range(self.hauteur):
             for x in range(self.largeur):
                 tile = self.get_tile(x, y)
-                if tile and isinstance(tile, Resource):
+                if tile and tile.resource != None:
                     resources.append((x, y))
         return resources
     

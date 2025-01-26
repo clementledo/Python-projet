@@ -9,9 +9,9 @@ class Villager(Unit):
         super().__init__(x, y, "Villager", 0.3, 2, 25, map)
         self.player_id = player_id
         self.use_terminal_view = use_terminal_view
-        self.is_gathering = False
+        """self.is_gathering = False"""
         self.gathering_progress = 0
-        self.gathering_speed = 1
+        """self.gathering_speed = 1"""
         self.carry_capacity = 10
         self.carried_resources = 0
         self.resource_type = None
@@ -125,7 +125,14 @@ class Villager(Unit):
         resources_gathered = self.resource_gather_rate * delta_time
         if resources_gathered > self.resource_capacity:
             resources_gathered = self.resource_capacity
-        print(f"{resources_gathered} unités de {resource_type} collectées.")
+        
+        #self.grid[self.y][self.x].resource.quantity[resource_type] -= resources_gathered
+        """reste à actualiser ressources de IA"""
+        self.carried_resources += resources_gathered
+        if self.carried_resources >= self.resource_capacity:
+            self.carried_resources = self.resource_capacity
+        #self.grid.get_tile(self.destination[0],self.destination[1]).resource.starting_resources[resource_type] -= resources_gathered
+        #print(f"{self.carried_resources} unités de {resource_type} collectées.")
     
     def gather(self, resource_pos):
         tile = self.grid.get_tile(resource_pos[0], resource_pos[1])
@@ -134,6 +141,7 @@ class Villager(Unit):
             self.status = unitStatus.GATHERING
             self.is_gathering = True
             self.destination = resource_pos
+            
 
     def get_resource_type(self, resource):
         """Map resource to resource type"""
@@ -157,6 +165,13 @@ class Villager(Unit):
                         self.carried_resources += 1
                         self.gathering_progress = 0
 
+    """"villageois placé en amont sur la bonne tuile"""
+    def collect(self, resource_type) : 
+        delta_time = 60
+        self.start_gathering(resource_type)
+        self.gather_resources(resource_type, delta_time)
+        return resources_gathered
+        
     def update(self):
         """Update unit state and animation"""
         delta_time = 1 / 60 
@@ -168,8 +183,12 @@ class Villager(Unit):
         if self.status == unitStatus.BUILDING:
             self.update_building(delta_time)
         elif self.status == unitStatus.GATHERING:
-            self.gather_resources(self.current_resource_type, delta_time)
-
+            if self.distance_to(self.destination) > 1:
+                self.move_toward(self.destination,self.grid)
+            else:
+                self.gather_resources(self.current_resource_type, delta_time)
+        elif self.status == unitStatus.RETURNING_RESOURCES:
+            self.move_toward(self.destination,self.grid)
     def serialize(self):
         """Serialize villager data"""
         base_data = super().serialize()
