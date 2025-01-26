@@ -3,7 +3,7 @@ from .resource import Resource
 class Tile:
     def __init__(self, x, y, occupant=None, resource: Resource = None):
         self.x = x
-        self.y
+        self.y = y
         self.occupant = occupant
         self.resource = resource
 
