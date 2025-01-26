@@ -1,4 +1,5 @@
 import random
+from models.units.unit import unitStatus
 from models.Player.strategy import Strategy  # Import Strategy from the appropriate module
 from models.Buildings.farm import Farm
 from models.Buildings.house import House
@@ -394,13 +395,8 @@ class IA:
     def nb_building(self) :
         return len(self.buildings["Barracks"]) + len(self.buildings["Town_center"]) + len(self.buildings["House"]) + len(self.buildings["Farm"]) + len(self.buildings["Stable"] + len(self.buildings["Archery_Range"] + len(self.buildings["Keep"] + len(self.buildings["Camp"]
     """ 
-    def execute_Agrressive_phase(self):
-        military = [u for u in self.units if u.unit_type in ["Archer", "Horseman","Villager","Swordman"]]
-        if len(military) <5:
-            self.spawn_villager
-        else
-            self.ex
-
+    
+    
     def execute_defensive_strategy(self):
         # Implement defensive strategy logic here
         print("Executing defensive strategy")
@@ -731,7 +727,7 @@ class IA:
         self.map_data.place_building(building)
         buiilder = self.allocate_villagers_for_construction(building)
         x = self.get_available_villagers()
-        #print(f"AI is constructing a {building_type.__name__} at position {position} with {builder} there is {len(x)} villagers disponible in {len(self.units["Villager"])}")
+        print(f"AI is constructing a {building_type.__name__} at position {position} with {buiilder} there is {len(x)} villagers disponible in {len(self.units["Villager"])}.")
         self.buildings[building.name].append(building)
 
     def should_build_camp(self, node):
@@ -757,28 +753,19 @@ class IA:
         return min_distance > distance_threshold
         
     def update(self):
+        """"""
         if self.strategy == Strategy.AGGRESSIVE:
             self.execute_aggressive_strategy()
         elif self.strategy == Strategy.DEFENSIVE:
             self.execute_defensive_strategy()
         else:
-            self.execute_economic_strategy()"""
-        self.execute_attack_phase()
+            self.execute_economic_strategy()
         
-     
         
-    def count_villagers_collecting(self, resource_type):
-        """
-        Count the number of villagers collecting a specific resource.
-
-        :param resource_type: The type of resource to count (e.g., "Food", "Wood", "Gold").
-        :return: The number of villagers collecting the specified resource.
-        """
-        count = 0
-        for villager in self.units["Villager"]:
-            if villager.task == resource_type:
-                count += 1
-        return count"""
+        #for villager in self.units["Villager"]:
+         #   print(villager.status)
+              
+    
     def remove_dead_units(self):
             unit_types = ["Villager", "Archer", "Horseman"]
             for unit_type in unit_types:
@@ -859,3 +846,6 @@ class IA:
                     0 <= y < self.game_state.carte.hauteur)
         except (TypeError, ValueError):
             return False
+
+
+    
