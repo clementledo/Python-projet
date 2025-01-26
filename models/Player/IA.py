@@ -53,8 +53,8 @@ class IAPlayer:
         # Priorité: Construction d'unités militaires
         if len(military) < self.min_warriors:
             self.train_military_unit()
-        else:
-            self.attack_enemy()
+        #else:
+            #self.attack_enemy()
 
     def execute_defensive_strategy(self):
         # Priorité: Défense de la base et économie
@@ -86,20 +86,7 @@ class IAPlayer:
             for unit in military:
                 unit.move_to((base.pos[0] + 2, base.pos[1] + 2))
 
-    def attack_enemy(self):
-        military = [u for u in self.units if u.unit_type in ["Archer", "Horseman"]]
-        enemy_units = [u for u in self.game_state.model['units'] if u.player_id != self.player_id]
-        
-        if len(military) >= self.attack_threshold and enemy_units:
-            target = self.find_best_target(enemy_units)
-            for unit in military:
-                unit.move_towards(target.position,self.game_state.carte)
-
-            """" 1 cible / attaquant """
-            """ for unit in military:
-                target = self.find_best_target(enemy_units)
-                unit.move_towards(target.position,self.game_state.carte)
-                unit.atk(target) """
+    
 
     def find_best_target(self, enemy_units):
         # Prioritize villagers and weak units

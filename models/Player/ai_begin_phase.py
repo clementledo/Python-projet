@@ -47,7 +47,7 @@ class IA:
 
         # Spawn 3 villagers near the Town Hall
         for i in range(3):
-            villager_position = (town_center_position[0] + i, town_center_position[1])
+            villager_position = (town_hall_position[0] + i, town_hall_position[1])
             if self.game_state.carte.is_area_free(villager_position[0], villager_position[1],1,1):
                 position = villager_position
             else:
@@ -117,7 +117,7 @@ class IA:
         if self.can_afford(villager_cost):
             # Deduct resources and spawn a new villager
             self.deduct_resources(villager_cost)
-            villager_position = (town_hall.position[0], town_hall.position[1] + 1)
+            villager_position = (Town_center.position[0], Town_center.position[1] + 1)
             if self.game_state.carte.is_area_free(villager_position[0], villager_position[1],1,1):
                 position = villager_position
             else:
@@ -356,9 +356,9 @@ class IA:
                     villager = available_villagers.pop(0)
                     villager_farm.append(villager)
             villager_wood = available_villagers
-        
+            
         for villager in villager_farm:
-            pos = self.find_nearby_resources(villager,type_resource.Food)
+            pos = self.find_nearby_resources(villager, Type.Food)
             if pos:
                 if villager.position != pos:
                     path = self.find_path(villager, pos)
@@ -369,7 +369,7 @@ class IA:
                     self.gather_resource(villager, pos, 100) 
                          
         for villager in villager_wood:
-            pos = self.find_nearby_resources(villager,type_resource.Wood)
+            pos = self.find_nearby_resources(villager, Type.Wood)
             if pos:
                 if self.get_distance(villager.position, pos) > 1:
                     path = self.find_path(villager, pos)
@@ -382,7 +382,7 @@ class IA:
             if isinstance(building, Town_center):
                 for _ in range(5):
                     for villager in available_villagers:
-                        pos = self.find_nearby_resources(villager,type_resource.Food)
+                        pos = self.find_nearby_resources(villager, Type.Food)
                         if villager.position != pos:
                                 villager.move_towards(pos, self.map_data)
                         villager.gather_resources()
@@ -390,7 +390,7 @@ class IA:
                         break
         if len(available_villagers) > 0:
             for villager in available_villagers:
-                pos = self.find_nearby_resources(villager,type_resource.Wood)
+                pos = self.find_nearby_resources(villager, Type.Wood)
                 if self.get_distance(villager.position, pos) > 1:
                         villager.move_towards(next_step, self.map_data)
                 villager.gather_resources()

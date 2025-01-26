@@ -3,6 +3,9 @@ import math
 from models.Buildings.town_center import Town_center  # Adjust the import path as necessary
 import subprocess
 import sys
+import webbrowser
+import os  # Ajout de l'import
+
 class GameController:
     def __init__(self, model, view, carte,tile_size):
         # ... (existing initialization) ...
@@ -13,11 +16,10 @@ class GameController:
         self.selected_unit = None  # Unité sélectionnée par le joueur
         self.camera_x = 0  # Position X de la caméra
         self.camera_y = 0  # Position Y de la caméra
-        self.camera_speed = 10  # Vitesse de déplacement de la caméra
+        self.camera_speed = 20  # Vitesse de déplacement de la caméra
         self.selected_unit = None
         self.map_width = carte.largeur
         self.map_height = carte.hauteur
-        self.zoom_level = 0.5
         self.selected_unit = None
         self.selected_building = None
         self.player_resources = {}
@@ -86,10 +88,13 @@ class GameController:
                 if event.key == pygame.K_F12:
                     # Switch to terminal view
                     subprocess.Popen([sys.executable, "main2.py"])
-
-            # Zoom handling
-            if event.type == pygame.MOUSEWHEEL:
-                self.zoom_level = max(0.5, min(2.0, self.zoom_level + event.y * 0.1))
+                #if event.key == pygame.K_TAB:
+                    #try:
+                        #url = 'http://localhost:8000/data/game_data.html'  # URL du serveur local
+                        #print(f"Ouverture de la page HTML: {url}")  # Message de débogage
+                        #webbrowser.open(url)
+                    #except Exception as e:
+                        #print(f"Erreur lors de l'ouverture de la page HTML: {e}")
 
             # Camera dragging
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -112,8 +117,8 @@ class GameController:
 
                  # Sélection d'un bâtiment
                 mouse_pos = pygame.mouse.get_pos()
-                map_x = int(mouse_pos[0] / (self.tile_size * self.zoom_level) + self.camera_x)
-                map_y = int(mouse_pos[1] / (self.tile_size * self.zoom_level) + self.camera_y)
+                map_x = int(mouse_pos[0] / self.tile_size + self.camera_x)
+                map_y = int(mouse_pos[1] / self.tile_size + self.camera_y)
                 
                 for building in self.model['buildings']:
                     bx, by = building.pos
@@ -187,8 +192,8 @@ class GameController:
             map_y = int((rel_y / minimap_rect.height) * (self.map_height * self.tile_size))
 
             # Ajuster la caméra pour centrer sur la position cliquée
-            self.camera_x = max(0, min(self.camera_boundary_x, map_x - self.screen_width // (2 * self.zoom_level)))
-            self.camera_y = max(0, min(self.camera_boundary_y, map_y - self.screen_height // (2 * self.zoom_level)))
+            self.camera_x = max(0, min(self.camera_boundary_x, map_x - self.screen_width // 2))
+            self.camera_y = max(0, min(self.camera_boundary_y, map_y - self.screen_height // 2))
 
             print(f"Camera moved to ({self.camera_x}, {self.camera_y}) via minimap click.")
 
@@ -220,8 +225,7 @@ class GameController:
             x_tile, y_tile = unit.get_position()
             iso_x, iso_y = self.view.world_to_screen(x_tile, y_tile, 
                                                      self.camera_x, 
-                                                     self.camera_y, 
-                                                     self.zoom_level)
+                                                     self.camera_y)
             
             # Center the map
             iso_x += screen_width // 2
@@ -251,16 +255,15 @@ class GameController:
             
             # Convertir la position du bâtiment en coordonnées écran avec la projection isométrique
             iso_x, iso_y = self.view.world_to_screen(building_x, building_y, 
-                                                    self.camera_x, self.camera_y, 
-                                                    self.zoom_level)
+                                                    self.camera_x, self.camera_y)
             
             # Centrer la vue pour la position isométrique
             iso_x += screen_width // 2
             iso_y += screen_height // 4
 
             # Calculer les coordonnées de la zone occupée par le bâtiment (en tenant compte de la taille)
-            building_width = int(self.tile_size * building.size[0] * self.zoom_level)
-            building_height = int(self.tile_size * building.size[1] * self.zoom_level)
+            building_width = int(self.tile_size * building.size[0])
+            building_height = int(self.tile_size * building.size[1])
             
             # Créer un rectangle de collision autour du bâtiment
             building_rect = pygame.Rect(
@@ -282,7 +285,7 @@ class GameController:
 
     def update(self):
         # ... autres mises à jour ...
-        self.view.render_units(self.model['units'], self.camera_x, self.camera_y, self.zoom_level, self.selected_unit)
+        self.view.render_units(self.model['units'], self.camera_x, self.camera_y, self.selected_unit)
 
     def move_unit_to_town_center(self):
         """Move selected units to town center."""
@@ -303,8 +306,8 @@ class GameController:
 
     def get_unit_at_position(self, screen_pos):
         """Get unit at screen position."""
-        world_x = (screen_pos[0] + self.camera_x) / (self.view.tile_size * self.zoom_level)
-        world_y = (screen_pos[1] + self.camera_y) / (self.view.tile_size * self.zoom_level)
+        world_x = (screen_pos[0] + self.camera_x) / self.view.tile_size
+        world_y = (screen_pos[1] + self.camera_y) / self.view.tile_size
         
         for unit in self.model['units']:
             unit_x, unit_y = unit.position
@@ -316,8 +319,8 @@ class GameController:
 
     def get_building_at_position(self, screen_pos):
         """Get building at screen position."""
-        world_x = (screen_pos[0] + self.camera_x) / (self.view.tile_size * self.zoom_level)
-        world_y = (screen_pos[1] + self.camera_y) / (self.view.tile_size * self.zoom_level)
+        world_x = (screen_pos[0] + self.camera_x) / self.view.tile_size
+        world_y = (screen_pos[1] + self.camera_y) / self.view.tile_size
         
         for building in self.model['buildings']:
             building_x, building_y = building.pos

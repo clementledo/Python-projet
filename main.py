@@ -1,4 +1,6 @@
 import pygame
+import subprocess  # Ajout de l'import
+import sys  # Ajout de l'import
 from views.menu import main_menu, pause_menu, settings_menu
 from game_state import GameState
 from views.game_view import GameView
@@ -139,6 +141,9 @@ def handle_pause_menu(screen, game_state, TILE_SIZE) -> tuple[str, bool]:
     return SCREEN_STATES['PAUSE'], True
 
 def main():
+    # Démarrer le serveur local
+    subprocess.Popen([sys.executable, "start_server.py"])
+    
     screen, game_state, clock, font, TILE_SIZE = initialize_game()
     
     current_screen = SCREEN_STATES['MAIN_MENU']

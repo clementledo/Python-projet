@@ -14,7 +14,6 @@ from controllers.game_controller import GameController
 from models.map import Map
 from models.Player.IA import IAPlayer, Strategy
 from models.Player.ai_begin_phase import IA
-#
 import traceback
 import json
 
@@ -77,53 +76,66 @@ class GameState:
         self.screen = screen
         if self.view is None and screen is not None:
             self.view = GameView(screen, self.tile_size)
-            self.controller = GameController(self.model, self.view)
+            self.controller = GameController(
+                self.model, 
+                self.view, 
+                self.carte,  # Pass the map
+                self.tile_size  # Pass tile size
+            )
 
-    def start_new_game(self, screen, map_width, map_height, tile_size, map_type="ressources_generales", starting_condition="Marines", use_terminal_view=False, ai_mode=True):
+    def start_new_game(self, screen, map_width, map_height, tile_size, map_type="ressources_generales", 
+                       starting_condition="Marines", use_terminal_view=False, ai_mode=True):
+        """Initialize new game with terminal or GUI mode"""
         self.use_terminal_view = use_terminal_view
-        # Only import pygame if not in terminal mode
-        if not use_terminal_view:
-            import pygame
-        # Initialize map, units, buildings, and resources
-        self.carte = Map(map_width, map_height, map_type)  # Corrected constructor call
+        
+        if use_terminal_view:
+            import os
+            os.environ['SDL_VIDEODRIVER'] = 'dummy'
+        
+        # Initialize game components
+        self.carte = Map(map_width, map_height, map_type)
         condition = self.STARTING_CONDITIONS[starting_condition]
-        self.player_resources = {1: condition["resources"].copy(), 2: condition["resources"].copy()}
+        self.player_resources = {
+            1: condition["resources"].copy(), 
+            2: condition["resources"].copy()
+        }
+        
+        # Skip view initialization in terminal mode
+        if not use_terminal_view:
+            self.set_screen(screen)
         
         units = []
         buildings = []
         
-        # Initialize buildings
+        # Initialize buildings with terminal mode awareness
         for building_type, pos in condition["buildings"]:
             building_class = globals()[building_type]
             building = building_class(pos)
+            building.use_terminal_view = use_terminal_view
             building.player_id = 1
             buildings.append(building)
-            """placer les bâtiments sur la carte
-            self.carte.place_building(building)"""
 
             mirrored_x = map_width - pos[0] - 1
             building = building_class((mirrored_x, pos[1]))
+            building.use_terminal_view = use_terminal_view
             building.player_id = 2
             buildings.append(building)
-            """placer les bâtiments sur la carte
-            self.carte.place_building(building)"""
 
-        # Initialize units
+        # Initialize units with terminal mode awareness
         for i in range(condition["villagers"]):
             x_offset = i % 4
             y_offset = i // 4
+            
             villager = Villager(10 + x_offset, 12 + y_offset, self.carte)
+            villager.use_terminal_view = use_terminal_view
             villager.player_id = 1
             units.append(villager)
-            """placer les unités sur la carte
-            self.carte.grid[12 + y_offset][10 + x_offset].occupant = villager"""
 
             villager = Villager(map_width - 15 + x_offset, 12 + y_offset, self.carte)
+            villager.use_terminal_view = use_terminal_view
             villager.player_id = 2
             units.append(villager)
-            """placer les unités sur la carte
-            self.carte.grid[12 + y_offset][map_width - 15 + x_offset].occupant = villager"""
-
+        
         for building in buildings:
             self.carte.place_building(building)
         self.model = {'map': self.carte, 'units': units, 'buildings': buildings}
@@ -258,7 +270,6 @@ class GameState:
         self.controller.zoom_level = self.zoom_level
 
     def initialize_game_components(self, screen, TILE_SIZE):
-        """Initialize game components after loading."""
         self.screen = screen
         self.view = GameView(screen, TILE_SIZE)
         
