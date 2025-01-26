@@ -347,10 +347,14 @@ class IA:
         villager_nb_min = 50
         building_nb_min = 5
         resource_level_min = 500
-        villager_nb = len(self.units["Villager"]
-        building_nb = self.nb_building()
         resource_level = len(self.resources["food"]) + len(self.resources["wood"]) + len(self.resources["gold"])
+        #non-military building/unit
+        towncenter_nb = len(self.units["TownCenter"]
+        house_nb = len(self.units["House"]
+        farm_nb = len(self.units["Farm"]
+        villager_nb = len(self.units["Villager"]
         nb_attacks_consecutive_max = 3
+        
         if len(self.buildings["Barracks"]) < min_nb_barracks and self.resources["wood"] > 350 :
              self.construct_building("Barracks", self.find_nearby_available_position(pos,(3,3)))
         elif self.resources["wood"] < 350 :
@@ -365,18 +369,25 @@ class IA:
                     return    #attack
                 #defense or spawn or recolt or build
                 else :
-                    if building_nb < building_nb_min or villager_nb < villager_nb_min or resource_level < resource_level_min :
+                    if towncenter_nb < building_nb_min or house_nb < building_nb_min or farm_nb < building_nb_min or villager_nb < villager_nb_min or resource_level < resource_level_min :
                         #determine priority
-                        l = list((building_nb - building_nb_min, villager_nb - villager_nb_min, resource_level - resource_level_min))
+                        l = list((towncenter_nb - building_nb_min, house_nb - building_nb_min or farm_nb - building_nb_min, villager_nb - villager_nb_min, resource_level - resource_level_min))
                         urg = min(l)
                         index = l.index(urg)
                         if index == 0 :
-                            #priority in buildings
-                            #construct
+                            #construct towncenter
                         elif index == 1 :
-                            #spawn
-                        else
-                            #recolt
+                             #construct farm
+                        elif index == 2 :
+                             #construct house
+                        elif index == 3 :
+                             #spawn villager
+                        else :
+                             #collect ressource
+
+                        #defense
+                        
+                             
                         
     """
     
