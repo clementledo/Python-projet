@@ -35,9 +35,13 @@ STARTING_CONDITIONS = {
 }
 
 class Game:
-    def __init__(self, width, height, map_type="default"):
-        self.map = Map.generate_random_map(width, height, map_type)
+    def __init__(self, width, height, starting_condition="Maigre", map_type="default"):
+        self.map = Map(width, height)
         self.players = []
+        self.add_player(Player(1), starting_condition)
+        self.add_player(Player(2), starting_condition)
+        self.map_type = map_type
+        self.map.add_resources(self.map_type)
 
     def add_player(self, player: Player, starting_condition="Maigre"):
         self.players.append(player)
@@ -54,13 +58,21 @@ class Game:
         if player.player_id == 1:
             offset_x, offset_y = 0, 0
         elif player.player_id == 2:
-            offset_x, offset_y = self.map.width - 5, self.map.height - 5
+            offset_x, offset_y = self.map.width - 6, self.map.height - 6
+            if condition_name == "Marines":
+                offset_x, offset_y = self.map.width - 15, self.map.height - 15
         else:
             offset_x, offset_y = 0, 0  # Default to top left if player id is not 1 or 2
 
+        if condition_name in ["Maigre", "Moyenne"]:
+            max_width, max_height = 7, 7
+        elif condition_name == "Marines":
+            max_width, max_height = 15, 15
+        else:
+            max_width, max_height = self.map.width, self.map.height
+
         for building_name in condition["buildings"]:
-            position = self._find_valid_position(offset_x, offset_y)
-            self._clear_resources(position, building_name)
+            position = self._find_valid_position(offset_x, offset_y, building_name, max_width, max_height)
             if building_name == "TownCenter":
                 building = TownCenter(position)
             elif building_name == "Barrack":
@@ -74,26 +86,27 @@ class Game:
             player.add_building(building)
         
         for unit_name in condition["units"]:
-            position = self._find_valid_position(offset_x, offset_y)
-            self._clear_resources(position, unit_name)
+            position = self._find_valid_position_for_unit(offset_x, offset_y, max_width, max_height)
             if unit_name == "Villager":
                 unit = Villager(position=position)
             # Add other unit types here
             self.map.add_unit(unit)
             player.add_unit(unit)
 
-    def _find_valid_position(self, offset_x, offset_y):
-        for dx in range(offset_x, self.map.width):
-            for dy in range(offset_y, self.map.height):
-                if self.map.get_tile(dx, dy).occupant is None:
+    def _find_valid_position(self, offset_x, offset_y, name, max_width, max_height):
+        size = {"TownCenter": (4, 4), "Barrack": (3, 3), "ArcheryRange": (3, 3), "Stable": (3, 3)}.get(name, (1, 1))
+        for dx in range(offset_x, min(offset_x + max_width, self.map.width) - size[0] + 1, size[0] + 1):
+            for dy in range(offset_y, min(offset_y + max_height, self.map.height) - size[1] + 1, size[1] + 1):
+                if all(self.map.get_tile(dx + j, dy + i).occupant is None and not self.map.get_tile(dx + j, dy + i).has_resource() for i in range(size[1]) for j in range(size[0])):
                     return (dx, dy)
         raise ValueError("No valid position available")
 
-    def _clear_resources(self, position, name):
-        x, y = position
-        tile = self.map.get_tile(x, y)
-        if tile.has_resource():
-            tile.resource = None
+    def _find_valid_position_for_unit(self, offset_x, offset_y, max_width, max_height):
+        for dx in range(offset_x, min(offset_x + max_width, self.map.width)):
+            for dy in range(offset_y, min(offset_y + max_height, self.map.height)):
+                if self.map.get_tile(dx, dy).occupant is None:
+                    return (dx, dy)
+        raise ValueError("No valid position available")
 
     def update(self):
         self.map.update()
