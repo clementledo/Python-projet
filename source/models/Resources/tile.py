@@ -1,4 +1,5 @@
 from .resource import Resource
+from .terrain_type import Terrain_type
 
 class Tile:
     def __init__(self, position, occupant=None, resource: Resource = None):
