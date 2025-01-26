@@ -4,14 +4,18 @@ import time
 class TownCenter(Building):
     def __init__(self, position=(0, 0)):
         super().__init__(name="Town Centre", build_time=150, hp=1000, size=(4, 4), position=position, symbol="T")
+        self.cost = {"Wood": 350}
 
-    def spawn_villager(self, map):
+    def spawn_villager(self, map, player):
         from models.Units.villager import Villager  # Local import to avoid circular import
+        if player.resources["Food"] < 50:
+            raise ValueError("Not enough Food to create a Villager")
         time.sleep(2.5)  # Simulate 25 seconds spawn time
         spawn_position = self._find_spawn_position(map)
         if spawn_position:
             villager = Villager(position=spawn_position)
             map.add_unit(villager)
+            player.resources["Food"] -= 50
         else:
             raise ValueError("No valid spawn position available")
 

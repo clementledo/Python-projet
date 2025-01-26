@@ -14,10 +14,14 @@ class Villager(Unit):
         self.resource_collected = 0
         self.collection_rate = 25 #/ 60  # 25 resources per minute
 
-    def build(self, building: Building, map, num_villagers=1):
+    def build(self, building: Building, map, player, num_villagers=1):
         if not self._is_adjacent_to_building_site(building):
             self.move_adjacent_to_building_site(map, building)
         
+        for resource, amount in building.cost.items():
+            if player.resources.get(resource, 0) < amount:
+                raise ValueError(f"Not enough {resource} to build {building.name}")
+
         nominal_time = building.build_time
         actual_time = 3 * nominal_time / (num_villagers + 2)
         if self._can_place_building(building, map):
@@ -26,6 +30,8 @@ class Villager(Unit):
                 print("building...")
                 pass
             map.add_building(building)
+            for resource, amount in building.cost.items():
+                player.resources[resource] -= amount
         else:
             raise ValueError("Cannot place building at the specified location")
 
