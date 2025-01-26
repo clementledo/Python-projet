@@ -198,6 +198,7 @@ class IA:
 
         return closest_target
 
+    """"
     def collect_resource(self, resource_type) :
         # collect all villagers free for recolt
         villagers = [v for v in self.units["Villager"] if v.status == unitStatus.IDLE]
@@ -215,6 +216,7 @@ class IA:
                     print(f"{v.unit_type} gathered resource_type")
                 else :
                     print(f"{v.unit_type} didn't gather resource_type")
+                    """
            
     def find_nearby_building(self,pos, building_type):
         min_distance = 1000
