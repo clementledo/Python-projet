@@ -338,6 +338,7 @@ class IA:
     def get_main_base(self):
         town_centers = [b for b in self.buildings if b.__class__.__name__ == "Town_center"]
         return town_centers[0] if town_centers else None
+        
     """
     def execute_aggressive_strategy(self, #nb_attacks_consecutive):
         # Implement aggressive strategy logic here
@@ -365,6 +366,18 @@ class IA:
                 #defense or spawn or recolt or build
                 else :
                     if building_nb < building_nb_min or villager_nb < villager_nb_min or resource_level < resource_level_min :
+                        #determine priority
+                        l = list((building_nb - building_nb_min, villager_nb - villager_nb_min, resource_level - resource_level_min))
+                        urg = min(l)
+                        index = l.index(urg)
+                        if index == 0 :
+                            #priority in buildings
+                            #construct
+                        elif index == 1 :
+                            #spawn
+                        else
+                            #recolt
+                        
     """
     
     """
