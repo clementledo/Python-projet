@@ -338,12 +338,17 @@ class IA:
     def get_main_base(self):
         town_centers = [b for b in self.buildings if b.__class__.__name__ == "Town_center"]
         return town_centers[0] if town_centers else None
-    
-    def execute_aggressive_strategy(self, nb_attacks_consecutive):
+    """
+    def execute_aggressive_strategy(self, #nb_attacks_consecutive):
         # Implement aggressive strategy logic here
         print("Executing aggressive strategy")
         # Example: Focus on training military units and attacking enemies
-
+        villager_nb_min = 50
+        building_nb_min = 5
+        resource_level_min = 500
+        villager_nb = len(self.units["Villager"]
+        building_nb = self.nb_building()
+        resource_level = len(self.resources["food"]) + len(self.resources["wood"]) + len(self.resources["gold"])
         nb_attacks_consecutive_max = 3
         if len(self.buildings["Barracks"]) < min_nb_barracks and self.resources["wood"] > 350 :
              self.construct_building("Barracks", self.find_nearby_available_position(pos,(3,3)))
@@ -357,13 +362,17 @@ class IA:
             else: 
                 if nb_attacks_consecutive < nb_attacks_consecutive_max :  
                     return    #attack
+                #defense or spawn or recolt or build
                 else :
-                    i = random.randint(0,2)
-                    if i == 1 :
-                        return      #recolt
-                    else :
-                        return    #build
-
+                    if building_nb < building_nb_min or villager_nb < villager_nb_min or resource_level < resource_level_min :
+    """
+    
+    """
+    def nb_building(self) :
+        return len(self.buildings["Barracks"]) + len(self.buildings["Town_center"]) + len(self.buildings["House"]) + len(self.buildings["Farm"]) + len(self.buildings["Stable"] + len(self.buildings["Archery_Range"] + len(self.buildings["Keep"] + len(self.buildings["Camp"]
+    """ 
+    
+    
     def execute_defensive_strategy(self):
         # Implement defensive strategy logic here
         print("Executing defensive strategy")
