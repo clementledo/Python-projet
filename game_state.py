@@ -85,7 +85,8 @@ class GameState:
             )
 
     def start_new_game(self, screen, map_width, map_height, tile_size, map_type="ressources_generales", 
-                       starting_condition="Marines", use_terminal_view=False, ai_mode=True):
+                       starting_condition="Marines", use_terminal_view=False, ai_mode=True,
+                       player1_strategy="AGGRESSIVE",player2_strategy="ECONOMIC"):
         """Initialize new game with terminal or GUI mode"""
         self.use_terminal_view = use_terminal_view
         
@@ -144,9 +145,9 @@ class GameState:
         # Initialize AI players
         if ai_mode:
             self.players = {
-                1: IAPlayer(1, self, Strategy.AGGRESSIVE),
-                #2: IAPlayer(2, self, Strategy.DEFENSIVE) 
-                2: IA(2, self, Strategy.ECONOMIC) 
+                1: IA(1, self, player1_strategy),
+                #2: IAPlayer(2, self, Strategy.DEFENSIVE)
+                2: IA(2, self, Strategy[player2_strategy]) 
             }
 
         # Initialize view and controller
@@ -164,7 +165,7 @@ class GameState:
             self.view.load_building_sprite("A", "assets/Buildings/Archery_range.png")
             self.view.load_building_sprite("B", "assets/Buildings/Barracks.png")
             self.view.load_building_sprite("H", "assets/Buildings/House.png")
-            self.view.load_building_sprite("F", "assets/Buildings/Farm.png")
+            self.view.load_building_sprite("F", "assets/Buildings/farm.png")
             self.view.load_building_sprite("C", "assets/Buildings/castel.png")
             self.view.load_building_sprite("S", "assets/Buildings/Stable.png")
             self.controller = GameController(self.model,self.view, self.carte, tile_size)  # Pass required arguments
@@ -341,23 +342,4 @@ class GameState:
             self.screen.fill((0, 0, 0))
             self.view.render(self.model, self.camera_x, self.camera_y, self.zoom_level)
            # pygame.display.flip()
-
-    def remove_unit(self, unit):
-        """Remove a unit from game state and cleanup all references"""
-        # Remove from units list
-        if unit in self.model['units']:
-            self.model['units'].remove(unit)
-        
-        # Remove from map occupancy
-        if hasattr(unit, 'x') and hasattr(unit, 'y'):
-            self.carte.grid[unit.y][unit.x].occupant = None
-            
-        # Remove unit status
-        if unit in self.unit_status:
-            del self.unit_status[unit]
-            
-        # Update any relevant player statistics
-        if hasattr(unit, 'player_id'):
-            player_id = unit.player_id
-            if player_id in self.players:
-                self.players[player_id].unit_count = len([u for u in self.model['units'] if u.player_id == player_id])
+    

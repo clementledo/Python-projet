@@ -130,10 +130,13 @@ class Villager(Unit):
         """reste à actualiser ressources de IA"""
         self.carried_resources += resources_gathered
         if self.carried_resources >= self.resource_capacity:
+            resources_gathered = self.resource_capacity + resources_gathered - self.carried_resources 
             self.carried_resources = self.resource_capacity
+        return resources_gathered 
+            
         #self.grid.get_tile(self.destination[0],self.destination[1]).resource.starting_resources[resource_type] -= resources_gathered
         #print(f"{self.carried_resources} unités de {resource_type} collectées.")
-    
+
     def gather(self, resource_pos):
         tile = self.grid.get_tile(resource_pos[0], resource_pos[1])
         if tile.resource:
@@ -169,7 +172,7 @@ class Villager(Unit):
     def collect(self, resource_type) : 
         delta_time = 60
         self.start_gathering(resource_type)
-        self.gather_resources(resource_type, delta_time)
+        resources_gathered = self.gather_resources(resource_type, delta_time)
         return resources_gathered
         
     def update(self):
