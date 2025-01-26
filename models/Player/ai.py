@@ -2,6 +2,7 @@ import random
 from models.units.unit import unitStatus
 from models.Player.strategy import Strategy  # Import Strategy from the appropriate module
 from models.Buildings.farm import Farm
+from models.Buildings.building  import Building
 from models.Buildings.house import House
 from models.Buildings.camp import Camp
 from models.Buildings.barrack import Barrack
@@ -17,13 +18,13 @@ class IA:
         self.strategy = strategy
         self.units = {
             "Villager": [u for u in game_state.model['units'] if u.unit_type == "Villager" and u.player_id == player_id] ,
-            "Swordman": [u for u in game_state.model['units'] if u.unit_type == "Swordman" and u.player_id == player_id],
+            "Swordsman": [u for u in game_state.model['units'] if u.unit_type == "Swordsman" and u.player_id == player_id],
             "Archer": [u for u in game_state.model['units'] if u.unit_type == "Archer" and u.player_id == player_id],
             "Horseman": [u for u in game_state.model['units'] if u.unit_type == "Horseman" and u.player_id == player_id],
             "Attack": [],
         }
         self.game_state = game_state  # Full map data with obstacles and resources
-        self.targets = {}  # Store targets for each unit
+        self.targets = None  # Store targets for each unit
         self.resources = game_state.player_resources[player_id]  
         self.phase = 1
         self.buildings = {
@@ -268,6 +269,8 @@ class IA:
                 if distance < min_distance:
                     closest_resource = r
                     min_distance = distance
+                print(f"Checking resource at {r} with distance {distance}")
+
         if closest_resource:
             print(f"{unit.unit_type} found {resource_type} at {closest_resource}")
         return closest_resource
@@ -329,15 +332,15 @@ class IA:
 
     def get_distance(self, pos1, pos2):
         #Get the Manhattan distance between two positions.
-        return abs(pos1[0] - pos2[0]) + abs(pos2[1] - pos2[1])
+        x = abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
+        return x
 
     def find_path(self, unit, destination):
         #Find the shortest path to the destination using map data.
         return unit.find_path(destination, self.game_state.grid)
     
     def get_main_base(self):
-        town_centers = [b for b in self.buildings if b.__class__.__name__ == "Town_center"]
-        return town_centers[0] if town_centers else None
+        return self.buildings["Town_center"][0]
     
     def execute_aggressive_strategy(self, nb_attacks_consecutive):
         # Implement aggressive strategy logic here
@@ -375,7 +378,10 @@ class IA:
             if len(self.buildings["Town_center"]) >= 4:
                 self.phase = 2
         elif self.phase == 2:
+            if self.check_mate():
+                self.launch_attack()
             self.execute_second_phase()
+            
             
     def execute_begin_phase(self):
         # 0. Build Farm
@@ -521,7 +527,7 @@ class IA:
         
     def defend_base(self):
             military_units = []
-            for unit_type in ["Archer", "Swordman", "Horseman","Villager"]:
+            for unit_type in ["Archer", "Swordsman", "Horseman","Villager"]:
                 military_units.extend(self.units.get(unit_type, []))
             base = self.get_main_base()
             if base:
@@ -646,7 +652,7 @@ class IA:
             enemy_units = [u for u in self.game_state.model['units'] if u.player_id != self.player_id]
             base = self.get_main_base()
             if base:
-                nearby_enemies = [u for u in enemy_units if self.get_distance(u.position, base.position) < 10]
+                nearby_enemies = [u for u in enemy_units if self.get_distance(u.position, base.pos) < 10]
                 return len(nearby_enemies) == 0
             return False
 
@@ -718,17 +724,208 @@ class IA:
         distance_threshold = 10  # Define a threshold distance
 
         return min_distance > distance_threshold
+    
+    def check_mate(self):
+        """
+        Check if the AI has enough units to launch an attack.
+        The attack is performed if:
+        1. The number of combat units surpasses a certain threshold.
+        2. The total number of units significantly surpasses the opponent's unit count.
+
+        :return: True if conditions for attack are met, False otherwise.
+        """
+        # Threshold for combat units to launch an attack
+        combat_unit_threshold = 50
         
+        # Get AI's combat unit count
+        ai_combat_units = len(self.units["Swordsman"]) + len(self.units["Archer"]) + len(self.units["Horseman"])
+
+        # Condition 1: Enough combat units
+        if ai_combat_units >= combat_unit_threshold:
+            print(f"AI has {ai_combat_units} combat units, meeting the threshold of {combat_unit_threshold}.")
+            return True
+
+        # Get AI's total unit count
+        ai_total_units = ai_combat_units + len(self.units["Villager"])
+
+        # Get opponent's total unit count
+        opponent_total_units = len(self.game_state.model["units"]) - ai_total_units
+
+        
+
+        # Condition 2: Total unit count far surpasses opponent
+        unit_ratio = ai_total_units / max(1, opponent_total_units)  # Prevent division by zero
+        if unit_ratio >= 1.5:  # AI has at least twice as many units as the opponent
+            print(f"AI unit ratio ({unit_ratio:.2f}) surpasses opponent significantly.")
+            return True
+
+        # If neither condition is met, do not attack
+        print(f"AI does not meet attack conditions: {ai_combat_units} combat units, ratio {unit_ratio:.2f}.")
+        return False
+
+        
+    
+    def get_enemy_critical_point(self):
+        """
+    Identifies the nearest critical point to attack.
+    Priority:
+    1. Town Halls
+    2. Military Buildings
+    """
+        critical_points = []
+
+        # Collect enemy buildings
+        enemy_buildings = self.get_enemy_buildings()
+
+        # Prioritize Town Halls
+        for building in enemy_buildings:
+            if building.name == "Town_center":
+                critical_points.append(building)
+
+        # Add military buildings
+        for building in enemy_buildings:
+            if building.name in ["Barracks", "Stable", "Archery_Range"]:
+                critical_points.append(building)
+
+        # Sort by proximity to AI's main position
+        ai_position = self.get_main_base().pos
+        min_distance = float('inf')
+        critpoint = None
+        for p in critical_points:
+            distance = self.get_distance(p.pos, ai_position)
+            if distance < min_distance:
+                critpoint = p
+        
+        # Return the nearest critical point
+        return critpoint if critical_points else None
+
+    def get_enemy_army(self):
+        """
+        Retrieves the enemy army's strength and composition.
+        Returns:
+        - A dictionary with counts of each unit type
+        - Total strength score (optional)
+        """
+        enemy_units = [u for u in self.game_state.model['units'] if u.player_id != self.player_id]
+        army_composition = {}
+        total_strength = 0
+
+        for unit in enemy_units:
+            if unit.type not in army_composition:
+                army_composition[unit.type] = 0
+            army_composition[unit.type] += 1
+            total_strength += unit.atk + unit.health  # Example strength calculation
+
+        return {
+        "composition": army_composition,
+        "total_strength": total_strength
+        }
+
+    def get_enemy_buildings(self):
+        building = [b for b in self.game_state.model['buildings'] if b.player_id != self.player_id]
+        return building
+    
+    def launch_attack(self):
+        """
+        Launch an attack on the identified critical point.
+        """
+        # Identify the target critical point
+        if not self.targets or self.targets.health <= 0:
+            critical_point = self.get_enemy_critical_point()
+            target = self.check_atk(critical_point)
+            if target is None:
+                print("No target")
+                return  # No critical point to attack
+            self.targets = target
+        # Gather all available military units
+        army_units = []
+        for unit_type in ["Archer", "Swordsman", "Horseman","Villager"]:
+            army_units.extend(self.units.get(unit_type, [])) 
+        if not army_units:
+            return  # No army available to attack
+        target_pos = self.targets.pos if isinstance(self.targets, Building) else self.targets.position
+        print(f"Target at {target_pos}")
+        # Issue attack command to all units
+        for unit in army_units:
+            if unit.health <= 0:
+                self.game_state.model['units'].remove(unit)
+                self.units[unit.unit_type].remove(unit)
+                self.map_data.get_tile(unit.position[0], unit.position[1]).unit.remove(unit)
+                continue
+            print(f"Unit of {self.player_id} at {unit.position}")
+            if self.get_distance(unit.position, target_pos) > 1:
+                unit.move_toward(target_pos, self.map_data)
+                self.change_unit_status(unit, unitStatus.MOVING)
+            else:
+                unit.atk(self.targets)
+                self.change_unit_status(unit, unitStatus.ATTACKING)
+        # Optional: Update AI state to track the active attack
+        
+        print()
+    def check_atk(self, nearby_targets):
+        """
+        Checks and prioritizes targets for an army to attack.
+
+        Parameters:
+        - army_position (tuple): The current position of the AI's army (x, y).
+        - nearby_targets (list): A list of potential nearby targets (e.g., buildings, positions).
+        - critical_point (tuple): The fallback critical point to attack if no nearby enemies.
+
+        Returns:
+        target (tuple): The selected target position to attack.
+        """
+
+    # Gather targets with enemy units
+        enemy_targets = self.get_enemy_units_at(nearby_targets.pos)
+
+    # If there are enemy targets, prioritize the nearest one
+        if enemy_targets:
+            return enemy_targets[0]
+    # No enemy units nearby, fallback to the critical point
+        return nearby_targets
+    
+    def get_enemy_units_at(self, position, radius = 10):
+        """
+        Searches for enemy units around a given position within a specified radius.
+
+        Parameters:
+        - position (tuple): The target position (x, y) to search around.
+        - radius (int): The radius within which to search for enemy units.
+
+        Returns:
+        - list: A list of enemy units found within the radius.
+        """
+        x, y = position
+        enemy_units = []
+
+        # Iterate through all tiles within the square bounding the radius
+        for dx in range(-radius, radius + 1):
+            for dy in range(-radius, radius + 1):
+                search_x, search_y = x + dx, y + dy
+
+                # Skip out-of-bound tiles
+                if not self.map_data.is_within_bounds(search_x, search_y):
+                    continue
+
+                # Check the distance (Manhattan or Euclidean based on your game)
+                if self.get_distance((x, y), (search_x, search_y)) <= radius:
+                    # Retrieve any enemy units at this position
+                    units_at_tile = self.map_data.get_tile(search_x, search_y).unit
+                    for unit in units_at_tile:
+                        if unit.player_id != self.player_id:  # Ensure it's an enemy unit
+                            enemy_units.append(unit)
+        print(enemy_units)
+        return enemy_units
+
     def update(self):
-        """"""
-        if self.strategy == Strategy.AGGRESSIVE:
+        """
+         """
+        if self.strategy == "aggressive":
             self.execute_aggressive_strategy()
-        elif self.strategy == Strategy.DEFENSIVE:
+        elif self.strategy == "defensive":
             self.execute_defensive_strategy()
         else:
             self.execute_economic_strategy()
-        
-        
         #for villager in self.units["Villager"]:
          #   print(villager.status)
               

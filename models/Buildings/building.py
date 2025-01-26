@@ -8,6 +8,7 @@ class Building :
     def __init__(self, name, construction_time, hp, size, symbol, pos) :
         self.cost = {"wood":0,"gold":0}
         self.construction_time = construction_time
+        self.health = hp
         self.hp = hp
         self.symbol = symbol
         self.size = size
@@ -63,8 +64,9 @@ class Building :
     def destroy(self) :
         self.hp = 0
         
-    def damage(self, unit) :
-        self.hp -= unit.attack
+    def take_damage(self, atk) :
+        self.hp -= atk
+        self.health -= atk
 
     def print_building(self) :
         print(self.symbol)

@@ -10,7 +10,7 @@ class Barrack(Building) :
         self.training_cooldown = 20
         self.unit_cost = {"food": 50, "gold": 20}
         self.unit = None
-        self.unit_type = "Swordman"
+        self.unit_type = "Swordsman"
         
     def train_unit(self, pos, game_state):
         self.unit = Swordsman(pos[0], pos[1], game_state.carte)

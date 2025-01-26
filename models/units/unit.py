@@ -21,6 +21,7 @@ class Unit:
         self.x = x
         self.y = y
         self.position = (x, y)
+        self.pos = (x, y)
         self.unit_type = unit_type
         self.speed = speed
         self.attack_speed = attack_speed
@@ -40,7 +41,8 @@ class Unit:
         self.health = hp  # Points de vie
         self.max_health = hp 
         self.status = unitStatus.IDLE
-
+        self.grid.get_tile(x,y).unit.append(self)
+        self.target = None
         self.current_path = []  # Store current path for visualization
         self.show_path = True   # Toggle path visibility
         self.visited_path = []  # Store visited path points
@@ -48,7 +50,7 @@ class Unit:
         self.movement_accumulator = 0.0  # Stocke la progression du déplacement 
         self.last_move_time = pygame.time.get_ticks() / 1000.0
         self.last_attack_time = 0.0
-
+    
     def update(self):
         """Update unit state"""
         if self.status == unitStatus.MOVING:
@@ -64,7 +66,7 @@ class Unit:
                     self.atk(self.target)
                 else:
                     self.status = unitStatus.MOVING
-                    self.destination = self.target.position
+                    self.destination = self.target.pos
             else:
                 self.status = unitStatus.IDLE
                 self.target = None
@@ -74,7 +76,8 @@ class Unit:
 
     def distance_to(self, target):
         """Calculates distance to target unit"""
-        return abs(self.position[0] - target[0]) + abs(self.position[1] - target[1])
+        x = abs(self.position[0] - target[0]) + abs(self.position[1] - target[1])
+        return x
     
     def heuristic(self, a, b):
         """Fonction heuristique pour A* (distance de Chebyshev)."""
@@ -238,15 +241,18 @@ class Unit:
                 try:
                     # Mettre à jour la position
                     self.position = next_step
+                    self.pos = next_step
                     self.visited_path.append(next_step)
                     self.current_path.pop(0)
-                    
+                    self.grid.update_unit_position(self, old_position, next_step)
+                    #print(f"{self} move to {self.position}")
                     # Réduire l'accumulateur d'une unité pour chaque tuile parcourue
                     self.movement_accumulator -= 1.0
                     
                 except Exception as e:
                     print(f"Error moving unit: {e}")
                     self.position = old_position
+                    self.pos = old_position
                     return False
 
             self.last_move_time = current_time
@@ -270,7 +276,7 @@ class Unit:
         self.status == unitStatus.ATTACKING
         if self.health <= 0:
             return
-        print(f"{self.unit_type} Attacked {target_unit.unit_type} at {target_unit.position}, new health: {target_unit.health - self.atk_power}")
+        print(f"{self.unit_type} Attacked {target_unit} at {target_unit.pos}, new health: {target_unit.health - self.atk_power}")
         target_unit.take_damage(self.atk_power)
         self.last_attack_time = current_time
 
@@ -285,7 +291,7 @@ class Unit:
         """Gère la mort de l'unité."""
         print(f"L'unité {self.unit_type} est morte.")
         #self.grid.get_tile(self.position[0], self.position[1]).remove_unit(self)
-        self.game_state.remove_unit(self)
+        #self.game_state.remove_unit(self)
         
     def serialize(self):
         """Serialize unit data"""
