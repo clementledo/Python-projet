@@ -14,7 +14,7 @@ def initialize_game() -> tuple:
     screen_info = pygame.display.Info()
     SCREEN_WIDTH = screen_info.current_w
     SCREEN_HEIGHT = screen_info.current_h
-    TILE_SIZE = 70
+    TILE_SIZE = 64
     
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption('Age of Empires Pygame test')
@@ -25,7 +25,7 @@ def main():
     screen, clock, font, TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT = initialize_game()
     asset_manager = AssetManager()
     game_view = GameView(screen, TILE_SIZE, asset_manager)
-    game_map = Map(120, 120)
+    game_map = Map(1000, 1000)
     camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT, game_map.width, game_map.height)
     
     running = True
