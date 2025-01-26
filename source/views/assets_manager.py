@@ -43,6 +43,8 @@ class AssetManager:
         self.load_terrain_textures()
         self.load_wood_sprites()
         self.load_gold_sprites()
+        self.load_building_sprites()
+        self.load_villager_sprites()
 
     def load_terrain_textures(self):
         self.terrain_textures = {
@@ -71,3 +73,51 @@ class AssetManager:
             self.gold_sprites['gold'] = gold_image
         except pygame.error as e:
             print(f"Error loading gold sprite: assets/Gold.png - {e}")
+
+    def load_building_sprites(self):
+        try:
+            # Assurez-vous que la clé correspond exactement au nom du bâtiment
+            self.building_sprites['Town Centre'] = pygame.image.load('assets/buildings/town_center.png').convert_alpha()
+            print("Sprite Town Centre chargé avec succès")
+        except pygame.error as e:
+            print(f"Erreur de chargement du sprite Town Centre : {e}")  
+
+    def load_villager_sprites(self):
+        # Load building sprites
+        for i in range(1, 76):  # 1 to 75
+            sprite_path = f'assets/Sprites/Villager/FarmingVillager/Build & Repair/Act/Villageract{i:03d}.png'
+            try:
+                sprite = pygame.image.load(sprite_path).convert_alpha()
+                self.villager_sprites['building'].append(sprite)
+            except pygame.error as e:
+                print(f"Error loading building sprite {i}: {e}")
+
+        # Load walking sprites
+        sprite_dir = "assets/Sprites/Villager/Walk"
+        for i in range(16, 76):
+            sprite_path = os.path.join(sprite_dir, f"Villagerwalk{i:03d}.png")
+            try:
+                sprite = pygame.image.load(sprite_path).convert_alpha()
+                self.villager_sprites['walking'].append(sprite)
+            except pygame.error as e:
+                print(f"Couldn't load sprite: {sprite_path}")
+
+        # Load standing sprites
+        sprite_dir = "assets/Sprites/Villager/Stand"
+        for i in range(53, 75):
+            sprite_path = os.path.join(sprite_dir, f"Villagerstand{i:03d}.png")
+            try:
+                sprite = pygame.image.load(sprite_path).convert_alpha()
+                self.villager_sprites['standing'].append(sprite)
+            except pygame.error as e:
+                print(f"Couldn't load sprite: {sprite_path}")
+
+    def get_villager_sprites(self, animation_type):
+        return self.villager_sprites.get(animation_type, [])
+    
+    def apply_tint(self, image, tint_color):
+        """Apply a tint color to an image"""
+        tinted_image = image.copy()
+        tinted_image.fill(tint_color[0:3] + (0,), None, pygame.BLEND_RGBA_MULT)
+        tinted_image.fill(tint_color[0:3] + (255,), None, pygame.BLEND_RGBA_ADD)
+        return tinted_image
