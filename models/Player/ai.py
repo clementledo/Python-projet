@@ -355,7 +355,7 @@ class IA:
         villager_nb = len(self.units["Villager"]
         nb_attacks_consecutive_max = 3
         
-        if len(self.buildings["Barracks"]) < min_nb_barracks and self.resources["wood"] > 350 :
+        if len(self.buildings["Barracks"]) < min_nb_building and self.resources["wood"] > 350 :
              self.construct_building("Barracks", self.find_nearby_available_position(pos,(3,3)))
         elif self.resources["wood"] < 350 :
             return# recolt resources
