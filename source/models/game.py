@@ -5,20 +5,22 @@ from models.Buildings.barrack import Barrack
 from models.Units.villager import Villager
 from models.Buildings.archery_range import ArcheryRange
 from models.Buildings.stable import Stable
+from models.Resources.resource_type import ResourceType
+
 
 STARTING_CONDITIONS = {
     "Maigre": {
-        "resources": {"Food": 50, "Wood": 200, "Gold": 50},
+        "resources": {ResourceType.FOOD: 50, ResourceType.WOOD: 200, ResourceType.GOLD: 50},
         "buildings": ["TownCenter"],
         "units": ["Villager", "Villager", "Villager"]
     },
     "Moyenne": {
-        "resources": {"Food": 2000, "Wood": 2000, "Gold": 2000},
+        "resources": {ResourceType.FOOD: 2000, ResourceType.WOOD: 2000, ResourceType.GOLD: 2000},
         "buildings": ["TownCenter"],
         "units": ["Villager", "Villager", "Villager"]
     },
     "Marines": {
-        "resources": {"Food": 20000, "Wood": 20000, "Gold": 20000},
+        "resources": {ResourceType.FOOD: 20000, ResourceType.WOOD: 20000, ResourceType.GOLD: 20000},
         "buildings": [
             "TownCenter",    # Main town center
             "Barrack",       # Barrack near the center
@@ -75,7 +77,6 @@ class Game:
             position = self._find_valid_position(offset_x, offset_y, building_name, max_width, max_height)
             if building_name == "TownCenter":
                 building = TownCenter(position)
-                player.max_population = min(player.max_population + 5, 200)
             elif building_name == "Barrack":
                 building = Barrack(position)
             elif building_name == "ArcheryRange":

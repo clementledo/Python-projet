@@ -46,7 +46,7 @@ class Unit:
 
             for next in neighbors(current):
                 tile = map.get_tile(next[0], next[1])
-                if tile.is_occupied() or (tile.has_resource() and tile.resource.type in [ResourceType.WOOD, ResourceType.GOLD]):
+                if tile.is_occupied() and not isinstance(tile.occupant, Unit) and not tile.occupant.walkable:
                     continue
                 new_cost = cost_so_far[current] + heuristic(current, next)
                 if next not in cost_so_far or new_cost < cost_so_far[next]:
@@ -56,7 +56,18 @@ class Unit:
                     came_from[next] = current
 
         if goal not in came_from:
-            raise ValueError("No valid path to target position")
+            # Find the closest possible position
+            closest_tile = None
+            min_distance = float('inf')
+            for next in neighbors(goal):
+                if next in came_from:
+                    distance = heuristic(next, goal)
+                    if distance < min_distance:
+                        min_distance = distance
+                        closest_tile = next
+            if closest_tile is None:
+                raise ValueError("No valid path to target position")
+            goal = closest_tile
 
         path = []
         current = goal
@@ -97,7 +108,7 @@ class Unit:
 
             for next in neighbors(current):
                 tile = map.get_tile(next[0], next[1])
-                if tile.is_occupied() or (tile.has_resource() and tile.resource.type in [ResourceType.WOOD, ResourceType.GOLD]):
+                if tile.is_occupied() and not isinstance(tile.occupant, Unit) and not tile.occupant.walkable:
                     continue
                 new_cost = cost_so_far[current] + heuristic(current, next)
                 if next not in cost_so_far or new_cost < cost_so_far[next]:
@@ -131,7 +142,7 @@ class Unit:
             self.position = path[-1]
             self.status = Status.WALKING  # Update status to walking
 
-    def attack_target(self, target, map):
+    def attack_target(self, target, map, player):
         if self.hp <= 0 or target.hp <= 0:
             raise ValueError("One of the units is already dead")
         if abs(self.position[0] - target.position[0]) > 1 or abs(self.position[1] - target.position[1]) > 1:
@@ -141,6 +152,8 @@ class Unit:
             target.hp = 0
             if isinstance(target, Unit):
                 map.remove_unit(target)
+                player.remove_unit(target)
             elif isinstance(target, Building):
                 map.remove_building(target)
+                player.remove_building(target)
         self.status = Status.ATTACKING  # Update status to attacking

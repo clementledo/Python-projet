@@ -66,7 +66,7 @@ class Villager(Unit):
 
             for next in neighbors(current):
                 tile = map.get_tile(next[0], next[1])
-                if tile.is_occupied() or (tile.has_resource() and tile.resource.type in [ResourceType.WOOD, ResourceType.GOLD]):
+                if tile.is_occupied() and not isinstance(tile.occupant, Unit) and not tile.occupant.walkable:
                     continue
                 new_cost = cost_so_far[current] + heuristic(current, next)
                 if next not in cost_so_far or new_cost < cost_so_far[next]:
@@ -125,6 +125,8 @@ class Villager(Unit):
                 tile.resource.quantity -= amount
                 if tile.resource.quantity <= 0:
                     tile.resource = None
+        else:
+            raise ValueError("Villager is not adjacent to a resource tile or resource tile is empty")
 
     def drop_resource(self, map):
         if self._is_adjacent_to_drop_point(map):

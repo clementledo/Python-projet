@@ -138,11 +138,12 @@ class Map:
         for y in range(self.height):
             for x in range(self.width):
                 if random.random() < 0.1:  # 10% chance to place a resource
-                    resource_type = random.choice([ResourceType.WOOD, ResourceType.GOLD])
-                    if resource_type == "gold":
-                        self.grid[y][x].resource = Resource(resource_type, 800)
-                    else:
-                        self.grid[y][x].resource = Resource(resource_type, 100)
+                    if self.grid[y][x].occupant is None:
+                        resource_type = random.choice([ResourceType.WOOD, ResourceType.GOLD])
+                        if resource_type == ResourceType.GOLD:
+                            self.grid[y][x].resource = Resource(resource_type, 800)
+                        else:
+                            self.grid[y][x].resource = Resource(resource_type, 100)
 
     def _generate_central_gold_resources(self):
         center_x, center_y = self.width // 2, self.height // 2
@@ -152,6 +153,8 @@ class Map:
             for x in range(self.width):
                 if abs(x - center_x) < radius_x and abs(y - center_y) < radius_y:
                     if random.random() < 0.3:  # 30% chance to place gold
-                        self.grid[y][x].resource = Resource(ResourceType.GOLD, 800)
+                        if self.grid[y][x].occupant is None:
+                            self.grid[y][x].resource = Resource(ResourceType.GOLD, 800)
                 elif random.random() < 0.1:  # 10% chance to place other resources
-                    self.grid[y][x].resource = Resource(ResourceType.WOOD, 100)
+                    if self.grid[y][x].occupant is None:
+                        self.grid[y][x].resource = Resource(ResourceType.WOOD, 100)
