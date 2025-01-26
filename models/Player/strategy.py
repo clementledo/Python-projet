@@ -14,9 +14,6 @@ class Strategy:
     def __init__(self, ai_controller):
         self.ai_controller = ai_controller
         self.phase = 1
-        
-
-
     def execute_begin_phase(self):
         """
         Executes the beginning phase of the game.
@@ -63,36 +60,4 @@ class Strategy:
         elif self.phase == 2:
             self.execute_second_phase()
 
-    def execute_attack_phase(self):
-        # Collect military units
-        military_units = []
-        for unit_type in ["Archer", "Swordman", "Horseman","Villager"]:
-            military_units.extend(self.ai_controller.units.get(unit_type, []))
-        
-        # Find enemy units
-        enemy_units = [
-            u for u in self.ai_controller.game_state.model['units'] 
-            if u.player_id != self.ai_controller.player_id
-        ]
-        
-        # Attack if enough military units and enemies exist
-        if len(military_units) >= len(enemy_units):
-            # Find a target
-            target = self.ai_controller.find_nearby_targets(military_units[0], enemy_units)
-            if target:
-                print(f"Found Target at {target.position}")
-                position_attack = (target.position[0] + 1, target.position[1]) 
-                for unit in military_units:
-                   unit.move_toward(position_attack, self.ai_controller.game_state.carte)
-                   if self.ai_controller.get_distance(position_attack,unit.position)==0:
-                       unit.atk(target)
-    def die(self, game_state):                  
-        units_to_remove = [unit for unit in self.ai_controller.units if unit.health <= 0]
-        for dead_unit in units_to_remove:
-            self.models.units.remove(dead_unit)  # Remove from model
-            game_state.remove_unit(dead_unit)    # Remove from game state
-            
-            # Update player stats if needed
-            if hasattr(dead_unit, 'player_id'):
-                if dead_unit.player_id in game_state.players:
-                    game_state.players[dead_unit.player_id].update_unit_count()
+    

@@ -40,7 +40,7 @@ class Unit:
         self.health = hp  # Points de vie
         self.max_health = hp 
         self.status = unitStatus.IDLE
-
+        self.target = None
         self.current_path = []  # Store current path for visualization
         self.show_path = True   # Toggle path visibility
         self.visited_path = []  # Store visited path points
@@ -264,7 +264,7 @@ class Unit:
 
     def atk(self, target_unit):
         current_time = pygame.time.get_ticks() / 1000.0
-        if current_time - self.last_attack_time < 3.0:  # Enforce 1 second cooldown
+        if current_time - self.last_attack_time < 2.0:  # Enforce 1 second cooldown
             return
         """Simule une attaque contre une autre unité."""
         self.status == unitStatus.ATTACKING
@@ -285,7 +285,6 @@ class Unit:
         """Gère la mort de l'unité."""
         print(f"L'unité {self.unit_type} est morte.")
         #self.grid.get_tile(self.position[0], self.position[1]).remove_unit(self)
-        self.game_state.remove_unit(self)
         
     def serialize(self):
         """Serialize unit data"""

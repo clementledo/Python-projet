@@ -1,5 +1,4 @@
 import random
-from models.units.unit import unitStatus
 from models.Player.strategy import Strategy  # Import Strategy from the appropriate module
 from models.Buildings.farm import Farm
 from models.Buildings.house import House
@@ -302,6 +301,11 @@ class IA:
         # Implement aggressive strategy logic here
         print("Executing aggressive strategy")
         # Example: Focus on training military units and attacking enemies
+        military = [u for u in self.units if u.unit_type in ["Archer", "Horseman","Villager","Swordman"]]
+        if len(military) <5:
+            self.
+        #else:
+            #self.attack_enemy()
 
     def execute_defensive_strategy(self):
         # Implement defensive strategy logic here
@@ -685,16 +689,17 @@ class IA:
         self.map_data.place_building(building)
         buiilder = self.allocate_villagers_for_construction(building)
         x = self.get_available_villagers()
-        print(f"AI is constructing a {building_type.__name__} at position {position} with {buiilder} there is {len(x)} villagers disponible in {len(self.units["Villager"])}.")
+        #print(f"AI is constructing a {building_type.__name__} at position {position} with {builder} there is {len(x)} villagers disponible in {len(self.units["Villager"])}")
         self.buildings[building.name].append(building)
 
     def update(self):
-        if self.strategy == Strategy.AGGRESSIVE:
+        """" if self.strategy == Strategy.AGGRESSIVE:
             self.execute_aggressive_strategy()
         elif self.strategy == Strategy.DEFENSIVE:
             self.execute_defensive_strategy()
         else:
-            self.execute_economic_strategy()
+            self.execute_economic_strategy()"""
+        self.execute_attack_phase()
         
      
         
@@ -710,3 +715,87 @@ class IA:
             if villager.task == resource_type:
                 count += 1
         return count
+    
+    def remove_dead_units(self):
+            unit_types = ["Villager", "Archer", "Horseman"]
+            for unit_type in unit_types:
+                if unit_type in self.units:
+                # Find dead units
+                    dead_units = [
+                        unit for unit in self.units[unit_type] 
+                        if unit.health <= 0
+                ]
+                    for dead_unit in dead_units:
+                # Remove from AI controller
+                        self.units[unit_type].remove(dead_unit)
+                # Clear map position
+                        if hasattr(dead_unit, 'position'):
+                            x, y = dead_unit.position
+                            #self.game_state.carte.grid[y][x].occupant = None
+                # Remove from game state
+                        self.game_state.model['units'].remove(dead_unit)
+                # Update AI stats
+                        #self.population -= 1        
+                        print(f"{unit_type} died at position {dead_unit.position if hasattr(dead_unit, 'position') else 'unknown'}")
+    def execute_attack_phase(self):
+        # Collect all military units
+        military_units = []
+        for unit_type in ["Archer", "Swordman", "Horseman", "Villager"]:
+            military_units.extend(self.units.get(unit_type, []))
+    
+        # Find all enemy units
+        enemy_units = [
+            u for u in self.game_state.model['units'] 
+            if u.player_id != self.player_id
+        ]
+    
+        if not military_units or not enemy_units:
+            print("No military units or no enemies to attack.")
+            return
+
+        # Group military units into squads
+        squad_size = 5
+        squads = [military_units[i:i + squad_size] for i in range(0, len(military_units), squad_size)]
+    
+        for squad in squads:
+            for unit in squad:
+                unit.target = self.find_nearby_targets(squad[0], enemy_units, 100)
+                if not unit.target:
+                    continue
+                if not self.is_valid_target_position(unit.target.position):
+                    print(f"Invalid target position {unit.target.position}. Skipping.")
+                    continue
+
+                # Move units towards the attack position
+                if self.get_distance(unit.target.position, unit.position) > unit.attack_range:
+                    unit.move_toward(unit.target.position, self.game_state.carte)
+            
+                # Check if unit is close enough to attack
+                if self.get_distance(unit.target.position, unit.position) <= unit.attack_range:
+                    unit.atk(unit.target)
+                
+                # Check if target is destroyed
+                if unit.target.health <= 0:
+                    print(f"Target at {unit.target.position} destroyed.")
+                    enemy_units.remove(unit.target)
+                    self.remove_dead_units()
+                    break
+                # Handle unit death
+                if unit.health <= 0:
+                    print(f"{unit.unit_type} died at {unit.position}.")
+                    self.units[unit.unit_type].remove(unit)
+                    self.game_state.model['units'].remove(unit)
+
+        print("Attack phase completed.")
+
+    def is_valid_target_position(self, position):
+        # Add checks to verify the target's position is valid
+        try:
+            x, y = position
+            return (0 <= x < self.game_state.carte.largeur and 
+                    0 <= y < self.game_state.carte.hauteur)
+        except (TypeError, ValueError):
+            return False
+
+
+    
