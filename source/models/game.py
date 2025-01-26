@@ -75,6 +75,7 @@ class Game:
             position = self._find_valid_position(offset_x, offset_y, building_name, max_width, max_height)
             if building_name == "TownCenter":
                 building = TownCenter(position)
+                player.max_population = min(player.max_population + 5, 200)
             elif building_name == "Barrack":
                 building = Barrack(position)
             elif building_name == "ArcheryRange":

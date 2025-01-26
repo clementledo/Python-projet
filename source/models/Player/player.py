@@ -7,11 +7,13 @@ class Player:
         self.buildings = []
         self.units = []
         self.population = 0
-        self.max_population = 200
+        self.max_population = 5
         self.resources = {"Gold": 0, "Wood": 0, "Food": 0}
 
     def add_building(self, building: Building):
         self.buildings.append(building)
+        if building.name in ["Town Center", "House"]:
+            self.max_population = min(self.max_population + 5, 200)
 
     def remove_building(self, building: Building):
         self.buildings.remove(building)
