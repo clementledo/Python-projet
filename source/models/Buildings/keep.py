@@ -1,4 +1,4 @@
-from source.models.Buildings.building import Building
+from models.Buildings.building import Building
 import math
 
 class Keep(Building):

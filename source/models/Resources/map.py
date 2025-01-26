@@ -116,9 +116,11 @@ class Map:
     @staticmethod
     def _generate_central_gold_map(map_instance):
         center_x, center_y = map_instance.width // 2, map_instance.height // 2
+        radius_x = int(map_instance.width * 0.2)
+        radius_y = int(map_instance.height * 0.2)
         for y in range(map_instance.height):
             for x in range(map_instance.width):
-                if abs(x - center_x) < 10 and abs(y - center_y) < 10:  # 20x20 central area
+                if abs(x - center_x) < radius_x and abs(y - center_y) < radius_y:
                     if random.random() < 0.3:  # 30% chance to place gold
                         map_instance.grid[y][x].resource = Resource(ResourceType.GOLD, 800)
                 elif random.random() < 0.1:  # 10% chance to place other resources

@@ -1,4 +1,6 @@
 from models.Resources.resource_type import ResourceType
+from models.Buildings.building import Building
+from models.Units.status import Status
 
 class Unit:
     def __init__(self, name, hp, attack, speed, range=1, position=(0, 0), symbol=""):
@@ -9,10 +11,12 @@ class Unit:
         self.range = range
         self.position = position
         self.symbol = symbol
+        self.status = Status.INACTIVE  # Use Status enum
 
     def __repr__(self):
         return (f"Unit(name={self.name}, hp={self.hp}, attack={self.attack}, "
-                f"speed={self.speed}, range={self.range}, position={self.position} symbol={self.symbol})")
+                f"speed={self.speed}, range={self.range}, position={self.position}, "
+                f"symbol={self.symbol}, status={self.status})")
 
     def move(self, map, target_position):
         from queue import PriorityQueue
@@ -63,6 +67,7 @@ class Unit:
 
         if path:
             self.position = path[-1]
+            self.status = Status.WALKING  # Update status to walking
 
     def move_to(self, map, target):
         from queue import PriorityQueue
@@ -124,12 +129,18 @@ class Unit:
 
         if path:
             self.position = path[-1]
+            self.status = Status.WALKING  # Update status to walking
 
-    def attack_unit(self, target):
+    def attack_target(self, target, map):
         if self.hp <= 0 or target.hp <= 0:
             raise ValueError("One of the units is already dead")
         if abs(self.position[0] - target.position[0]) > 1 or abs(self.position[1] - target.position[1]) > 1:
             raise ValueError("Target is not adjacent")
         target.hp -= self.attack
-        if target.hp < 0:
+        if target.hp <= 0:
             target.hp = 0
+            if isinstance(target, Unit):
+                map.remove_unit(target)
+            elif isinstance(target, Building):
+                map.remove_building(target)
+        self.status = Status.ATTACKING  # Update status to attacking
