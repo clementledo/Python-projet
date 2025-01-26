@@ -6,6 +6,8 @@ class TownCenter(Building):
     def __init__(self, position=(0, 0)):
         super().__init__(name="Town Centre", build_time=150, hp=1000, size=(4, 4), position=position, symbol="T")
         self.cost = {ResourceType.WOOD: 350}
+        self.offset_x = 415  # Offset X ajusté pour TownCenter
+        self.offset_y = 240  # Offset Y ajusté pour TownCenter
 
     def spawn_villager(self, map, player):
         from models.Units.villager import Villager  # Local import to avoid circular import

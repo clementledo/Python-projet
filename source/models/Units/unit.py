@@ -1,4 +1,3 @@
-from models.Resources.resource_type import ResourceType
 from models.Buildings.building import Building
 from models.Units.status import Status
 
@@ -12,6 +11,9 @@ class Unit:
         self.position = position
         self.symbol = symbol
         self.status = Status.INACTIVE  # Use Status enum
+        self.path = []  # Path of the unit
+        self.move_progress = 0 # Progress of the unit
+        self.move_speed = 0.1 # Speed of move (in % per frame)
 
     def __repr__(self):
         return (f"Unit(name={self.name}, hp={self.hp}, attack={self.attack}, "
@@ -75,10 +77,10 @@ class Unit:
             path.append(current)
             current = came_from[current]
         path.reverse()
-
-        if path:
-            self.position = path[-1]
-            self.status = Status.WALKING  # Update status to walking
+        self.path = path  # Store the path in the unit
+        self.move_progress = 0 #Initialize progress
+        self.status = Status.WALKING  # Update status to walking
+        self.map = map #Store the map in the unit
 
     def move_to(self, map, target):
         from queue import PriorityQueue
@@ -138,9 +140,10 @@ class Unit:
             current = came_from[current]
         path.reverse()
 
-        if path:
-            self.position = path[-1]
-            self.status = Status.WALKING  # Update status to walking
+        self.path = path # Store the path in the unit
+        self.move_progress = 0 #Initialize progress
+        self.status = Status.WALKING  # Update status to walking
+        self.map = map #Store the map in the unit
 
     def attack_target(self, target, map, player):
         if self.hp <= 0 or target.hp <= 0:
@@ -157,3 +160,16 @@ class Unit:
                 map.remove_building(target)
                 player.remove_building(target)
         self.status = Status.ATTACKING  # Update status to attacking
+
+    def update_position(self):
+        """Update the position of the unit along its path."""
+        if self.status == Status.WALKING and self.path:
+            if self.move_progress < 1:
+                self.move_progress = min(1, self.move_progress + self.move_speed)
+            else :
+              self.map.remove_unit(self)
+              self.position = self.path.pop(0) # Move to the next position
+              self.map.add_unit(self)
+              self.move_progress = 0
+              if not self.path:
+                 self.status = Status.INACTIVE

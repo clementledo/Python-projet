@@ -1,9 +1,8 @@
 import pygame
-from models.Resources.map import Map
-from models.Resources.tile import Tile
 from views.game_view import GameView
 from views.assets_manager import AssetManager
 from views.camera import Camera
+from models.game import Game
 
 def initialize_game() -> tuple:
     """Initialize the game and return essential components."""
@@ -25,8 +24,8 @@ def main():
     screen, clock, font, TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT = initialize_game()
     asset_manager = AssetManager()
     game_view = GameView(screen, TILE_SIZE, asset_manager)
-    game_map = Map(1000, 1000)
-    camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT, game_map.width, game_map.height)
+    game = Game(30, 30, "Marines", "central_gold")
+    camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT, game.map.width, game.map.height)
     
     running = True
     while running:
@@ -38,7 +37,7 @@ def main():
         camera.handle_input()
         camera_x, camera_y = camera.scroll.x, camera.scroll.y
 
-        game_view.render_game(game_map, camera_x, camera_y, clock)
+        game_view.render_game(game.map, camera_x, camera_y, clock)
 
         pygame.display.flip()
         clock.tick(250)

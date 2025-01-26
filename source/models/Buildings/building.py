@@ -7,6 +7,8 @@ class Building:
         self.position = position
         self.walkable = walkable
         self.symbol = symbol
+        self.offset_x = 0  # Offset X par défaut
+        self.offset_y = 0  # Offset Y par défaut
 
     def __repr__(self):
         return (f"Building(name={self.name}, build_time={self.build_time}, hp={self.hp}, "
