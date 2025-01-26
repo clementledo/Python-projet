@@ -3,7 +3,7 @@ import math
 
 class Archer(Unit):
     def __init__(self, position=(0, 0)):
-        super().__init__(name="Archer", hp=30, attack=4, speed=1, range=4, position=position)
+        super().__init__(name="Archer", hp=30, attack=4, speed=1, range=4, position=position, symbol="a")
 
     def attack_unit(self, target):
         if self.hp <= 0 or target.hp <= 0:

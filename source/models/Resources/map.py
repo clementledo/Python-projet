@@ -2,6 +2,8 @@ from .tile import Tile
 from .resource import Resource
 from .resource import ResourceType
 from models.Buildings.building import Building
+from models.Buildings.farm import Farm
+from models.Units.unit import Unit
 import random
 
 class Map:
@@ -22,12 +24,14 @@ class Map:
         else:
             raise ValueError("Coordinates out of bounds")
 
-    def add_building(self, building: Building, x, y):
-        if not self._can_place_building(building, x, y):
+    def add_building(self, building: Building):
+        if not self._can_place_building(building):
             raise ValueError("Cannot place building at the specified location")
         for i in range(building.size[1]):
             for j in range(building.size[0]):
-                self.grid[y + i][x + j].occupant = building
+                self.grid[building.position[1] + i][building.position[0] + j].occupant = building
+                if isinstance(building, Farm):
+                    self.grid[building.position[1] + i][building.position[0] + j].resource = Resource(ResourceType.FOOD, 300)
 
     def remove_building(self, building: Building):
         for y in range(self.height):
@@ -35,14 +39,57 @@ class Map:
                 if self.grid[y][x].occupant == building:
                     self.grid[y][x].occupant = None
 
-    def _can_place_building(self, building: Building, x, y):
-        if x + building.size[0] > self.width or y + building.size[1] > self.height:
+    def _can_place_building(self, building: Building):
+        if building.position[0] + building.size[0] > self.width or building.position[1] + building.size[1] > self.height:
             return False
         for i in range(building.size[1]):
             for j in range(building.size[0]):
-                if self.grid[y + i][x + j].occupant is not None or self.grid[y + i][x + j].has_resource():
+                if self.grid[building.position[1] + i][building.position[0] + j].occupant is not None or self.grid[building.position[1] + i][building.position[0] + j].has_resource():
                     return False
         return True
+
+    def add_unit(self, unit: Unit):
+        x, y = unit.position
+        if 0 <= x < self.width and 0 <= y < self.height:
+            if self.grid[y][x].occupant is None:
+                self.grid[y][x].occupant = unit
+            else:
+                raise ValueError("Tile is already occupied")
+        else:
+            raise ValueError("Coordinates out of bounds")
+
+    def remove_unit(self, unit: Unit):
+        x, y = unit.position
+        if 0 <= x < self.width and 0 <= y < self.height:
+            if self.grid[y][x].occupant == unit:
+                self.grid[y][x].occupant = None
+            else:
+                raise ValueError("Unit not found at the specified location")
+        else:
+            raise ValueError("Coordinates out of bounds")
+
+    def update(self):
+        for y in range(self.height):
+            for x in range(self.width):
+                tile = self.grid[y][x]
+                if isinstance(tile.occupant, Unit):
+                    unit = tile.occupant
+                    if unit.position != (x, y):
+                        self.grid[y][x].occupant = None
+                        new_x, new_y = unit.position
+                        self.grid[new_y][new_x].occupant = unit
+
+    def display(self):
+        for y in range(self.height):
+            for x in range(self.width):
+                tile = self.grid[y][x]
+                if tile.occupant:
+                    print(tile.occupant.symbol, end=' ')
+                elif tile.has_resource():
+                    print(tile.resource.type.value, end=' ')
+                else:
+                    print('.', end=' ')
+            print()
 
     @staticmethod
     def generate_random_map(width, height, map_type="default"):

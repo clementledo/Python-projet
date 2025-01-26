@@ -1,17 +1,18 @@
 from models.Resources.resource_type import ResourceType
 
 class Unit:
-    def __init__(self, name, hp, attack, speed, range=1, position=(0, 0)):
+    def __init__(self, name, hp, attack, speed, range=1, position=(0, 0), symbol=""):
         self.name = name
         self.hp = hp
         self.attack = attack
         self.speed = speed
         self.range = range
         self.position = position
+        self.symbol = symbol
 
     def __repr__(self):
         return (f"Unit(name={self.name}, hp={self.hp}, attack={self.attack}, "
-                f"speed={self.speed}, range={self.range}, position={self.position})")
+                f"speed={self.speed}, range={self.range}, position={self.position} symbol={self.symbol})")
 
     def move(self, map, target_position):
         from queue import PriorityQueue
@@ -60,7 +61,8 @@ class Unit:
             current = came_from[current]
         path.reverse()
 
-        self.position = path[-1]
+        if path:
+            self.position = path[-1]
 
     def move_to(self, map, target):
         from queue import PriorityQueue
@@ -110,7 +112,7 @@ class Unit:
                         min_distance = distance
                         closest_tile = next
             if closest_tile is None:
-                raise ValueError("No valid path to target position or adjacent tiles")
+                return  # No valid path to target position or adjacent tiles
             goal = closest_tile
 
         path = []
@@ -120,7 +122,8 @@ class Unit:
             current = came_from[current]
         path.reverse()
 
-        self.position = path[-1]
+        if path:
+            self.position = path[-1]
 
     def attack_unit(self, target):
         if self.hp <= 0 or target.hp <= 0:
