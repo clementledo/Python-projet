@@ -16,6 +16,7 @@ class TownCenter(Building):
         if spawn_position:
             villager = Villager(position=spawn_position)
             map.add_unit(villager)
+            player.add_unit(villager)
             player.resources[ResourceType.FOOD] -= 50
         else:
             raise ValueError("No valid spawn position available")

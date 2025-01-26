@@ -31,8 +31,20 @@ class Unit:
             results = filter(lambda p: 0 <= p[0] < map.width and 0 <= p[1] < map.height, results)
             return results
 
+        def adjacent_positions(building_position, building_size):
+            x, y = building_position
+            width, height = building_size
+            positions = []
+            for dx in range(-1, width + 1):
+                for dy in range(-1, height + 1):
+                    if (dx == -1 or dx == width) or (dy == -1 or dy == height):
+                        positions.append((x + dx, y + dy))
+            return filter(lambda p: 0 <= p[0] < map.width and 0 <= p[1] < map.height, positions)
+
         start = self.position
-        goal = target_position
+        goal_positions = adjacent_positions(target_position, (4, 4))  # Assuming building size is 4x4
+        goal_positions = list(goal_positions)
+
         frontier = PriorityQueue()
         frontier.put((0, start))
         came_from = {start: None}
@@ -41,7 +53,8 @@ class Unit:
         while not frontier.empty():
             _, current = frontier.get()
 
-            if current == goal:
+            if current in goal_positions:
+                goal = current
                 break
 
             for next in neighbors(current):
@@ -51,7 +64,7 @@ class Unit:
                 new_cost = cost_so_far[current] + heuristic(current, next)
                 if next not in cost_so_far or new_cost < cost_so_far[next]:
                     cost_so_far[next] = new_cost
-                    priority = new_cost + heuristic(goal, next)
+                    priority = new_cost + heuristic(goal_positions[0], next)
                     frontier.put((priority, next))
                     came_from[next] = current
 
@@ -59,14 +72,16 @@ class Unit:
             # Find the closest possible position
             closest_tile = None
             min_distance = float('inf')
-            for next in neighbors(goal):
+            for next in neighbors(goal_positions[0]):
                 if next in came_from:
-                    distance = heuristic(next, goal)
+                    distance = heuristic(next, goal_positions[0])
                     if distance < min_distance:
                         min_distance = distance
                         closest_tile = next
             if closest_tile is None:
-                raise ValueError("No valid path to target position")
+                print(f"No valid path from {start} to {target_position}")
+                self.status = Status.INACTIVE  # Update status to inactive
+                return  # No valid path to target position
             goal = closest_tile
 
         path = []
