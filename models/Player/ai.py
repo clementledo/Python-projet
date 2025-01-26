@@ -191,15 +191,25 @@ class IA:
 
         return closest_target
 
-    def collect_resource(self, unit, resource_type) :
-        goal = self.find_nearby_resources(unit, resource_type)
-        if goal :
-            unit.move_toward(goal, self.map_data)
-            resource_gathered = unit.collect(resource_type)
-            self.resources[resource_type] += resource_gathered 
-            print(f"{unit.unit_type} gathered resource_type")
-        else :
-            print(f"{unit.unit_type} didn't gather resource_type")
+    """"
+    def collect_resource(self, resource_type) :
+        # collect all villagers free for recolt
+        villagers = [v for v in self.units["Villager"] if v.status == unitStatus.IDLE]
+
+        # search the nearest resource of resource_type for each villager
+        for v in villagers :
+            if resource_type == 'Food':
+                goal = self.find_nearby_building(v.position,"Farm")
+            else:
+                goal = self.find_nearby_resources(v, resource_type)
+            if goal :
+                if v.move_toward(goal, self.map_data) :
+                    resource_gathered = v.collect(resource_type)
+                    self.resources[resource_type] += resource_gathered 
+                    print(f"{v.unit_type} gathered resource_type")
+                else :
+                    print(f"{v.unit_type} didn't gather resource_type")
+                    """
            
     def find_nearby_building(self,pos, building_type):
         min_distance = 1000
@@ -332,7 +342,58 @@ class IA:
         return self.buildings["Town_center"][0]
         
    
-    
+    """def execute_aggressive_strategy(self, #nb_attacks_consecutive):
+        # Implement aggressive strategy logic here
+        print("Executing aggressive strategy")
+        # Example: Focus on training military units and attacking enemies
+        villager_nb_min = 50
+        building_nb_min = 5
+        resource_level_min = 500
+        resource_level = len(self.resources["food"]) + len(self.resources["wood"]) + len(self.resources["gold"])
+        #non-military building/unit
+        towncenter_nb = len(self.units["TownCenter"]
+        house_nb = len(self.units["House"]
+        farm_nb = len(self.units["Farm"]
+        villager_nb = len(self.units["Villager"]
+        nb_attacks_consecutive_max = 3
+        
+        if len(self.buildings["Barracks"]) < min_nb_building and self.resources["wood"] > 350 :
+             self.construct_building("Barracks", self.find_nearby_available_position(pos,(3,3)))
+        elif self.resources["wood"] < 350 :
+            return# recolt resources
+        else :
+            if len(self.units["Horseman"]) < min_nb_horsemen and self.resources["food"] > 80 and self.resources["food"] > 20 : 
+                return# create soldiers
+            elif self.resources["food"] < 80 or self.resources["food"] < 20: 
+                 return# recolt
+            else: 
+                if nb_attacks_consecutive < nb_attacks_consecutive_max :  
+                    return    #attack
+                #defense or spawn or recolt or build
+                else :
+                    if towncenter_nb < building_nb_min or house_nb < building_nb_min or farm_nb < building_nb_min or villager_nb < villager_nb_min or resource_level < resource_level_min :
+                        #determine priority
+                        l = list((towncenter_nb - building_nb_min, house_nb - building_nb_min or farm_nb - building_nb_min, villager_nb - villager_nb_min, resource_level - resource_level_min))
+                        urg = min(l)
+                        index = l.index(urg)
+                        if index == 0 :
+                            #construct towncenter
+                        elif index == 1 :
+                             #construct farm
+                        elif index == 2 :
+                             #construct house
+                        elif index == 3 :
+                             #spawn villager
+                        else :
+                             #collect ressource
+
+                        #defense
+                        
+                             
+                
+    def nb_building(self) :
+        return len(self.buildings["Barracks"]) + len(self.buildings["Town_center"]) + len(self.buildings["House"]) + len(self.buildings["Farm"]) + len(self.buildings["Stable"] + len(self.buildings["Archery_Range"] + len(self.buildings["Keep"] + len(self.buildings["Camp"]
+    """ 
     def execute_aggressive_strategy(self):
         military_units = []
         for unit_type in ["Archer", "Swordman", "Horseman", "Villager"]:

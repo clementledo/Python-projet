@@ -136,6 +136,10 @@ def settings_menu(screen):
     starting_conditions = ["Maigre", "Moyenne", "Marines"]
     selected_condition = 1
 
+    # Add strategy options
+    strategies = ["AGGRESSIVE", "DEFENSIVE", "ECONOMIC"]
+    player1_strategy = 0  # Default: AGGRESSIVE
+    player2_strategy = 2 # Default: DEFENSIVE
     
     # Pre-calculate button data (text surfaces and rects)
     def create_buttons(button_data):
@@ -152,6 +156,7 @@ def settings_menu(screen):
     buttons = create_buttons([
         {"label": "Start", "action": "start_game", "rect": pygame.Rect(670, 1020, 200, 50)},
         {"label": "Back", "action": "back", "rect": pygame.Rect(890, 1020, 200, 50)}
+        
     ])
 
     size_buttons = create_buttons([
@@ -169,6 +174,20 @@ def settings_menu(screen):
         for i, cond in enumerate(starting_conditions)
     ])
 
+    strategies_buttons = create_buttons([])
+
+    # Strategy selection
+    strategy_colors = {
+        "AGGRESSIVE": (255, 50, 50),    # Red
+        "DEFENSIVE": (50, 50, 255),     # Blue
+        "ECONOMIC": (50, 255, 50)       # Green
+    }
+    
+    settings = {
+        "player1_strategy": 0,  # Index in strategies list
+        "player2_strategy": 0
+    }
+
     running = True
     while running:
         screen.blit(bg_image, (0, 0))
@@ -185,6 +204,20 @@ def settings_menu(screen):
         screen.blit(title_type, (500, 730))
         screen.blit(title_condition, (1250, 350))
 
+        # Draw strategy selection buttons
+        for player_num in [1, 2]:
+            strategy_idx = settings[f"player{player_num}_strategy"]
+            current_strategy = strategies[strategy_idx]
+            
+            text = f"Player {player_num} Strategy: {current_strategy}"
+            text_surface = font.render(text, True, strategy_colors[current_strategy])
+            text_rect = text_surface.get_rect(center=(SCREEN_WIDTH//2+450, 600 + player_num * 100))
+            
+            # Draw button background
+            pygame.draw.rect(screen,  (90, 42, 42), 
+                           text_rect.inflate(20, 10))
+            screen.blit(text_surface, text_rect)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return {"action": "quit"}
@@ -197,10 +230,18 @@ def settings_menu(screen):
                                 "action": "start",
                                 "map_size": map_sizes[selected_size],
                                 "map_type": map_types[selected_type],
-                                "starting_condition": starting_conditions[selected_condition]
+                                "starting_condition": starting_conditions[selected_condition],
+                                "player1_strategy": strategies[player1_strategy],
+                                "player2_strategy": strategies[player2_strategy]
                             }
                         elif button["action"] == "back":
                             return "back"
+                        elif button["action"] == "player1_strategy":
+                            player1_strategy = (player1_strategy + 1) % len(strategies)
+                            button["label"] = f"Player 1 Strategy: {strategies[player1_strategy]}"
+                        elif button["action"] == "player2_strategy":
+                            player2_strategy = (player2_strategy + 1) % len(strategies)
+                            button["label"] = f"Player 2 Strategy: {strategies[player2_strategy]}"
 
                 for i, size_button in enumerate(size_buttons):
                     if size_button["rect"].collidepoint(event.pos):
@@ -213,6 +254,16 @@ def settings_menu(screen):
                 for i, condition_button in enumerate(condition_buttons):
                     if condition_button["rect"].collidepoint(event.pos):
                         selected_condition = i
+
+                # Check strategy button clicks
+                for player_num in [1, 2]:
+                    button_rect = pygame.Rect(SCREEN_WIDTH//2 + 450, 
+                                            600 + player_num * 100, 
+                                            200, 50)
+                    if button_rect.collidepoint(event.pos):
+                        # Cycle through strategies
+                        settings[f"player{player_num}_strategy"] = \
+                            (settings[f"player{player_num}_strategy"] + 1) % len(strategies)
 
         # Draw buttons (using pre-calculated data)
         def draw_buttons(buttons_to_draw, selected_index):
