@@ -4,6 +4,7 @@ from .terrain_type import Terrain_type
 class Tile:
     def __init__(self, position, occupant=None, resource: Resource = None):
         self.position = position
+        self.terrain_type = Terrain_type.GRASS
         self.occupant = occupant
         self.resource = resource
 

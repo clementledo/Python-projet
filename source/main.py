@@ -3,6 +3,7 @@ from models.Resources.map import Map
 from models.Resources.tile import Tile
 from views.game_view import GameView
 from views.assets_manager import AssetManager
+from views.camera import Camera
 
 def initialize_game() -> tuple:
     """Initialize the game and return essential components."""
@@ -18,23 +19,27 @@ def initialize_game() -> tuple:
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption('Age of Empires Pygame test')
 
-    return screen, clock, font, TILE_SIZE
+    return screen, clock, font, TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT
 
 def main():
-    screen, clock, font, TILE_SIZE = initialize_game()
+    screen, clock, font, TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT = initialize_game()
     asset_manager = AssetManager()
     game_view = GameView(screen, TILE_SIZE, asset_manager)
     game_map = Map(120, 120)
+    camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT, game_map.width, game_map.height)
     
-    camera_x, camera_y = 0, 0
     running = True
     while running:
         screen.fill((0, 0, 0))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-        
-        game_view.render_map(game_map, camera_x, camera_y)
+
+        camera.handle_input()
+        camera_x, camera_y = camera.scroll.x, camera.scroll.y
+
+        game_view.render_game(game_map, camera_x, camera_y, clock)
+
         pygame.display.flip()
         clock.tick(60)
     

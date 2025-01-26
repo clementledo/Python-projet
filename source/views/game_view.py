@@ -33,6 +33,19 @@ class GameView:
 
         return iso_x, iso_y
     
+    def screen_to_world(self, x, y, camera_x, camera_y):
+        """Convert screen coordinates to world coordinates with isometric projection."""
+        tile_width = self.tile_size * 2
+        tile_height = self.tile_size
+
+        x += camera_x
+        y += camera_y
+
+        world_x = (2 * y + x) // tile_width
+        world_y = (2 * y - x) // tile_width
+
+        return world_x, world_y
+    
     def render_map(self, carte, camera_x, camera_y):
         """Render the map to the screen."""
         base_textures = {
@@ -74,7 +87,15 @@ class GameView:
                 terrain_texture = textures.get(tile.terrain_type, textures[Terrain_type.GRASS])
                 self.screen.blit(terrain_texture, (iso_x, iso_y))
 
-    def render_game(self, carte, camera_x, camera_y):
-        """Render the game to the screen."""
+    def render_game(self, carte, camera_x, camera_y, clock):
+        """Render the game to the screen avec un compteur de FPS."""
         self.render_map(carte, camera_x, camera_y)
+        fps = clock.get_fps()
+        fps_text = self.font.render(f"FPS: {int(fps)}", True, pygame.Color('white'))
+        self.screen.blit(fps_text, (10, 10))
         self.dirty_rects = []
+
+        #afficher position de la camera en dessous du compteur de FPS
+        camera_pos = self.font.render(f"Camera: {int(camera_x)}, {int(camera_y)}", True, pygame.Color('white'))
+        self.screen.blit(camera_pos, (10, 40))
+     
