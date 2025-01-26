@@ -25,6 +25,16 @@ class AssetManager:
             'standing': [],
             'building': []
         }
+        self.archer_sprites = {
+            'attack': [],
+            'walking': [],
+            'standing': []
+        }
+        self.scout_sprites = {
+            'attack': [],
+            'walking': [],
+            'standing': []
+        }
         
         self.use_terminal_view = False
         # Skip asset loading in terminal mode
@@ -43,6 +53,8 @@ class AssetManager:
         self.load_decoration_sprites()
         self.load_villager_sprites()
         self.load_building_sprites()
+        self.load_archer_sprites()  # Add archer sprites loading
+        self.load_scout_sprites()  # Add scout sprites loading
 
     def load_ui_elements(self):
         self.ui_assets = {
@@ -126,3 +138,24 @@ class AssetManager:
 
     def get_broken_building_sprite(self, size):
         return self.broken_building_sprites.get(size)
+
+    def load_archer_sprites(self):
+        # Load attack animation frames
+        for i in range(1, 51):  # 1 to 50
+            frame_number = str(i).zfill(3)  # Converts 1 to 001, 2 to 002, etc.
+            path = f'assets/Sprites/Archer/Attack/Archerattack{frame_number}.png'
+            try:
+                sprite = pygame.image.load(path).convert_alpha()
+                self.archer_sprites['attack'].append(sprite)
+            except pygame.error:
+                print(f"Could not load archer sprite: {path}")
+
+    def load_scout_sprites(self):
+        for i in range(1, 51):  # 1 to 50
+            frame_number = str(i).zfill(3)  # Convert to 001, 002, etc.
+            path = f'assets/Sprites/Scout/Attack/Scoutattack{frame_number}.png'
+            try:
+                sprite = pygame.image.load(path).convert_alpha()
+                self.scout_sprites['attack'].append(sprite)
+            except pygame.error:
+                print(f"Could not load scout sprite: {path}")
