@@ -3,6 +3,9 @@ from models.Resources.Terrain_type import Terrain_type
 
 from models.units.villager import Villager
 from views.asset_manager import AssetManager
+from models.Buildings.town_center import Town_center
+from models.Buildings.barrack import Barrack
+from models.Buildings.archery_range import Archery_Range
 
 class GameView:
     def __init__(self, screen, tile_size=50):
@@ -483,6 +486,50 @@ class GameView:
                 text = self.font.render(str(amount), True, (255, 255, 255))
                 self.screen.blit(text, (x + icon_size + 20, y + 8))
                 
+            # Count units and buildings for each player
+            def count_entities(player_id):
+                units = {
+                    'V': 0,  # Villagers
+                    'A': 0,  # Archers
+                    'H': 0   # Horsemen
+                }
+                buildings = {
+                    'T': 0,  # Town Centers
+                    'B': 0,  # Barracks
+                    'A': 0   # Archery Ranges
+                }
+                
+                for unit in self.game_state.model['units']:
+                    if unit.player_id == player_id:
+                        if unit.unit_type == "Villager":
+                            units['V'] += 1
+                        elif unit.unit_type == "Archer":
+                            units['A'] += 1
+                        elif unit.unit_type == "Horseman":
+                            units['H'] += 1
+                            
+                for building in self.game_state.model['buildings']:
+                    if building.player_id == player_id:
+                        if isinstance(building, Town_center):
+                            buildings['T'] += 1
+                        elif isinstance(building, Barrack):
+                            buildings['B'] += 1
+                        elif isinstance(building, Archery_Range):
+                            buildings['A'] += 1
+                            
+                return units, buildings
+
+            # Add unit and building counts
+            units, buildings = count_entities(player_id)
+            
+            # Format counts string
+            unit_text = f"U{{{units['V']}V,{units['A']}A,{units['H']}H}}"
+            building_text = f"B{{{buildings['T']}T,{buildings['B']}B,{buildings['A']}A}}"
+            
+            # Draw counts
+            count_text = self.font.render(f"{unit_text} {building_text}", True, (255, 255, 255))
+            self.screen.blit(count_text, (panel1_x  + 400, panel_y+10))
+
     def render_game(self, game_state, screen, clock, font):
         """Render the entire game state."""
         controller = game_state.controller
