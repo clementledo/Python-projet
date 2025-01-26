@@ -77,8 +77,8 @@ class GameView:
         min_x, min_y = int(min_x), int(min_y)
         max_x, max_y = int(max_x), int(max_y)
 
-        padding_x = int(screen_width / tile_width) + 2
-        padding_y = int(screen_height / tile_height) + 2
+        padding_x = int(screen_width / tile_width) - 4
+        padding_y = int(screen_height / tile_height) - 4
 
         # Bornes valides
         min_x = max(min_x - padding_x, 0)
@@ -111,7 +111,3 @@ class GameView:
         fps_text = self.font.render(f"FPS: {int(fps)}", True, pygame.Color('white'))
         self.screen.blit(fps_text, (10, 10))
         self.dirty_rects = []
-
-        #afficher position de la camera en dessous du compteur de FPS
-        camera_pos = self.font.render(f"Camera: {int(camera_x)}, {int(camera_y)}", True, pygame.Color('white'))
-        self.screen.blit(camera_pos, (10, 40))
