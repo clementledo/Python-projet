@@ -12,7 +12,8 @@ from models.Resources.Tile import Type
 from views.game_view import GameView
 from controllers.game_controller import GameController
 from models.map import Map
-from models.Player.IA import IAPlayer, Strategy
+from models.Player.strategy import Strategy
+
 from models.Player.ai import IA
 #
 import traceback
@@ -29,7 +30,8 @@ class GameState:
         "Maigre": {
             "resources": {"food": 50, "wood": 200, "gold": 50},
             "buildings": [("Town_center", (5, 9))],
-            "villagers": 3
+            "villagers": 3,
+            "Horseman": 2
         },
         "Moyenne": {
             "resources": {"food": 2000, "wood": 2000, "gold": 2000},
@@ -137,6 +139,8 @@ class GameState:
             villager.use_terminal_view = use_terminal_view
             villager.player_id = 2
             units.append(villager)
+
+
         
         for building in buildings:
             self.carte.place_building(building)
@@ -145,9 +149,9 @@ class GameState:
         # Initialize AI players
         if ai_mode:
             self.players = {
-                1: IA(1, self, player1_strategy),
-                #2: IAPlayer(2, self, Strategy.DEFENSIVE)
-                2: IA(2, self, Strategy[player2_strategy]) 
+                1: IA(1, self, Strategy(self,player1_strategy)),
+               
+                2: IA(2, self, Strategy(self,player2_strategy)) 
             }
 
         # Initialize view and controller

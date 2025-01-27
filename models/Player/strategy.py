@@ -11,9 +11,11 @@ class Strategy:
     DEFENSIVE = "defensive"
     ECONOMIC = "economic"
     
-    def __init__(self, ai_controller):
+    def __init__(self, ai_controller, strategy_type):
         self.ai_controller = ai_controller
+        self.strategy_type = strategy_type
         self.phase = 1
+
     def execute_begin_phase(self):
         """
         Executes the beginning phase of the game.
@@ -59,5 +61,3 @@ class Strategy:
                 self.phase = 2
         elif self.phase == 2:
             self.execute_second_phase()
-
-    
