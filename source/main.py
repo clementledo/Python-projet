@@ -9,6 +9,8 @@ from models.Buildings.camp import Camp
 from models.Buildings.keep import Keep
 from models.Units.archer import Archer
 from models.Units.horseman import Horseman
+from models.Units.swordsman import Swordsman
+from models.Units.villager import Villager
 
 def initialize_game() -> tuple:
     """Initialize the game and return essential components."""
@@ -49,6 +51,14 @@ def main():
     #ajouter un horseman (unit)
     horseman = Horseman(position=(59, 3))
     game.map.add_unit(horseman)
+
+    #ajouter un swordsman (unit)
+    swordsman = Swordsman(position=(59, 4))
+    game.map.add_unit(swordsman)
+
+    #ajouter un villageois (unit)
+    villager = Villager(position=(59, 5))
+    game.map.add_unit(villager)
 
 
     a=1
