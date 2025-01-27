@@ -7,7 +7,7 @@ from models.Buildings.house import House
 import math
 import random
 from models.Buildings.farm import Farm
-import threading
+from concurrent.futures import ThreadPoolExecutor
 
 class Player:
     def __init__(self, player_id, general_strategy="balanced"):
@@ -45,16 +45,15 @@ class Player:
             raise ValueError("Invalid resource type")
 
     def send_villager_to_collect(self, map, clock):
-        threads = []
-        for unit in self.units:
-            if isinstance(unit, Villager):
-                villager = unit
-                resource_type = random.choice([ResourceType.WOOD, ResourceType.GOLD])
-                thread = threading.Thread(target=self._collect_resources, args=(villager, map, resource_type, clock))
-                threads.append(thread)
-                thread.start()
-        for thread in threads:
-            thread.join()
+        with ThreadPoolExecutor(max_workers=10) as executor:  # Limit the number of threads
+            futures = []
+            for unit in self.units:
+                if isinstance(unit, Villager):
+                    villager = unit
+                    resource_type = random.choice([ResourceType.WOOD, ResourceType.GOLD])
+                    futures.append(executor.submit(self._collect_resources, villager, map, resource_type, clock))
+            for future in futures:
+                future.result()
 
     def _collect_resources(self, villager, map, resource_type, clock):
         villager.move_adjacent_to_resource(map, resource_type)

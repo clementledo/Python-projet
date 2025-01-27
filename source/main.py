@@ -44,29 +44,6 @@ def main():
     game_view = GameView(screen, TILE_SIZE, asset_manager)
     game = Game(60, 60, "Moyenne", "default")
     camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT, game.map.width, game.map.height)
-    
-    house = House(position=(58, 0))
-    game.map.add_building(house)
-    game.players[0].add_building(house)
-
-    camp = Camp(position=(56, 0))
-    game.map.add_building(camp)
-    game.players[0].add_building(camp)
-
-
-    farm = Farm(position=(54, 0))   
-    game.map.add_building(farm)
-    game.players[0].add_building(farm)
-
-    #ajouter un archer (unit)
-    archer = Archer(position=(59, 2))
-    game.map.add_unit(archer)
-    game.players[0].add_unit(archer)
-
-    #ajouter un horseman (unit)
-    horseman = Horseman(position=(59, 3))
-    game.map.add_unit(horseman)
-    game.players[0].add_unit(horseman)
 
     game.map.add_resources(game.map_type)
     
