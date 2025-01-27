@@ -3,6 +3,12 @@ from views.game_view import GameView
 from views.assets_manager import AssetManager
 from views.camera import Camera
 from models.game import Game
+from models.Buildings.farm import Farm
+from models.Buildings.house import House
+from models.Buildings.camp import Camp
+from models.Buildings.keep import Keep
+from models.Units.archer import Archer
+from models.Units.horseman import Horseman
 
 def initialize_game() -> tuple:
     """Initialize the game and return essential components."""
@@ -24,10 +30,29 @@ def main():
     screen, clock, font, TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT = initialize_game()
     asset_manager = AssetManager()
     game_view = GameView(screen, TILE_SIZE, asset_manager)
-    game = Game(60, 60, "Marines", "central_gold")
+    game = Game(60, 60, "Marines", "default")
     camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT, game.map.width, game.map.height)
-    a=1
+    
+    house = House(position=(58, 0))
+    game.map.add_building(house)
 
+    camp = Camp(position=(56, 0))
+    game.map.add_building(camp)
+
+    farm = Farm(position=(54, 0))   
+    game.map.add_building(farm)
+
+    #ajouter un archer (unit)
+    archer = Archer(position=(59, 2))
+    game.map.add_unit(archer)
+
+    #ajouter un horseman (unit)
+    horseman = Horseman(position=(59, 3))
+    game.map.add_unit(horseman)
+
+
+    a=1
+    
     running = True
     while running:
         screen.fill((0, 0, 0))

@@ -25,6 +25,16 @@ class AssetManager:
             'standing': [],
             'building': []
         }
+        self.archer_sprites = {
+            'walking': [],
+            'standing': [],
+            'attacking': []
+        }
+        self.horseman_sprites = {
+            'walking': [],
+             'standing' : [],
+              'attacking' : []
+        }
         self.wood_sprites = {}
         self.gold_sprites = {}
         
@@ -45,6 +55,8 @@ class AssetManager:
         self.load_gold_sprites()
         self.load_building_sprites()
         self.load_villager_sprites()
+        self.load_archer_sprites()
+        self.load_horseman_sprites()
 
     def load_terrain_textures(self):
         self.terrain_textures = {
@@ -76,9 +88,13 @@ class AssetManager:
 
     def load_building_sprites(self):
         try:
-            # Assurez-vous que la clé correspond exactement au nom du bâtiment
             self.building_sprites['Town Centre'] = pygame.image.load('assets/buildings/town_center.png').convert_alpha()
-            print("Sprite Town Centre chargé avec succès")
+            
+            self.building_sprites['Farm'] = pygame.image.load('assets/buildings/farm.jpg').convert_alpha()
+
+            self.building_sprites['House'] = pygame.image.load('assets/buildings/House.png').convert_alpha()
+
+            self.building_sprites['Camp'] = pygame.image.load('assets/buildings/castel.png').convert_alpha()
 
             original_stable = pygame.image.load('assets/buildings/Stable.png').convert_alpha()
             scaled_width = int(original_stable.get_width() * 1.5)
@@ -90,10 +106,8 @@ class AssetManager:
             scaled_height = int(original_barracks.get_height() / 1.45)
             self.building_sprites['Barracks'] = pygame.transform.scale(original_barracks, (scaled_width, scaled_height))
 
-            # Corriger l'ajout de l'Archery Range au dictionnaire
             self.building_sprites['Archery Range'] = pygame.image.load('assets/buildings/Archery_range.png').convert_alpha()
-            print("Sprite ArcheryRange chargé avec succès")
-
+            
         except pygame.error as e:
             print(f"Erreur de chargement des sprites des bâtiments : {e}")  
 
@@ -126,9 +140,77 @@ class AssetManager:
                 self.villager_sprites['standing'].append(sprite)
             except pygame.error as e:
                 print(f"Couldn't load sprite: {sprite_path}")
+                
+    def load_archer_sprites(self):
+      # Load walking sprites
+        sprite_dir = "assets/Sprites/Archer/Walk"
+        for i in range(1, 15):
+            sprite_path = os.path.join(sprite_dir, f"Archerwalk{i:03d}.png")
+            try:
+                sprite = pygame.image.load(sprite_path).convert_alpha()
+                self.archer_sprites['walking'].append(sprite)
+            except pygame.error as e:
+                print(f"Couldn't load sprite: {sprite_path}")
+
+        # Load standing sprites
+        sprite_dir = "assets/Sprites/Archer/Stand"
+        for i in range(11, 15):
+            sprite_path = os.path.join(sprite_dir, f"Archerstand{i:03d}.png")
+            try:
+                sprite = pygame.image.load(sprite_path).convert_alpha()
+                self.archer_sprites['standing'].append(sprite)
+            except pygame.error as e:
+                print(f"Couldn't load sprite: {sprite_path}")
+                
+        # Load attacking sprites
+        sprite_dir = "assets/Sprites/Archer/Attack"
+        for i in range(1, 25):
+            sprite_path = os.path.join(sprite_dir, f"Archerattack{i:03d}.png")
+            try:
+                sprite = pygame.image.load(sprite_path).convert_alpha()
+                self.archer_sprites['attacking'].append(sprite)
+            except pygame.error as e:
+                print(f"Couldn't load sprite: {sprite_path}")
+    
+    def load_horseman_sprites(self):
+        # Load walking sprites
+        sprite_dir = "assets/Sprites/Scout/Walk"
+        for i in range(1, 15):
+            sprite_path = os.path.join(sprite_dir, f"Scoutwalk{i:03d}.png")
+            try:
+                sprite = pygame.image.load(sprite_path).convert_alpha()
+                self.horseman_sprites['walking'].append(sprite)
+            except pygame.error as e:
+                print(f"Couldn't load sprite: {sprite_path}")
+                
+        # Load standing sprites
+        sprite_dir = "assets/Sprites/Scout/Stand"
+        for i in range(11, 20):
+            sprite_path = os.path.join(sprite_dir, f"Scoutstand{i:03d}.png")
+            try:
+                sprite = pygame.image.load(sprite_path).convert_alpha()
+                self.horseman_sprites['standing'].append(sprite)
+            except pygame.error as e:
+                print(f"Couldn't load sprite: {sprite_path}")
+        
+        # Load attacking sprites
+        sprite_dir = "assets/Sprites/Scout/Attack"
+        for i in range(1, 15):
+            sprite_path = os.path.join(sprite_dir, f"Scoutattack{i:03d}.png")
+            try:
+                sprite = pygame.image.load(sprite_path).convert_alpha()
+                self.horseman_sprites['attacking'].append(sprite)
+            except pygame.error as e:
+                print(f"Couldn't load sprite: {sprite_path}")
 
     def get_villager_sprites(self, animation_type):
         return self.villager_sprites.get(animation_type, [])
+    
+    def get_archer_sprites(self, animation_type):
+        return self.archer_sprites.get(animation_type, [])
+    
+    def get_horseman_sprites(self, animation_type):
+        return self.horseman_sprites.get(animation_type, [])
     
     def apply_tint(self, image, tint_color):
         """Appliquer une teinte de couleur à une image"""

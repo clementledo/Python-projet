@@ -2,7 +2,7 @@ from models.Buildings.building import Building
 from models.Units.status import Status
 
 class Unit:
-    def __init__(self, name, hp, attack, speed, range=1, position=(0, 0), symbol=""):
+    def __init__(self, name, hp, attack, speed, range=1, position=(0, 0), symbol="", offset_x=0, offset_y=0, animation_speed = 5):
         self.name = name
         self.hp = hp
         self.attack = attack
@@ -14,6 +14,9 @@ class Unit:
         self.path = []  # Path of the unit
         self.move_progress = 0 # Progress of the unit
         self.move_speed = 0.1 # Speed of move (in % per frame)
+        self.offset_x = offset_x
+        self.offset_y = offset_y
+        self.animation_speed = animation_speed
 
     def __repr__(self):
         return (f"Unit(name={self.name}, hp={self.hp}, attack={self.attack}, "

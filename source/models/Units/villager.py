@@ -9,7 +9,7 @@ import math
 
 class Villager(Unit):
     def __init__(self, position=(0, 0)):
-        super().__init__(name="Villager", hp=25, attack=2, speed=0.8, position=position, symbol="v")
+        super().__init__(name="Villager", hp=25, attack=2, speed=0.8, position=position, symbol="v", animation_speed=4, offset_x=0, offset_y=20)
         self.carry_capacity = 20
         self.resource_collected = 0
         self.collection_rate = 25 #/ 60  # 25 resources per minute

@@ -6,7 +6,7 @@ from models.Units.villager import Villager
 from models.Buildings.archery_range import ArcheryRange
 from models.Buildings.stable import Stable
 from models.Resources.resource_type import ResourceType
-import threading
+
 
 STARTING_CONDITIONS = {
     "Maigre": {
@@ -45,8 +45,7 @@ class Game:
         self.map_type = map_type
         self.map.add_resources(self.map_type)
 
-    def add_player(self, player: Player, starting_condition="Maigre", general_strategy="balanced"):
-        player.general_strategy = general_strategy
+    def add_player(self, player: Player, starting_condition="Maigre"):
         self.players.append(player)
         self._apply_starting_conditions(player, starting_condition)
 
@@ -128,27 +127,3 @@ class Game:
 
     def __repr__(self):
         return (f"Game(map={self.map}, players={len(self.players)})")
-
-    def play_turn(self):
-        threads = []
-        for player in self.players:
-            enemy_players = [p for p in self.players if p != player]
-            thread = threading.Thread(target=player.play_turn, args=(self.map, enemy_players))
-            threads.append(thread)
-            thread.start()
-
-        for thread in threads:
-            thread.join()
-
-    def check_game_over(self):
-        for player in self.players:
-            if not player.buildings:
-                winner = [p for p in self.players if p != player][0]
-                print(f"Player {winner.player_id} wins!")
-                return True
-            elif not player.units and player.resources[ResourceType.FOOD] < 50:
-                winner = [p for p in self.players if p != player][0]
-                print(f"Player {winner.player_id} wins!")
-                return True
-            print(f"Player {player.player_id} has {len(player.buildings)} buildings and {len(player.units)} units")
-        return False

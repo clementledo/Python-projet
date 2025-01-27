@@ -136,7 +136,7 @@ class Map:
     def _generate_default_resources(self):
         for y in range(self.height):
             for x in range(self.width):
-                if random.random() < 0.1:  # 10% chance to place a resource
+                if random.random() < 0:  # 10% chance to place a resource
                     if self.grid[y][x].occupant is None:
                         resource_type = random.choice([ResourceType.WOOD, ResourceType.GOLD])
                         if resource_type == ResourceType.GOLD:
