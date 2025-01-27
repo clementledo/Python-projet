@@ -1,6 +1,5 @@
-from .tile import Tile
-from .resource import Resource
-from .resource import ResourceType
+from models.Resources.tile import Tile
+from models.Resources.resource import Resource, ResourceType
 from models.Buildings.building import Building
 from models.Buildings.farm import Farm
 from models.Units.unit import Unit

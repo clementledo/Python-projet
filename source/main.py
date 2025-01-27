@@ -24,9 +24,10 @@ def main():
     screen, clock, font, TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT = initialize_game()
     asset_manager = AssetManager()
     game_view = GameView(screen, TILE_SIZE, asset_manager)
-    game = Game(30, 30, "Marines", "central_gold")
+    game = Game(60, 60, "Marines", "central_gold")
     camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT, game.map.width, game.map.height)
-    
+    a=1
+
     running = True
     while running:
         screen.fill((0, 0, 0))
@@ -40,6 +41,9 @@ def main():
         game_view.render_game(game.map, camera_x, camera_y, clock)
 
         pygame.display.flip()
+        if a == 1:
+            game.display()
+            a=2
         clock.tick(250)
     
     pygame.quit()

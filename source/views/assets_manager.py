@@ -79,8 +79,23 @@ class AssetManager:
             # Assurez-vous que la clé correspond exactement au nom du bâtiment
             self.building_sprites['Town Centre'] = pygame.image.load('assets/buildings/town_center.png').convert_alpha()
             print("Sprite Town Centre chargé avec succès")
+
+            original_stable = pygame.image.load('assets/buildings/Stable.png').convert_alpha()
+            scaled_width = int(original_stable.get_width() * 1.5)
+            scaled_height = int(original_stable.get_height() * 1.5)
+            self.building_sprites['Stable'] = pygame.transform.scale(original_stable, (scaled_width, scaled_height))
+
+            original_barracks = pygame.image.load('assets/buildings/Barracks.png').convert_alpha()
+            scaled_width = int(original_barracks.get_width() / 1.45)
+            scaled_height = int(original_barracks.get_height() / 1.45)
+            self.building_sprites['Barracks'] = pygame.transform.scale(original_barracks, (scaled_width, scaled_height))
+
+            # Corriger l'ajout de l'Archery Range au dictionnaire
+            self.building_sprites['Archery Range'] = pygame.image.load('assets/buildings/Archery_range.png').convert_alpha()
+            print("Sprite ArcheryRange chargé avec succès")
+
         except pygame.error as e:
-            print(f"Erreur de chargement du sprite Town Centre : {e}")  
+            print(f"Erreur de chargement des sprites des bâtiments : {e}")  
 
     def load_villager_sprites(self):
         # Load building sprites
@@ -116,8 +131,11 @@ class AssetManager:
         return self.villager_sprites.get(animation_type, [])
     
     def apply_tint(self, image, tint_color):
-        """Apply a tint color to an image"""
+        """Appliquer une teinte de couleur à une image"""
         tinted_image = image.copy()
-        tinted_image.fill(tint_color[0:3] + (0,), None, pygame.BLEND_RGBA_MULT)
-        tinted_image.fill(tint_color[0:3] + (255,), None, pygame.BLEND_RGBA_ADD)
+        # Créer une surface de la même taille avec la couleur de teinte
+        tint_surface = pygame.Surface(tinted_image.get_size(), pygame.SRCALPHA)
+        tint_surface.fill(tint_color)
+        # Appliquer la surface de teinte avec un mode de fusion approprié
+        tinted_image.blit(tint_surface, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
         return tinted_image
