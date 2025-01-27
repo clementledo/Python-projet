@@ -175,7 +175,7 @@ class Unit:
         """Update the position of the unit along its path."""
         if self.status == Status.WALKING and self.path:
             if self.move_progress < 1:
-                self.move_progress = min(1, self.move_progress + self.speed / 10)  # Adjust progress based on speed
+                self.move_progress = min(1, self.move_progress + self.speed / 10)  # Adjust progress based on speed (0.8 tile/s)
             else:
                 self.map.remove_unit(self)
                 self.position = self.path.pop(0)  # Move to the next position

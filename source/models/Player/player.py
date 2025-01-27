@@ -43,6 +43,23 @@ class Player:
         else:
             raise ValueError("Invalid resource type")
 
+    def send_villager_to_collect(self, map, resource_type: ResourceType, clock):
+        for unit in self.units:
+            if isinstance(unit, Villager):
+                villager = unit
+                villager.move_adjacent_to_resource(map, resource_type)
+                while villager.path:
+                    villager.update_position()
+                    clock.tick(60)
+                villager.collect_resource()
+                villager.move_to_drop_resource(map)
+                while villager.path:
+                    villager.update_position()
+                    clock.tick(60)
+                villager.drop_resource(map,self)
+                return
+        raise ValueError("No villager available to collect resources")
+
     def play_turn(self, map, enemy_players):
         strategy = self._choose_strategy()
         if strategy == "economic":

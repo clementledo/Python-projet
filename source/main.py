@@ -1,4 +1,5 @@
 import pygame
+import threading
 from views.game_view import GameView
 from views.assets_manager import AssetManager
 from views.camera import Camera
@@ -31,6 +32,9 @@ def initialize_game() -> tuple:
 
     return screen, clock, font, TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT
 
+def player_collect_resources(player, game_map, resource_type, clock):
+    player.send_villager_to_collect(game_map, resource_type, clock)
+
 def main():
     screen, clock, font, TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT = initialize_game()
     asset_manager = AssetManager()
@@ -44,9 +48,6 @@ def main():
     camp = Camp(position=(54, 1))
     game.map.add_building(camp)
 
-    # farm = Farm(position=(54, 0))   
-    # game.map.add_building(farm)
-
     # ajouter un archer (unit)
     archer = Archer(position=(59, 2))
     game.map.add_unit(archer)
@@ -58,6 +59,12 @@ def main():
     game.map.add_resources(game.map_type)
     a = 1
     
+    player1_thread = threading.Thread(target=player_collect_resources, args=(game.players[0], game.map, ResourceType.GOLD, clock))
+    player2_thread = threading.Thread(target=player_collect_resources, args=(game.players[1], game.map, ResourceType.WOOD, clock))
+
+    player1_thread.start()
+    player2_thread.start()
+
     running = True
     while running:
         screen.fill((0, 0, 0))
@@ -73,14 +80,7 @@ def main():
         pygame.display.flip()
         
         if a == 2:
-            # Déplacer l'archer vers une nouvelle position
-            unit = game.players[0].units[0]
-            unit.move_adjacent_to_resource(game.map, ResourceType.GOLD)
-            while unit.path:
-                unit.update_position()
-                game_view.render_game(game.map, camera_x, camera_y, clock)
-                pygame.display.flip()
-                clock.tick(60)
+            game.display()
             a = 3  # Pour éviter de répéter le déplacement
 
         if a == 1:
@@ -89,6 +89,8 @@ def main():
         
         clock.tick(60)
     
+    player1_thread.join()
+    player2_thread.join()
     pygame.quit()
 
 if __name__ == "__main__":
