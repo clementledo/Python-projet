@@ -88,25 +88,25 @@ class AssetManager:
 
     def load_building_sprites(self):
         try:
-            self.building_sprites['Town Centre'] = pygame.image.load('assets/buildings/town_center.png').convert_alpha()
+            self.building_sprites['Town Centre'] = pygame.image.load('assets/Buildings/town_center.png').convert_alpha()
             
-            self.building_sprites['Farm'] = pygame.image.load('assets/buildings/farm.jpg').convert_alpha()
+            self.building_sprites['Farm'] = pygame.image.load('assets/Buildings/farm.jpg').convert_alpha()
 
-            self.building_sprites['House'] = pygame.image.load('assets/buildings/House.png').convert_alpha()
+            self.building_sprites['House'] = pygame.image.load('assets/Buildings/House.png').convert_alpha()
 
-            self.building_sprites['Camp'] = pygame.image.load('assets/buildings/castel.png').convert_alpha()
+            self.building_sprites['Camp'] = pygame.image.load('assets/Buildings/castel.png').convert_alpha()
 
-            original_stable = pygame.image.load('assets/buildings/Stable.png').convert_alpha()
+            original_stable = pygame.image.load('assets/Buildings/Stable.png').convert_alpha()
             scaled_width = int(original_stable.get_width() * 1.5)
             scaled_height = int(original_stable.get_height() * 1.5)
             self.building_sprites['Stable'] = pygame.transform.scale(original_stable, (scaled_width, scaled_height))
 
-            original_barracks = pygame.image.load('assets/buildings/Barracks.png').convert_alpha()
+            original_barracks = pygame.image.load('assets/Buildings/Barracks.png').convert_alpha()
             scaled_width = int(original_barracks.get_width() / 1.45)
             scaled_height = int(original_barracks.get_height() / 1.45)
             self.building_sprites['Barracks'] = pygame.transform.scale(original_barracks, (scaled_width, scaled_height))
 
-            self.building_sprites['Archery Range'] = pygame.image.load('assets/buildings/Archery_range.png').convert_alpha()
+            self.building_sprites['Archery Range'] = pygame.image.load('assets/Buildings/Archery_range.png').convert_alpha()
             
         except pygame.error as e:
             print(f"Erreur de chargement des sprites des bâtiments : {e}")  

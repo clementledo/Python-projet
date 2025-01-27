@@ -9,6 +9,9 @@ from models.Buildings.camp import Camp
 from models.Buildings.keep import Keep
 from models.Units.archer import Archer
 from models.Units.horseman import Horseman
+from models.Resources.tile import Tile
+from models.Resources.resource import Resource
+from models.Resources.resource_type import ResourceType
 
 def initialize_game() -> tuple:
     """Initialize the game and return essential components."""
@@ -36,22 +39,22 @@ def main():
     house = House(position=(58, 0))
     game.map.add_building(house)
 
-    camp = Camp(position=(56, 0))
+    camp = Camp(position=(54, 1))
     game.map.add_building(camp)
 
-    farm = Farm(position=(54, 0))   
-    game.map.add_building(farm)
+    # farm = Farm(position=(54, 0))   
+    # game.map.add_building(farm)
 
-    #ajouter un archer (unit)
+    # ajouter un archer (unit)
     archer = Archer(position=(59, 2))
     game.map.add_unit(archer)
 
-    #ajouter un horseman (unit)
+    # ajouter un horseman (unit)
     horseman = Horseman(position=(59, 3))
     game.map.add_unit(horseman)
 
-
-    a=1
+    game.map.add_resources(game.map_type)
+    a = 1
     
     running = True
     while running:
@@ -66,10 +69,23 @@ def main():
         game_view.render_game(game.map, camera_x, camera_y, clock)
 
         pygame.display.flip()
+        
+        if a == 2:
+            # Déplacer l'archer vers une nouvelle position
+            unit = game.players[0].units[0]
+            unit.move_adjacent_to_resource(game.map, ResourceType.GOLD)
+            while unit.path:
+                unit.update_position()
+                game_view.render_game(game.map, camera_x, camera_y, clock)
+                pygame.display.flip()
+                clock.tick(60)
+            a = 3  # Pour éviter de répéter le déplacement
+
         if a == 1:
             game.display()
-            a=2
-        clock.tick(250)
+            a = 2
+        
+        clock.tick(60)
     
     pygame.quit()
 
