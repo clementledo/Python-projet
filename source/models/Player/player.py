@@ -7,6 +7,7 @@ from models.Buildings.house import House
 import math
 import random
 from models.Buildings.farm import Farm
+import threading
 
 class Player:
     def __init__(self, player_id, general_strategy="balanced"):
@@ -43,22 +44,29 @@ class Player:
         else:
             raise ValueError("Invalid resource type")
 
-    def send_villager_to_collect(self, map, resource_type: ResourceType, clock):
+    def send_villager_to_collect(self, map, clock):
+        threads = []
         for unit in self.units:
             if isinstance(unit, Villager):
                 villager = unit
-                villager.move_adjacent_to_resource(map, resource_type)
-                while villager.path:
-                    villager.update_position()
-                    clock.tick(60)
-                villager.collect_resource()
-                villager.move_to_drop_resource(map)
-                while villager.path:
-                    villager.update_position()
-                    clock.tick(60)
-                villager.drop_resource(map,self)
-                return
-        raise ValueError("No villager available to collect resources")
+                resource_type = random.choice([ResourceType.WOOD, ResourceType.GOLD])
+                thread = threading.Thread(target=self._collect_resources, args=(villager, map, resource_type, clock))
+                threads.append(thread)
+                thread.start()
+        for thread in threads:
+            thread.join()
+
+    def _collect_resources(self, villager, map, resource_type, clock):
+        villager.move_adjacent_to_resource(map, resource_type)
+        while villager.path:
+            villager.update_position()
+            clock.tick(60)
+        villager.collect_resource()
+        villager.move_to_drop_resource(map)
+        while villager.path:
+            villager.update_position()
+            clock.tick(60)
+        villager.drop_resource(map, self)
 
     def play_turn(self, map, enemy_players):
         strategy = self._choose_strategy()

@@ -15,6 +15,7 @@ from models.Resources.resource import Resource
 from models.Resources.resource_type import ResourceType
 from models.Units.swordsman import Swordsman
 from models.Units.villager import Villager
+import random
 
 def initialize_game() -> tuple:
     """Initialize the game and return essential components."""
@@ -32,14 +33,19 @@ def initialize_game() -> tuple:
 
     return screen, clock, font, TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT
 
-def player_collect_resources(player, game_map, resource_type, clock):
-    player.send_villager_to_collect(game_map, resource_type, clock)
+def player_collect_resources(player, game_map, clock):
+    while True:
+        try:
+            player.send_villager_to_collect(game_map, clock)
+        except ValueError as e:
+            print(e)
+            break
 
 def main():
     screen, clock, font, TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT = initialize_game()
     asset_manager = AssetManager()
     game_view = GameView(screen, TILE_SIZE, asset_manager)
-    game = Game(60, 60, "Marines", "default")
+    game = Game(60, 60, "Moyenne", "default")
     camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT, game.map.width, game.map.height)
     
     house = House(position=(58, 0))
@@ -57,10 +63,9 @@ def main():
     game.map.add_unit(horseman)
 
     game.map.add_resources(game.map_type)
-    a = 1
     
-    player1_thread = threading.Thread(target=player_collect_resources, args=(game.players[0], game.map, ResourceType.GOLD, clock))
-    player2_thread = threading.Thread(target=player_collect_resources, args=(game.players[1], game.map, ResourceType.WOOD, clock))
+    player1_thread = threading.Thread(target=player_collect_resources, args=(game.players[0], game.map, clock))
+    player2_thread = threading.Thread(target=player_collect_resources, args=(game.players[1], game.map, clock))
 
     player1_thread.start()
     player2_thread.start()
@@ -78,14 +83,6 @@ def main():
         game_view.render_game(game.map, camera_x, camera_y, clock)
 
         pygame.display.flip()
-        
-        if a == 2:
-            game.display()
-            a = 3  # Pour éviter de répéter le déplacement
-
-        if a == 1:
-            game.display()
-            a = 2
         
         clock.tick(60)
     

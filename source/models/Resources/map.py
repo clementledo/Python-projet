@@ -50,19 +50,22 @@ class Map:
     def add_unit(self, unit: Unit):
         x, y = unit.position
         if 0 <= x < self.width and 0 <= y < self.height:
-            if self.grid[y][x].occupant is None or isinstance(self.grid[y][x].occupant, Unit):
-                self.grid[y][x].occupant = unit
+            if self.grid[y][x].occupant is None:
+                self.grid[y][x].occupant = [unit]
+            elif isinstance(self.grid[y][x].occupant, list):
+                self.grid[y][x].occupant.append(unit)
             else:
-                print(unit.position , self.grid[y][x])
-                raise ValueError("Tile is already occupied")
+                raise ValueError("Tile is already occupied by a building")
         else:
             raise ValueError("Coordinates out of bounds")
 
     def remove_unit(self, unit: Unit):
         x, y = unit.position
         if 0 <= x < self.width and 0 <= y < self.height:
-            if self.grid[y][x].occupant == unit:
-                self.grid[y][x].occupant = None
+            if isinstance(self.grid[y][x].occupant, list) and unit in self.grid[y][x].occupant:
+                self.grid[y][x].occupant.remove(unit)
+                if not self.grid[y][x].occupant:
+                    self.grid[y][x].occupant = None
             else:
                 raise ValueError("Unit not found at the specified location")
         else:
@@ -72,19 +75,25 @@ class Map:
         for y in range(self.height):
             for x in range(self.width):
                 tile = self.grid[y][x]
-                if isinstance(tile.occupant, Unit):
-                    unit = tile.occupant
-                    if unit.position != (x, y):
-                        self.grid[y][x].occupant = None
-                        new_x, new_y = unit.position
-                        self.grid[new_y][new_x].occupant = unit
+                if isinstance(tile.occupant, list):
+                    for unit in tile.occupant:
+                        if unit.position != (x, y):
+                            tile.occupant.remove(unit)
+                            new_x, new_y = unit.position
+                            if self.grid[new_y][new_x].occupant is None:
+                                self.grid[new_y][new_x].occupant = [unit]
+                            elif isinstance(self.grid[new_y][new_x].occupant, list):
+                                self.grid[new_y][new_x].occupant.append(unit)
 
     def display(self):
         for y in range(self.height):
             for x in range(self.width):
                 tile = self.grid[y][x]
                 if tile.occupant:
-                    print(tile.occupant.symbol, end=' ')
+                    if isinstance(tile.occupant, list):
+                        print(tile.occupant[0].symbol, end=' ')
+                    else:
+                        print(tile.occupant.symbol, end=' ')
                 elif tile.has_resource():
                     print(tile.resource.type.value, end=' ')
                 else:

@@ -104,9 +104,12 @@ class GameView:
                                 self.screen.blit(building_sprite, (iso_bx - offset_x, iso_by - offset_y))
 
                 if tile.occupant:
-                    occupant = tile.occupant
-                    if isinstance(occupant, Unit):
-                        self.render_units(occupant, carte, camera_x, camera_y)
+                    if isinstance(tile.occupant, list):
+                        for unit in tile.occupant:
+                            if isinstance(unit, Unit):
+                                self.render_units(unit, carte, camera_x, camera_y)
+                    elif isinstance(tile.occupant, Unit):
+                        self.render_units(tile.occupant, carte, camera_x, camera_y)
 
     def render_units(self, unit, carte, camera_x, camera_y):
         """Render any unit on the map."""
