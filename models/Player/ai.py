@@ -961,19 +961,20 @@ class IA:
 
     def update(self):
         """"""
-        if self.strategy == "AGGRESSIVE":
-            self.execute_aggressive_strategy()
-            #print("Aggressive strategy executed.")
-        elif self.strategy == Strategy.DEFENSIVE:
-            self.execute_defensive_strategy()
-        else:
-            self.execute_economic_strategy()
-        #for villager in self.units["Villager"]:
-         #   print(villager.status)
-              
+        if not endgame():
+            if self.strategy == "AGGRESSIVE":
+                self.execute_aggressive_strategy()
+                #print("Aggressive strategy executed.")
+            elif self.strategy == Strategy.DEFENSIVE:
+                self.execute_defensive_strategy()
+            else:
+                self.execute_economic_strategy()
+            #for villager in self.units["Villager"]:
+            #   print(villager.status)
+                 
     
     def remove_dead_units(self):
-            unit_types = ["Villager", "Archer", "Horseman"]
+            unit_types = ["Villager", "Archer", "Horseman","Swordsman"]
             for unit_type in unit_types:
                 if unit_type in self.units:
                 # Find dead units
@@ -993,6 +994,30 @@ class IA:
                 # Update AI stats
                         #self.population -= 1        
                         print(f"{unit_type} died at position {dead_unit.position if hasattr(dead_unit, 'position') else 'unknown'}")
+
+    def remove_dead_buildings(self):
+            buildings_types=["Town_center","House","Farm","Barracks","Stable","Archery_Range","Keep","Camp"]
+            for building_type in buildings_types:
+                if building_type in self.buildings:
+                # Find dead units
+                    dead_buildings = [
+                        building for building in self.buildings[building_type] 
+                        if building.health <= 0
+                ]
+                    for dead_building in dead_buildings:
+                        # Remove from AI controller
+                        self.buildings[building_type].remove(dead_building)
+                        # Clear map position
+                        if hasattr(dead_building, 'position'):
+                            x, y = dead_building.position
+                            self.game_state.carte.grid[y][x].occupant = None
+                        # Remove from game state
+                        if dead_building in self.game_state.model['buildings']: 
+                            self.game_state.model['buildings'].remove(dead_building)
+                        # Update AI stats
+                        #self.population -= 1        
+                        print(f"{building_type} died at position {dead_building.position if hasattr(dead_building, 'position') else 'unknown'}")
+
     def execute_attack_phase(self):
         # Collect all military units
         military_units = []
@@ -1070,5 +1095,31 @@ class IA:
         except (TypeError, ValueError):
             return False
 
-
+    def endgame(self):
+        """Check if game is over by checking town centers for all players.
+        Returns:
+            tuple: (is_game_over: bool, winner_id: int or None)
+        """
+        try:
+            # Check if current player has lost
+            if len(self.buildings["Town_center"]) == 0:
+                return True, self.player_id
+            
+            # Check if other players have lost (no town centers)
+            other_players_tc = [
+                b for b in self.game_state.model['buildings'] 
+                if b.name == "Town_center" and b.player_id != self.player_id
+        ]
+        
+            if len(other_players_tc) == 0:
+                # Current player wins if others have no town centers
+                return True, self.player_id
+            
+            # Game continues if both players have town centers
+            return False, None
+        
+        except Exception as e:
+            print(f"Error checking game end state: {e}")
+            return False, None
+    
     

@@ -343,3 +343,4 @@ class GameState:
             self.view.render(self.model, self.camera_x, self.camera_y, self.zoom_level)
            # pygame.display.flip()
     
+################# END GAME #################
