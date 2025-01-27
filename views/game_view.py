@@ -16,6 +16,7 @@ class GameView:
         self.tile_size = tile_size
         self.unit_sprites = {}
         self.building_sprites = {}
+        self.resources_sprites = {}
         
         # Get asset manager instance
         self.asset_manager = AssetManager()
@@ -486,6 +487,9 @@ class GameView:
     def load_building_sprite(self, building_name, sprite_path):
         """Charge l'image du bâtiment à partir du chemin donné."""
         self.building_sprites[building_name] = pygame.image.load(sprite_path).convert_alpha()
+
+    def load_resources_sprite(self,resources_symbol, sprite_path):
+        self.resources_sprites[resources_symbol] = pygame.image.load(sprite_path).convert_alpha()
 
     def render_buildings(self, buildings, camera_x, camera_y, zoom_level):
         """Render buildings with foundations"""

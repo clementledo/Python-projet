@@ -5,6 +5,7 @@ from models.units.archer import Archer
 from models.units.horseman import Horseman
 from models.units.swordsman import Swordsman
 from models.Buildings.town_center import Town_center
+from models.Buildings.farm import Farm
 from models.Buildings.archery_range import Archery_Range
 from models.Buildings.building import Building
 from models.Buildings.barrack import Barrack
@@ -255,6 +256,27 @@ class GameState:
                 building.hp = building_data["hp"]
                 building.useable = building_data["useable"]
                 self.model['buildings'].append(building)
+            if building_data["name"] == "Farm":
+                x, y = building_data["pos"]
+                building = Farm(pos=(x, y))
+                building.size = building_data["size"]
+                building.hp = building_data["hp"]
+                building.useable = building_data["useable"]
+                self.model['buildings'].append(building)
+            if building_data["name"] == "Archery_range":
+                x, y = building_data["pos"]
+                building = Archery_Range(pos=(x, y))
+                building.size = building_data["size"]
+                building.hp = building_data["hp"]
+                building.useable = building_data["useable"]
+                self.model['buildings'].append(building)
+            if building_data["name"] == "Barrack":
+                x, y = building_data["pos"]
+                building = Barrack(pos=(x, y))
+                building.size = building_data["size"]
+                building.hp = building_data["hp"]
+                building.useable = building_data["useable"]
+                self.model['buildings'].append(building)
         print(f"{len(self.model['buildings'])} buildings successfully loaded.")
 
     def load_units(self, data):
@@ -266,11 +288,30 @@ class GameState:
                 self.model['units'].append(unit)
         print(f"{len(self.model['units'])} units successfully loaded.")
 
+    def load_resources(self,data):
+        """Load resources from saved data"""
+        self.model['resources_on_map'] = []
+        for resources_data in data['map']['grille']:
+            for i in range (len(resources_data)):
+                if resources_data[i]['resource'] != None :
+                    x, y = resources_data[i]['x'],resources_data[i]['y']
+                    symbol = resources_data[i]['resource']['symbol']
+                    resources = {'pos': (x,y), 'amount': 100, 'symbol': symbol}
+                    self.model['resources_on_map'].append(resources)
+        print(f"{len(self.model['resources_on_map'])} resources successfully loaded.")
+
     def load_sprites(self):
         """Load all required sprites."""
         self.view.load_building_sprite('T', "assets/Buildings/Towncenter.png")
+        self.view.load_building_sprite('F', "assets/Buildings/farm.png")
+        self.view.load_building_sprite("A", "assets/Buildings/Archery_range.png")
+        self.view.load_building_sprite("B", "assets/Buildings/Barracks.png")
+
         self.view.load_unit_sprite('Villager', "assets/Sprites/Villager/Stand/Villagerstand001.png")
         self.view.load_unit_sprite('Horseman','assets/Sprites/Scout/Stand/Scoutstand001.png')
+
+        self.view.load_resources_sprite('W','assets/tree.png')
+        self.view.load_resources_sprite('G','assets/Gold.png')
         print("Sprites loaded successfully.")
 
     def initialize_controller(self):
@@ -311,6 +352,7 @@ class GameState:
             self.load_map_and_camera(data)
             self.load_buildings(data)
             self.load_units(data)
+            self.load_resources(data)
         
             print(f"Game state loaded successfully from {filepath}")
             return True
