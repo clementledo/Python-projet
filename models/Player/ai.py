@@ -959,16 +959,21 @@ class IA:
         return enemy_units
 
     def update(self):
-        if not self.endgame():
+        game_over, winner = self.endgame()
+        if not game_over:
+            # Continue normal gameplay
             if self.strategy == "AGGRESSIVE":
                 self.execute_aggressive_strategy()
-               
-            elif self.strategy == "ECONOMIC":
-                self.execute_economic_strategy()
-            else:
+            elif self.strategy == Strategy.DEFENSIVE:
                 self.execute_defensive_strategy()
-            #for villager in self.units["Villager"]:
-            #   print(villager.status)
+            else:
+                self.execute_economic_strategy()
+        else:
+            # Game is over, handle end state
+            print(f"Game Over! Winner: Player {winner}")
+            return True, winner
+        
+        return False, None
                  
     
     def remove_dead_units(self):
@@ -1094,30 +1099,28 @@ class IA:
             return False
 
     def endgame(self):
-        """Check if game is over by checking town centers for all players.
-        Returns:
-            tuple: (is_game_over: bool, winner_id: int or None)
+        """
+        Check if game is over and determine winner
+        Returns: (game_over: bool, winner_id: int or None)
         """
         try:
-            # Check if current player has lost
+            # Current player lost
             if len(self.buildings["Town_center"]) == 0:
-                return True
+                return True, self.get_opponent_id()
             
-            # Check if other players have lost (no town centers)
+            # Other player lost
             other_players_tc = [
                 b for b in self.game_state.model['buildings'] 
                 if b.name == "Town_center" and b.player_id != self.player_id
-                ]
-        
+            ]
             if len(other_players_tc) == 0:
-                # Current player wins if others have no town centers
-                return True
+                return True, self.player_id
             
-            # Game continues if both players have town centers
-            return False
+            # Game continues
+            return False, None
         
         except Exception as e:
-            print(f"Error checking game end state: {e}")
-            return False
+            print(f"Error in endgame check: {e}")
+            return False, None
     
     
