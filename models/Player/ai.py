@@ -55,7 +55,7 @@ class IA:
 
         # Spawn 3 villagers near the Town Hall
         for i in range(3):
-            villager_position = (town_center_position[0] + i, town_center_position[1])
+            villager_position = (town_hall_position[0] + i, town_hall_position[1])
             if self.game_state.carte.is_area_free(villager_position[0], villager_position[1],1,1):
                 position = villager_position
             else:
@@ -960,9 +960,9 @@ class IA:
 
     def update(self):
         if not self.endgame():
-            if self.strategy == "AGGRESSIVE":
+            if self.strategy == Strategy.AGGRESSIVE:
                 self.execute_aggressive_strategy()
-                #print("Aggressive strategy executed.")
+               
             elif self.strategy == Strategy.DEFENSIVE:
                 self.execute_defensive_strategy()
             else:

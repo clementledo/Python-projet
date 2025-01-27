@@ -669,10 +669,11 @@ class GameView:
         
         self.render_map(game_state.carte, controller.camera_x, controller.camera_y, controller.zoom_level)
         self.generate_resources(game_state.carte)
-        self.render_units(game_state.model['units'], controller.camera_x, controller.camera_y, 
-                         controller.zoom_level, controller.selected_unit)
+        
         self.render_buildings(game_state.model['buildings'], controller.camera_x, controller.camera_y, 
                              controller.zoom_level)
+        self.render_units(game_state.model['units'], controller.camera_x, controller.camera_y, 
+                         controller.zoom_level, controller.selected_unit)
         self.render_minimap(game_state.carte, controller.camera_x, controller.camera_y,
                            controller.zoom_level, game_state.model['units'], game_state.model['buildings'])
         

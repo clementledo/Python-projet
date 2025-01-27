@@ -1,8 +1,8 @@
 import pygame
 from views.menu import main_menu, pause_menu, settings_menu
 from game_state import GameState
-from views.game_view import GameView
-from controllers.game_controller import GameController
+
+
 
 # Constants
 SCREEN_STATES = {
