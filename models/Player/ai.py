@@ -960,8 +960,7 @@ class IA:
         return enemy_units
 
     def update(self):
-        """"""
-        if not endgame():
+        if not self.endgame():
             if self.strategy == "AGGRESSIVE":
                 self.execute_aggressive_strategy()
                 #print("Aggressive strategy executed.")
@@ -1103,23 +1102,23 @@ class IA:
         try:
             # Check if current player has lost
             if len(self.buildings["Town_center"]) == 0:
-                return True, self.player_id
+                return True
             
             # Check if other players have lost (no town centers)
             other_players_tc = [
                 b for b in self.game_state.model['buildings'] 
                 if b.name == "Town_center" and b.player_id != self.player_id
-        ]
+                ]
         
             if len(other_players_tc) == 0:
                 # Current player wins if others have no town centers
-                return True, self.player_id
+                return True
             
             # Game continues if both players have town centers
-            return False, None
+            return False
         
         except Exception as e:
             print(f"Error checking game end state: {e}")
-            return False, None
+            return False
     
     
