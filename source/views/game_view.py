@@ -5,6 +5,7 @@ from models.Units.villager import Villager
 from models.Units.unit import Unit
 from models.Units.archer import Archer
 from models.Units.horseman import Horseman
+from models.Units.swordsman import Swordsman
 
 class GameView:
     def __init__(self, screen, tile_size=50, asset_manager=None):
@@ -24,7 +25,7 @@ class GameView:
         
         self.unit_animation_frames = {}  # Store animation frame indexes for all units
         self.animation_speed = 5 # Default animation speed
-        self.standing_animation_speed = 15 # Animation speed for standing
+        self.standing_animation_speed = 22 # Animation speed for standing
         self.animation_tick = 0
         self.unit_animation_ticks = {} # Store animation ticks for every unit
         self.animation_directions = {} # Store animation directions for every unit
@@ -124,7 +125,7 @@ class GameView:
         if unit.status == Status.WALKING:
             animation_type = 'walking'
         elif unit.status == Status.ATTACKING:
-            animation_type = 'attacking' if isinstance(unit, Archer) or isinstance(unit, Horseman) else 'building'  # Use "attacking" for archers
+            animation_type = 'attacking' if isinstance(unit, Archer) or isinstance(unit, Horseman) or isinstance(unit, Swordsman) else 'building'  # Use "attacking" for archers
 
 
         # Get the correct animation frames
@@ -134,6 +135,8 @@ class GameView:
             animation_frames = self.asset_manager.get_archer_sprites(animation_type)
         elif isinstance(unit, Horseman):
              animation_frames = self.asset_manager.get_horseman_sprites(animation_type)
+        elif isinstance(unit, Swordsman):
+            animation_frames = self.asset_manager.get_swordsman_sprites(animation_type)
         else:
             animation_frames = self.asset_manager.get_villager_sprites("standing")
         
@@ -168,6 +171,9 @@ class GameView:
                 elif isinstance(unit, Horseman):
                       self.unit_offsets[unit]['x'] = unit.offset_x
                       self.unit_offsets[unit]['y'] = unit.offset_y
+                elif isinstance(unit, Swordsman):
+                      self.unit_offsets[unit]['x'] = unit.offset_x
+                      self.unit_offsets[unit]['y'] = unit.offset_y
                 # You can add more condition here for other units
             
             
@@ -177,8 +183,9 @@ class GameView:
             self.screen.blit(current_frame, (iso_x + self.unit_offsets[unit]['x'], iso_y - current_frame.get_height() // 2 + self.unit_offsets[unit]['y']))
 
             # Update animation frame for this unit
-            animation_speed = self.standing_animation_speed if animation_type == 'standing' else unit.animation_speed
-            
+            animation_speed = self.animation_speed
+            if animation_type == 'standing':
+                animation_speed = self.standing_animation_speed
 
             self.unit_animation_ticks[unit][animation_type] += 1
             if self.unit_animation_ticks[unit][animation_type] >= animation_speed:

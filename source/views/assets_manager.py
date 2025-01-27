@@ -35,6 +35,11 @@ class AssetManager:
              'standing' : [],
               'attacking' : []
         }
+        self.swordsman_sprites = {
+            'walking' : [],
+            'standing' : [],
+            'attacking' : []
+        }
         self.wood_sprites = {}
         self.gold_sprites = {}
         
@@ -57,6 +62,7 @@ class AssetManager:
         self.load_villager_sprites()
         self.load_archer_sprites()
         self.load_horseman_sprites()
+        self.load_swordsman_sprites()
 
     def load_terrain_textures(self):
         self.terrain_textures = {
@@ -202,6 +208,46 @@ class AssetManager:
                 self.horseman_sprites['attacking'].append(sprite)
             except pygame.error as e:
                 print(f"Couldn't load sprite: {sprite_path}")
+                
+    def load_swordsman_sprites(self):
+        # Load walking sprites
+        sprite_dir = "assets/Sprites/AxeThrower/Walk"
+        for i in range(1, 15):
+            sprite_path = os.path.join(sprite_dir, f"Axethrowerwalk{i:03d}.png")
+            try:
+                sprite = pygame.image.load(sprite_path).convert_alpha()
+                scaled_width = int(sprite.get_width() * 1.1)
+                scaled_height = int(sprite.get_height() * 1.1)
+                scaled_sprite = pygame.transform.scale(sprite, (scaled_width, scaled_height))
+                self.swordsman_sprites['walking'].append(scaled_sprite)
+            except pygame.error as e:
+                print(f"Couldn't load sprite: {sprite_path}")
+                
+        # Load standing sprites
+        sprite_dir = "assets/Sprites/Axethrower/Stand"
+        for i in range(22, 30):
+            sprite_path = os.path.join(sprite_dir, f"Axethrowerstand{i:03d}.png")
+            try:
+                sprite = pygame.image.load(sprite_path).convert_alpha()
+                scaled_width = int(sprite.get_width() * 1.1)
+                scaled_height = int(sprite.get_height() * 1.1)
+                scaled_sprite = pygame.transform.scale(sprite, (scaled_width, scaled_height))
+                self.swordsman_sprites['standing'].append(scaled_sprite)
+            except pygame.error as e:
+                print(f"Couldn't load sprite: {sprite_path}")
+        
+        # Load attacking sprites
+        sprite_dir = "assets/Sprites/Axethrower/Attack"
+        for i in range(1, 25):
+            sprite_path = os.path.join(sprite_dir, f"Axethrowerattack{i:03d}.png")
+            try:
+                sprite = pygame.image.load(sprite_path).convert_alpha()
+                scaled_width = int(sprite.get_width() * 1.1)
+                scaled_height = int(sprite.get_height() * 1.1)
+                scaled_sprite = pygame.transform.scale(sprite, (scaled_width, scaled_height))
+                self.swordsman_sprites['attacking'].append(scaled_sprite)
+            except pygame.error as e:
+                print(f"Couldn't load sprite: {sprite_path}")
 
     def get_villager_sprites(self, animation_type):
         return self.villager_sprites.get(animation_type, [])
@@ -211,6 +257,9 @@ class AssetManager:
     
     def get_horseman_sprites(self, animation_type):
         return self.horseman_sprites.get(animation_type, [])
+    
+    def get_swordsman_sprites(self, animation_type):
+         return self.swordsman_sprites.get(animation_type,[])
     
     def apply_tint(self, image, tint_color):
         """Appliquer une teinte de couleur à une image"""

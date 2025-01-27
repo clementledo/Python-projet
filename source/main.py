@@ -12,6 +12,8 @@ from models.Units.horseman import Horseman
 from models.Resources.tile import Tile
 from models.Resources.resource import Resource
 from models.Resources.resource_type import ResourceType
+from models.Units.swordsman import Swordsman
+from models.Units.villager import Villager
 
 def initialize_game() -> tuple:
     """Initialize the game and return essential components."""
