@@ -1,5 +1,4 @@
 import pygame
-import threading
 from views.game_view import GameView
 from views.assets_manager import AssetManager
 from views.camera import Camera
@@ -10,12 +9,10 @@ from models.Buildings.camp import Camp
 from models.Buildings.keep import Keep
 from models.Units.archer import Archer
 from models.Units.horseman import Horseman
-from models.Resources.tile import Tile
-from models.Resources.resource import Resource
-from models.Resources.resource_type import ResourceType
 from models.Units.swordsman import Swordsman
 from models.Units.villager import Villager
 import random
+import threading
 
 def initialize_game() -> tuple:
     """Initialize the game and return essential components."""
@@ -50,17 +47,26 @@ def main():
     
     house = House(position=(58, 0))
     game.map.add_building(house)
+    game.players[0].add_building(house)
 
-    camp = Camp(position=(54, 1))
+    camp = Camp(position=(56, 0))
     game.map.add_building(camp)
+    game.players[0].add_building(camp)
 
-    # ajouter un archer (unit)
+
+    farm = Farm(position=(54, 0))   
+    game.map.add_building(farm)
+    game.players[0].add_building(farm)
+
+    #ajouter un archer (unit)
     archer = Archer(position=(59, 2))
     game.map.add_unit(archer)
+    game.players[0].add_unit(archer)
 
-    # ajouter un horseman (unit)
+    #ajouter un horseman (unit)
     horseman = Horseman(position=(59, 3))
     game.map.add_unit(horseman)
+    game.players[0].add_unit(horseman)
 
     game.map.add_resources(game.map_type)
     
@@ -80,14 +86,13 @@ def main():
         camera.handle_input()
         camera_x, camera_y = camera.scroll.x, camera.scroll.y
 
-        game_view.render_game(game.map, camera_x, camera_y, clock)
+        game_view.render_game(game.map, camera_x, camera_y, clock, game.players)
+        #game_view.render_minimap(game.map, game.players)
 
         pygame.display.flip()
         
         clock.tick(60)
     
-    player1_thread.join()
-    player2_thread.join()
     pygame.quit()
 
 if __name__ == "__main__":

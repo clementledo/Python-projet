@@ -43,7 +43,7 @@ class Game:
         self.add_player(Player(1), starting_condition)
         self.add_player(Player(2), starting_condition)
         self.map_type = map_type
-        # self.map.add_resources(self.map_type)
+        self.map.add_resources(self.map_type)
 
     def add_player(self, player: Player, starting_condition="Maigre"):
         self.players.append(player)

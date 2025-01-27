@@ -1,3 +1,4 @@
+# assets_manager.py
 import os
 import pygame
 from models.Resources.terrain_type import Terrain_type
@@ -42,6 +43,7 @@ class AssetManager:
         }
         self.wood_sprites = {}
         self.gold_sprites = {}
+        self.resource_bar_sprite = None # Add resource bar sprite
         
         self.use_terminal_view = False
         # Skip asset loading in terminal mode
@@ -52,6 +54,7 @@ class AssetManager:
             
         # Only load assets in GUI mode
         self.load_all_assets()
+        self.load_resource_bar_sprite() # Load the resource bar sprite
         self.initialized = True
 
     def load_all_assets(self):
@@ -260,7 +263,16 @@ class AssetManager:
     
     def get_swordsman_sprites(self, animation_type):
          return self.swordsman_sprites.get(animation_type,[])
-    
+
+    def load_resource_bar_sprite(self):
+        """Load the resource bar sprite."""
+        try:
+            self.resource_bar_sprite = pygame.image.load('assets/resourcecivpanel.png').convert_alpha()
+            #Scale the sprite
+            self.resource_bar_sprite = pygame.transform.scale(self.resource_bar_sprite, (600, 70))  # Increase width again
+        except pygame.error as e:
+            print(f"Error loading resource bar sprite: assets/UI/resource_bar.png - {e}")
+
     def apply_tint(self, image, tint_color):
         """Appliquer une teinte de couleur à une image"""
         tinted_image = image.copy()

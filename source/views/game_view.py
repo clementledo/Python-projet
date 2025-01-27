@@ -1,3 +1,4 @@
+# views/game_view.py
 import pygame
 from models.Resources.terrain_type import Terrain_type
 from models.Units.status import Status
@@ -6,6 +7,9 @@ from models.Units.unit import Unit
 from models.Units.archer import Archer
 from models.Units.horseman import Horseman
 from models.Units.swordsman import Swordsman
+from models.Buildings.building import Building
+from models.Player.player import Player
+from models.Resources.resource_type import ResourceType  # Import ResourceType
 
 class GameView:
     def __init__(self, screen, tile_size=50, asset_manager=None):
@@ -30,6 +34,25 @@ class GameView:
         self.unit_animation_ticks = {} # Store animation ticks for every unit
         self.animation_directions = {} # Store animation directions for every unit
         self.unit_offsets = {} # Store offsets for each unit
+        
+        # Minimap related
+        self.minimap_width = 600 # Largeur
+        self.minimap_height = 300  # Hauteur (la moitié de la largeur)
+        self.minimap_x = self.viewport_width - self.minimap_width - 10  # Position from the right
+        self.minimap_y = self.viewport_height - self.minimap_height - 10  # Position from the bottom
+        self.minimap_surface = pygame.Surface((self.minimap_width, self.minimap_height), pygame.SRCALPHA)
+        self.minimap_update_interval = 10 # update every 10 frames
+        self.minimap_frame_counter = 0
+        
+        self.resource_bar_height = 70  # Height of the resource bar for each player
+        self.resource_bar_spacing = 10  # Spacing between resource bars
+        self.resource_icon_size = 40
+        self.resource_text_offset = 80
+        self.resource_offsets = { # Define the offsets of every resources
+            ResourceType.FOOD: 150,    # Offset for FOOD from the start of the bar
+            ResourceType.WOOD: 300,    # Offset for WOOD from the start of the bar
+            ResourceType.GOLD: 450     # Offset for GOLD from the start of the bar
+        }
 
     def world_to_screen(self, x, y, camera_x, camera_y):
         tile_width = self.tile_size * 2
@@ -199,9 +222,116 @@ class GameView:
                 elif self.unit_animation_frames[unit][animation_type] <= 0:
                    self.animation_directions[unit][animation_type] = 1
 
-    def render_game(self, carte, camera_x, camera_y, clock):
+    def render_game(self, carte, camera_x, camera_y, clock, players):
         self.render_map(carte, camera_x, camera_y)
         fps = clock.get_fps()
         fps_text = self.font.render(f"FPS: {int(fps)}", True, pygame.Color('white'))
         self.screen.blit(fps_text, (10, 10))
+
+        # Render the resource UI
+        self.render_resource_ui(players)
         self.dirty_rects = []
+
+
+    def _render_minimap_content(self, carte, players):
+        """Renders the minimap content onto the minimap_surface."""
+        self.minimap_surface.fill((50, 50, 50))  # Clear the minimap surface
+
+        map_width = carte.width
+        map_height = carte.height
+        scale_x = self.minimap_width / (map_width * self.tile_size * 2) # Scale X for the minimap
+        scale_y = self.minimap_height / (map_height * self.tile_size) # Scale Y for the minimap
+
+        # Iterate through the entire map
+        for y in range(map_height):
+            for x in range(map_width):
+                tile = carte.get_tile(x, y)
+                if not tile:
+                    continue
+                
+                # Calculate the isometric position for the minimap using the same tile size
+                iso_x, iso_y = self.world_to_screen(x, y, 0, 0)
+                
+                # Apply scaling and translation for mini map
+                mini_x = (iso_x * scale_x) + (self.minimap_width / 2)
+                mini_y = (iso_y * scale_y)
+                
+                # Color for terrains
+                tile_color = (100, 150, 50) if tile.terrain_type == Terrain_type.GRASS else (100,100,100) # default grass
+
+                # Draw the terrain as a small square
+                mini_tile_size = 6 
+                pygame.draw.rect(self.minimap_surface, tile_color, (mini_x, mini_y, mini_tile_size, mini_tile_size))
+
+                # Draw buildings (as a rect) and units (as a circle)
+                if tile.is_occupied():
+                    occupant = tile.occupant
+                    if isinstance(occupant, Building):
+                         if any(p.player_id == 1 for p in players if occupant in p.buildings): # check player id
+                            building_color = (0, 255, 0)
+                         elif any(p.player_id == 2 for p in players if occupant in p.buildings):
+                            building_color = (255, 0, 0)
+                         else:
+                            building_color = (200, 200, 200)
+                         pygame.draw.rect(self.minimap_surface, building_color, (mini_x, mini_y, 5, 5)) # Taille des buildings
+                    elif isinstance(occupant, Unit):
+                        unit_color = (0, 0, 255) if any(p.player_id == 1 for p in players if occupant in p.units) else (255, 255, 0) if any(p.player_id == 2 for p in players if occupant in p.units) else (200, 200, 200)
+                        pygame.draw.circle(self.minimap_surface, unit_color, (int(mini_x + 3), int(mini_y + 3)), 2) # Dessiner un cercle (point) pour les unités
+
+    
+    def render_minimap(self, carte, players):
+        """Renders the minimap onto the screen. Updates only periodically."""
+        self.minimap_frame_counter += 1
+        if self.minimap_frame_counter >= self.minimap_update_interval:
+            self._render_minimap_content(carte, players)
+            self.minimap_frame_counter = 0
+
+        self.screen.blit(self.minimap_surface, (self.minimap_x, self.minimap_y))
+
+    def render_resource_ui(self, players):
+        """Renders the resource UI for all players."""
+        
+        # Calculate the starting position of the UI (top right)
+        ui_start_x = self.viewport_width - 620  # Adjust this as needed for padding
+        ui_start_y = 10  # Adjust this as needed for top padding
+        
+        for index, player in enumerate(players):
+            # Calculate the y position of the resource bar
+            bar_y = ui_start_y + index * (self.resource_bar_height + self.resource_bar_spacing)
+
+            # Draw resource bar background
+            if self.asset_manager.resource_bar_sprite:
+                 self.screen.blit(self.asset_manager.resource_bar_sprite, (ui_start_x, bar_y))
+            else:
+                # Fallback if the sprite doesn't exist
+                 pygame.draw.rect(self.screen, (50, 20, 20),
+                             (ui_start_x, bar_y, 280, self.resource_bar_height))
+            
+            # Calculate the positions for resource icons and texts
+            
+            # Display Player name
+            player_text_surface = self.font.render(f"Player {player.player_id}", True, (255, 255, 0) if player.player_id == 1 else (0, 255, 255)) # Change color if player 1 or player 2
+            self.screen.blit(player_text_surface, (ui_start_x + 20, bar_y + 20)) # Display player text
+            
+            resource_types = [ResourceType.FOOD, ResourceType.WOOD, ResourceType.GOLD]  # Order of resources
+            for resource_type in resource_types:
+                icon_x = ui_start_x + self.resource_offsets.get(resource_type, 0)  # Use offset from dictionary
+                text_x = icon_x + self.resource_icon_size - 50  # Offset for text after icon
+                icon_y = bar_y + self.resource_bar_height // 2 - self.resource_icon_size // 2  # Center vertically
+                
+                # Get the resource sprite
+                resource_sprite = None
+                if resource_type == ResourceType.FOOD:
+                    resource_sprite = pygame.transform.scale(pygame.image.load("assets/iconfood.png").convert_alpha(), (self.resource_icon_size, self.resource_icon_size))
+                elif resource_type == ResourceType.WOOD:
+                    resource_sprite = pygame.transform.scale(pygame.image.load("assets/iconwood.png").convert_alpha(), (self.resource_icon_size, self.resource_icon_size))
+                elif resource_type == ResourceType.GOLD:
+                    resource_sprite = pygame.transform.scale(pygame.image.load("assets/icongold.png").convert_alpha(), (self.resource_icon_size, self.resource_icon_size))
+                
+                if resource_sprite:
+                     self.screen.blit(resource_sprite, (icon_x, icon_y))  # Display icon
+
+                amount = player.resources.get(resource_type, 0)
+                text_surface = self.font.render(str(amount), True, pygame.Color('white'))
+                text_rect = text_surface.get_rect(center=(text_x + self.resource_text_offset , bar_y + self.resource_bar_height // 2))
+                self.screen.blit(text_surface, text_rect)  # Display resource amount
