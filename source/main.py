@@ -37,29 +37,36 @@ def main():
     
     house = House(position=(58, 0))
     game.map.add_building(house)
+    game.players[0].add_building(house)
 
     camp = Camp(position=(56, 0))
     game.map.add_building(camp)
+    game.players[0].add_building(camp)
+
 
     farm = Farm(position=(54, 0))   
     game.map.add_building(farm)
+    game.players[0].add_building(farm)
 
     #ajouter un archer (unit)
     archer = Archer(position=(59, 2))
     game.map.add_unit(archer)
+    game.players[0].add_unit(archer)
 
     #ajouter un horseman (unit)
     horseman = Horseman(position=(59, 3))
     game.map.add_unit(horseman)
+    game.players[0].add_unit(horseman)
 
     #ajouter un swordsman (unit)
     swordsman = Swordsman(position=(59, 4))
     game.map.add_unit(swordsman)
+    game.players[0].add_unit(swordsman)
 
     #ajouter un villageois (unit)
     villager = Villager(position=(59, 5))
     game.map.add_unit(villager)
-
+    game.players[0].add_unit(villager) 
 
     a=1
     
@@ -73,7 +80,8 @@ def main():
         camera.handle_input()
         camera_x, camera_y = camera.scroll.x, camera.scroll.y
 
-        game_view.render_game(game.map, camera_x, camera_y, clock)
+        game_view.render_game(game.map, camera_x, camera_y, clock, game.players)
+        #game_view.render_minimap(game.map, game.players)
 
         pygame.display.flip()
         if a == 1:
