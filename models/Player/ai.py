@@ -961,9 +961,9 @@ class IA:
 
     def update(self):
         if not self.endgame():
-            if self.strategy == "AGGRESSIVE":
+            if self.strategy == Strategy.AGGRESSIVE:
                 self.execute_aggressive_strategy()
-                #print("Aggressive strategy executed.")
+               
             elif self.strategy == Strategy.DEFENSIVE:
                 self.execute_defensive_strategy()
             else:

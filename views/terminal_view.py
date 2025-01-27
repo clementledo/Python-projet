@@ -4,6 +4,7 @@ from controllers.game_controller import GameController
 from models.Buildings.town_center import Town_center  # Adjust the import path as necessary
 import subprocess
 import sys
+import time
 
 
 class GameScreen(Enum):
@@ -14,7 +15,7 @@ class GameScreen(Enum):
 
 MAP_SIZES = {
     "Small": (30, 30),
-    "Medium": (75, 75),
+    "Medium": (100, 100),
     "Large": (120, 120)
 }
 
@@ -305,6 +306,25 @@ class TerminalView:
 
         # Rafraîchir l'écran pour afficher les changements
         stdscr.refresh()
+
+    def run_terminal_gameplay(self, stdscr):
+        """Boucle de jeu principale pour la version terminal."""
+        if not self.game_controller:
+            self.game_controller = GameController(self.game_state)
+
+        while self.screen == GameScreen.GAMEPLAY and self.running:
+            # Mises à jour IA et déplacements
+            self.game_controller.update_ai()
+            self.game_controller.update_units()
+
+            # Affichage textuel (à adapter selon votre format)
+            stdscr.clear()
+            stdscr.addstr(0, 0, "=== État du jeu (Terminal) ===")
+            # ...afficher ressources, unités, etc.
+
+            stdscr.refresh()
+
+            time.sleep(0.5)  # Petite pause pour limiter la vitesse de la boucle
 
     def run(self):
         curses.wrapper(self.main_menu)
