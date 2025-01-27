@@ -168,6 +168,7 @@ def main():
 
         elif current_screen == SCREEN_STATES['PAUSE']:
             current_screen, running = handle_pause_menu(screen, game_state, TILE_SIZE)
+        clock.tick(5000)
 
     pygame.quit()
 

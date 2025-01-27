@@ -960,13 +960,13 @@ class IA:
 
     def update(self):
         if not self.endgame():
-            if self.strategy == Strategy.AGGRESSIVE:
+            if self.strategy == "AGGRESSIVE":
                 self.execute_aggressive_strategy()
                
-            elif self.strategy == Strategy.DEFENSIVE:
-                self.execute_defensive_strategy()
-            else:
+            elif self.strategy == "ECONOMIC":
                 self.execute_economic_strategy()
+            else:
+                self.execute_defensive_strategy()
             #for villager in self.units["Villager"]:
             #   print(villager.status)
                  

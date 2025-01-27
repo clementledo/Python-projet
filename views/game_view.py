@@ -183,8 +183,8 @@ class GameView:
             buildings: Liste des bâtiments avec leurs positions et tailles.
         """
         # Dimensions et position de la minimap
-        minimap_width = 650
-        minimap_height = 220
+        minimap_width = 630
+        minimap_height = 320
         minimap_x = self.screen.get_width() - minimap_width - 5  # Décalage ajusté
         minimap_y = self.screen.get_height() - minimap_height - 5
 

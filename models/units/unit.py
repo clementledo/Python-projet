@@ -162,7 +162,7 @@ class Unit:
 
         return None  # Aucun chemin trouvé
 
-    def get_tile_cost(pos):
+    def get_tile_cost(self, pos, grid):
             base_cost = 1
             
             # Check for buildings directly from grid
