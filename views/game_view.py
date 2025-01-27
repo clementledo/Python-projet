@@ -3,6 +3,9 @@ from models.Resources.Terrain_type import Terrain_type
 
 from models.units.villager import Villager
 from views.asset_manager import AssetManager
+from models.Buildings.town_center import Town_center
+from models.Buildings.barrack import Barrack
+from models.Buildings.archery_range import Archery_Range
 
 class GameView:
     def __init__(self, screen, tile_size=50):
@@ -98,86 +101,72 @@ class GameView:
             camera_x, camera_y: Position de la caméra.
             zoom_level: Niveau de zoom (1.0 = taille normale).
         """
-        base_textures = {
-        Terrain_type.GRASS: self.asset_manager.terrain_textures[Terrain_type.GRASS],
-        Terrain_type.WATER: self.asset_manager.terrain_textures[Terrain_type.WATER]
-        }
-
-        # Dimensions des tuiles après application du zoom
-        tile_width = int(self.tile_size * 2 * zoom_level)
-        tile_height = int(self.tile_size * zoom_level)
-
-        textures = {
-        terrain: pygame.transform.scale(texture, (tile_width, tile_height))
-        for terrain, texture in base_textures.items()
-    }
-
-        
-        screen_width, screen_height = self.screen.get_size()
-
-        # Vérifier les dimensions de la grille avant de parcourir
-        if not carte.grille or not carte.grille[0]:
+        if not self.is_grid_valid(carte):
             print("Erreur : La grille est vide ou mal initialisée.")
             return
 
-        # Dimensions de la carte
-        map_width = len(carte.grille[0])  # Nombre de colonnes
-        map_height = len(carte.grille)   # Nombre de lignes
+        textures = self.get_scaled_textures(zoom_level)
+        screen_width, screen_height = self.screen.get_size()
 
-        # Rendu des tuiles
-        for y in range(map_height):
-            for x in range(map_width):
-                if not (0 <= x < map_width and 0 <= y < map_height):
-                    continue
-
-                tile = carte.grille[y][x]
-                if not tile:
-                    continue
-
-                # Convertir les coordonnées du monde en coordonnées écran
-                iso_x, iso_y = self.world_to_screen(x, y, camera_x, camera_y, zoom_level)
-                
-                # Centrer la carte sur l'écran
-                iso_x += screen_width // 2
-                iso_y += screen_height // 4
-
-                # Obtenir la texture de terrain
-                terrain_texture = textures.get(tile.terrain_type, textures[Terrain_type.GRASS])
-                self.screen.blit(terrain_texture, (iso_x, iso_y))
-
-                # Dessiner un point au centre de la tuile
-                point_color = (0, 255, 0)  # Vert pour les centres
-                point_radius = max(2, int(2 * zoom_level))  # Taille ajustée au zoom
-                pygame.draw.circle(
-                    self.screen,
-                    point_color,
-                    (iso_x + tile_width // 2, iso_y + tile_height // 2),
-                    point_radius
-                )
-
-        # Rendu des décorations (arbres, buissons, etc.)
-        for decoration in self.decorations:
-            x, y = decoration['x'], decoration['y']
-            if not (0 <= x < map_width and 0 <= y < map_height):
-                continue
-
-            iso_x, iso_y = self.world_to_screen(x, y, camera_x, camera_y, zoom_level)
-            
-            # Centrer la carte et ajuster la hauteur des décorations
-            iso_x += screen_width // 2
-            iso_y += screen_height // 4 - tile_height
-
-            # Redimensionner et dessiner la décoration
-            decoration_image = pygame.transform.scale(
-                decoration['image'], (tile_width, tile_height * 2)
-            )
-            self.screen.blit(decoration_image, (iso_x, iso_y))
-
+        self.render_tiles(carte, camera_x, camera_y, zoom_level, textures, screen_width, screen_height)
+        self.render_decorations(carte, camera_x, camera_y, zoom_level, screen_width, screen_height)
+        
         # Render resource panel last (on top)
         if hasattr(carte, 'resources'):
             self.render_resources(carte.resources)
 
-    
+    def get_scaled_textures(self, zoom_level):
+        """Retourne les textures redimensionnées en fonction du niveau de zoom."""
+        base_textures = {
+            Terrain_type.GRASS: self.asset_manager.terrain_textures[Terrain_type.GRASS],
+            Terrain_type.WATER: self.asset_manager.terrain_textures[Terrain_type.WATER]
+        }
+        tile_size = int(self.tile_size * zoom_level)
+        return {
+            terrain: pygame.transform.scale(texture, (tile_size * 2, tile_size))
+            for terrain, texture in base_textures.items()
+        }
+
+    def is_grid_valid(self, carte):
+        """Vérifie si la grille de la carte est valide."""
+        return carte.grille and carte.grille[0]
+
+    def render_tiles(self, carte, camera_x, camera_y, zoom_level, textures, screen_width, screen_height):
+        """Rendu des tuiles de la carte."""
+        map_width = len(carte.grille[0])
+        map_height = len(carte.grille)
+        half_screen_width = screen_width // 2
+        quarter_screen_height = screen_height // 4
+        tile_size = int(self.tile_size * zoom_level)
+
+        for y in range(map_height):
+            for x in range(map_width):
+                tile = carte.grille[y][x]
+                if not tile:
+                    continue
+                iso_x, iso_y = self.world_to_screen(x, y, camera_x, camera_y, zoom_level)
+                iso_x += half_screen_width
+                iso_y += quarter_screen_height
+                terrain_texture = textures.get(tile.terrain_type, textures[Terrain_type.GRASS])
+                self.screen.blit(terrain_texture, (iso_x, iso_y))
+
+    def render_decorations(self, carte, camera_x, camera_y, zoom_level, screen_width, screen_height):
+        """Rendu des décorations sur la carte."""
+        half_screen_width = screen_width // 2
+        quarter_screen_height = screen_height // 4
+        tile_size = int(self.tile_size * zoom_level)
+
+        for decoration in self.decorations:
+            x, y = decoration['x'], decoration['y']
+            if not (0 <= x < len(carte.grille[0]) and 0 <= y < len(carte.grille)):
+                continue
+            iso_x, iso_y = self.world_to_screen(x, y, camera_x, camera_y, zoom_level)
+            iso_x += half_screen_width
+            iso_y += quarter_screen_height - tile_size
+            decoration_image = pygame.transform.scale(
+                decoration['image'], (tile_size * 2, tile_size * 2)
+            )
+            self.screen.blit(decoration_image, (iso_x, iso_y))
 
     def render_minimap(self, map_data, camera_x, camera_y, zoom_level, units, buildings):
         """
@@ -483,6 +472,50 @@ class GameView:
                 text = self.font.render(str(amount), True, (255, 255, 255))
                 self.screen.blit(text, (x + icon_size + 20, y + 8))
                 
+            # Count units and buildings for each player
+            def count_entities(player_id):
+                units = {
+                    'V': 0,  # Villagers
+                    'A': 0,  # Archers
+                    'H': 0   # Horsemen
+                }
+                buildings = {
+                    'T': 0,  # Town Centers
+                    'B': 0,  # Barracks
+                    'A': 0   # Archery Ranges
+                }
+                
+                for unit in self.game_state.model['units']:
+                    if unit.player_id == player_id:
+                        if unit.unit_type == "Villager":
+                            units['V'] += 1
+                        elif unit.unit_type == "Archer":
+                            units['A'] += 1
+                        elif unit.unit_type == "Horseman":
+                            units['H'] += 1
+                            
+                for building in self.game_state.model['buildings']:
+                    if building.player_id == player_id:
+                        if isinstance(building, Town_center):
+                            buildings['T'] += 1
+                        elif isinstance(building, Barrack):
+                            buildings['B'] += 1
+                        elif isinstance(building, Archery_Range):
+                            buildings['A'] += 1
+                            
+                return units, buildings
+
+            # Add unit and building counts
+            units, buildings = count_entities(player_id)
+            
+            # Format counts string
+            unit_text = f"U{{{units['V']}V,{units['A']}A,{units['H']}H}}"
+            building_text = f"B{{{buildings['T']}T,{buildings['B']}B,{buildings['A']}A}}"
+            
+            # Draw counts
+            count_text = self.font.render(f"{unit_text} {building_text}", True, (255, 255, 255))
+            self.screen.blit(count_text, (panel1_x  + 400, panel_y+10))
+
     def render_game(self, game_state, screen, clock, font):
         """Render the entire game state."""
         controller = game_state.controller
