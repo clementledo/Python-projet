@@ -224,7 +224,7 @@ class AssetManager:
                 print(f"Couldn't load sprite: {sprite_path}")
                 
         # Load standing sprites
-        sprite_dir = "assets/Sprites/Axethrower/Stand"
+        sprite_dir = "assets/Sprites/AxeThrower/Stand"
         for i in range(22, 30):
             sprite_path = os.path.join(sprite_dir, f"Axethrowerstand{i:03d}.png")
             try:
@@ -237,7 +237,7 @@ class AssetManager:
                 print(f"Couldn't load sprite: {sprite_path}")
         
         # Load attacking sprites
-        sprite_dir = "assets/Sprites/Axethrower/Attack"
+        sprite_dir = "assets/Sprites/AxeThrower/Attack"
         for i in range(1, 25):
             sprite_path = os.path.join(sprite_dir, f"Axethrowerattack{i:03d}.png")
             try:
