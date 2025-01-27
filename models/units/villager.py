@@ -196,9 +196,9 @@ class Villager(Unit):
         """Serialize villager data"""
         base_data = super().serialize()
         villager_data = {
-            "is_gathering": self.is_gathering,
+            #"is_gathering": self.is_gathering,
             "gathering_progress": self.gathering_progress,
-            "gathering_speed": self.gathering_speed,
+            #"gathering_speed": self.gathering_speed,
             "carry_capacity": self.carry_capacity,
             "carried_resources": self.carried_resources,
             "resource_type": self.resource_type,
@@ -217,9 +217,9 @@ class Villager(Unit):
         villager.health = data["health"]
         villager.max_health = data["max_health"]
         villager.status = unitStatus(data["status"])
-        villager.is_gathering = data["is_gathering"]
+        #villager.is_gathering = data["is_gathering"]
         villager.gathering_progress = data["gathering_progress"]
-        villager.gathering_speed = data["gathering_speed"]
+        #villager.gathering_speed = data["gathering_speed"]
         villager.carry_capacity = data["carry_capacity"]
         villager.carried_resources = data["carried_resources"]
         villager.resource_type = data["resource_type"]

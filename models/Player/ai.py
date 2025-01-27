@@ -272,7 +272,6 @@ class IA:
                 if distance < min_distance:
                     closest_resource = r
                     min_distance = distance
-                print(f"Checking resource at {r} with distance {distance}")
 
         if closest_resource:
             print(f"{unit.unit_type} found {resource_type} at {closest_resource}")
@@ -1082,7 +1081,7 @@ class IA:
                     if unit in self.game_state.model['units']:
                         self.game_state.model['units'].remove(unit)
 
-        print("Attack phase completed.")
+        #print("Attack phase completed.")
 
 
     def is_valid_target_position(self, position):

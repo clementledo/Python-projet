@@ -3,6 +3,7 @@ import os
 from models.units.villager import Villager
 from models.units.archer import Archer
 from models.units.horseman import Horseman
+from models.units.swordsman import Swordsman
 from models.Buildings.town_center import Town_center
 from models.Buildings.archery_range import Archery_Range
 from models.Buildings.building import Building
@@ -265,6 +266,7 @@ class GameState:
         """Load all required sprites."""
         self.view.load_building_sprite('T', "assets/Buildings/Towncenter.png")
         self.view.load_unit_sprite('Villager', "assets/Sprites/Villager/Stand/Villagerstand001.png")
+        self.view.load_unit_sprite('Horseman','assets/Sprites/Scout/Stand/Scoutstand001.png')
         print("Sprites loaded successfully.")
 
     def initialize_controller(self):
@@ -305,7 +307,7 @@ class GameState:
             self.load_map_and_camera(data)
             self.load_buildings(data)
             self.load_units(data)
-            
+        
             print(f"Game state loaded successfully from {filepath}")
             return True
             

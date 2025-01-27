@@ -35,7 +35,12 @@ class Horseman(Unit):
     def get_current_sprite(self):
         if self.use_terminal_view:
             return None
-            
+        
+        import pygame
+        now = pygame.time.get_ticks()
+        if now - self.last_update > self.animation_speed * 1000:
+            self.last_update = now
+        
         if not self.sprites_initialized:
             self.initialize_sprites()
             

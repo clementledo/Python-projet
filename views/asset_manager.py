@@ -35,7 +35,11 @@ class AssetManager:
             'walking': [],
             'standing': []
         }
-        
+        self.swordsman_sprites = {
+            'attack': [],
+            'walking': [],
+            'standing': []
+        }
         self.use_terminal_view = False
         # Skip asset loading in terminal mode
         if 'SDL_VIDEODRIVER' in os.environ and os.environ['SDL_VIDEODRIVER'] == 'dummy':
@@ -54,7 +58,8 @@ class AssetManager:
         self.load_villager_sprites()
         self.load_building_sprites()
         self.load_archer_sprites()  # Add archer sprites loading
-        self.load_scout_sprites()  # Add scout sprites loading
+        self.load_scout_sprites()# Add scout sprites loading
+        self.load_swordsman_sprites()
 
     def load_ui_elements(self):
         self.ui_assets = {
@@ -149,7 +154,26 @@ class AssetManager:
                 self.archer_sprites['attack'].append(sprite)
             except pygame.error:
                 print(f"Could not load archer sprite: {path}")
-
+        
+        # Load standing sprites
+        for i in range(1, 53):
+            frame_number = str(i).zfill(3)
+            sprite_path = f'assets/Sprites/Archer/Stand/Archerstand{frame_number}.png'
+            try:
+                sprite = pygame.image.load(sprite_path).convert_alpha()
+                self.archer_sprites['standing'].append(sprite)
+            except pygame.error as e:
+                print(f"Couldn't load sprite: {sprite_path}")
+        
+        for i in range(1, 51):
+            frame_number = str(i).zfill(3)
+            sprite_path = f'assets/Sprites/Archer/Walk/Archerwalk{frame_number}.png'
+            try:
+                sprite = pygame.image.load(sprite_path).convert_alpha()
+                self.archer_sprites['walking'].append(sprite)
+            except pygame.error as e:
+                print(f"Couldn't load sprite: {sprite_path}")
+        
     def load_scout_sprites(self):
         for i in range(1, 51):  # 1 to 50
             frame_number = str(i).zfill(3)  # Convert to 001, 002, etc.
@@ -159,3 +183,56 @@ class AssetManager:
                 self.scout_sprites['attack'].append(sprite)
             except pygame.error:
                 print(f"Could not load scout sprite: {path}")
+        
+        # Load standing sprites
+        #sprite_dir = "assets/Sprites/Scount/Stand"
+        for i in range(1, 51):
+            frame_number = str(i).zfill(3)
+            sprite_path = f'assets/Sprites/Scout/Stand/Scoutstand{frame_number}.png'
+            try:
+                sprite = pygame.image.load(sprite_path).convert_alpha()
+                self.scout_sprites['standing'].append(sprite)
+            except pygame.error as e:
+                print(f"Couldn't load sprite: {sprite_path}")
+        
+        for i in range(1, 51):
+            frame_number = str(i).zfill(3)
+            sprite_path = f'assets/Sprites/Scout/Walk/Scoutwalk{frame_number}.png'
+            try:
+                sprite = pygame.image.load(sprite_path).convert_alpha()
+                self.scout_sprites['walking'].append(sprite)
+            except pygame.error as e:
+                print(f"Couldn't load sprite: {sprite_path}")
+    
+    def load_swordsman_sprites(self):
+        for i in range(1, 81):  # 1 to 50
+            frame_number = str(i).zfill(3)  # Convert to 001, 002, etc.
+            path = f'assets/Sprites/AxeThrower/Attack/Axethrowerattack{frame_number}.png'
+            try:
+                sprite = pygame.image.load(path).convert_alpha()
+                self.swordsman_sprites['attack'].append(sprite)
+            except pygame.error:
+                print(f"Could not load scout sprite: {path}")
+        
+        # Load standing sprites
+        #sprite_dir = "assets/Sprites/Scount/Stand"
+        for i in range(1, 51):
+            frame_number = str(i).zfill(3)
+            sprite_path = f'assets/Sprites/AxeThrower/Stand/Axethrowerstand{frame_number}.png'
+            try:
+                sprite = pygame.image.load(sprite_path).convert_alpha()
+                self.swordsman_sprites['standing'].append(sprite)
+            except pygame.error as e:
+                print(f"Couldn't load sprite: {sprite_path}")
+        
+        for i in range(1, 76):
+            frame_number = str(i).zfill(3)
+            sprite_path = f'assets/Sprites/AxeThrower/Walk/Axethrowerwalk{frame_number}.png'
+            try:
+                sprite = pygame.image.load(sprite_path).convert_alpha()
+                self.swordsman_sprites['walking'].append(sprite)
+            except pygame.error as e:
+                print(f"Couldn't load sprite: {sprite_path}")
+        
+    def get_villager_sprites(self, animation_type):
+        return self.villager_sprites.get(animation_type, [])

@@ -2,6 +2,9 @@ import pygame
 from models.Resources.Terrain_type import Terrain_type
 
 from models.units.villager import Villager
+from models.units.horseman import Horseman
+from models.units.archer import Archer
+from models.units.swordsman import Swordsman
 from views.asset_manager import AssetManager
 from models.Buildings.town_center import Town_center
 from models.Buildings.barrack import Barrack
@@ -286,6 +289,147 @@ class GameView:
         self.render_unit_paths(units, camera_x, camera_y, zoom_level)
         for unit in units:
             if isinstance(unit, Villager):
+                unit.initialize_sprites()  # Initialize sprites if needed
+                sprite = unit.get_current_sprite()
+                if sprite:
+                    tile_width = int(self.tile_size * 2 * zoom_level)
+                    tile_height = int(self.tile_size * zoom_level)
+                    screen_width, screen_height = self.screen.get_size()
+
+                    # Position interpolation for smooth movement
+                    if not hasattr(unit, "display_position"):
+                        unit.display_position = unit.get_position()  # Initialize display position
+
+                    x_target, y_target = unit.get_position()
+                    x_display, y_display = unit.display_position
+
+                    # Interpolation speed
+                    move_speed = 0.05  # Adjust this value for faster/slower interpolation
+
+                    # Linear interpolation towards target position
+                    x_display += (x_target - x_display) * move_speed
+                    y_display += (y_target - y_display) * move_speed
+
+                    # Update the display position
+                    unit.display_position = (x_display, y_display)
+
+                    iso_x, iso_y = self.world_to_screen(x_display, y_display, camera_x, camera_y, zoom_level)
+                    iso_x += screen_width // 2
+                    iso_y += screen_height // 4
+
+                    if selected_unit == unit:
+                        highlight_color = (255, 255, 0)
+                        highlight_radius = int(tile_width * 0.5)
+                        pygame.draw.circle(self.screen, highlight_color, 
+                                        (iso_x, iso_y + tile_height // 2), highlight_radius, 2)
+
+                    scaled_sprite = pygame.transform.scale(sprite, 
+                        (int(sprite.get_width() * zoom_level), 
+                        int(sprite.get_height() * zoom_level)))
+                    
+                    # Apply blue tint for Player 2 units
+                    if unit.player_id == 2:
+                        scaled_sprite = self.colorize_surface(scaled_sprite, (100, 100, 255, 255))
+                    
+                    self.screen.blit(scaled_sprite, 
+                        (iso_x - scaled_sprite.get_width() // 2, 
+                        iso_y - scaled_sprite.get_height() // 2))
+                    self.draw_health_bar(self.screen, unit, iso_x, iso_y, zoom_level)
+            elif isinstance(unit, Horseman):
+                unit.initialize_sprites()  # Initialize sprites if needed
+                sprite = unit.get_current_sprite()
+                if sprite:
+                    tile_width = int(self.tile_size * 2 * zoom_level)
+                    tile_height = int(self.tile_size * zoom_level)
+                    screen_width, screen_height = self.screen.get_size()
+
+                    # Position interpolation for smooth movement
+                    if not hasattr(unit, "display_position"):
+                        unit.display_position = unit.get_position()  # Initialize display position
+
+                    x_target, y_target = unit.get_position()
+                    x_display, y_display = unit.display_position
+
+                    # Interpolation speed
+                    move_speed = 0.05  # Adjust this value for faster/slower interpolation
+
+                    # Linear interpolation towards target position
+                    x_display += (x_target - x_display) * move_speed
+                    y_display += (y_target - y_display) * move_speed
+
+                    # Update the display position
+                    unit.display_position = (x_display, y_display)
+
+                    iso_x, iso_y = self.world_to_screen(x_display, y_display, camera_x, camera_y, zoom_level)
+                    iso_x += screen_width // 2
+                    iso_y += screen_height // 4
+
+                    if selected_unit == unit:
+                        highlight_color = (255, 255, 0)
+                        highlight_radius = int(tile_width * 0.5)
+                        pygame.draw.circle(self.screen, highlight_color, 
+                                        (iso_x, iso_y + tile_height // 2), highlight_radius, 2)
+
+                    scaled_sprite = pygame.transform.scale(sprite, 
+                        (int(sprite.get_width() * zoom_level), 
+                        int(sprite.get_height() * zoom_level)))
+                    
+                    # Apply blue tint for Player 2 units
+                    if unit.player_id == 2:
+                        scaled_sprite = self.colorize_surface(scaled_sprite, (100, 100, 255, 255))
+                    
+                    self.screen.blit(scaled_sprite, 
+                        (iso_x - scaled_sprite.get_width() // 2, 
+                        iso_y - scaled_sprite.get_height() // 2))
+                    self.draw_health_bar(self.screen, unit, iso_x, iso_y, zoom_level)
+            elif isinstance(unit, Archer):
+                unit.initialize_sprites()  # Initialize sprites if needed
+                sprite = unit.get_current_sprite()
+                if sprite:
+                    tile_width = int(self.tile_size * 2 * zoom_level)
+                    tile_height = int(self.tile_size * zoom_level)
+                    screen_width, screen_height = self.screen.get_size()
+
+                    # Position interpolation for smooth movement
+                    if not hasattr(unit, "display_position"):
+                        unit.display_position = unit.get_position()  # Initialize display position
+
+                    x_target, y_target = unit.get_position()
+                    x_display, y_display = unit.display_position
+
+                    # Interpolation speed
+                    move_speed = 0.05  # Adjust this value for faster/slower interpolation
+
+                    # Linear interpolation towards target position
+                    x_display += (x_target - x_display) * move_speed
+                    y_display += (y_target - y_display) * move_speed
+
+                    # Update the display position
+                    unit.display_position = (x_display, y_display)
+
+                    iso_x, iso_y = self.world_to_screen(x_display, y_display, camera_x, camera_y, zoom_level)
+                    iso_x += screen_width // 2
+                    iso_y += screen_height // 4
+
+                    if selected_unit == unit:
+                        highlight_color = (255, 255, 0)
+                        highlight_radius = int(tile_width * 0.5)
+                        pygame.draw.circle(self.screen, highlight_color, 
+                                        (iso_x, iso_y + tile_height // 2), highlight_radius, 2)
+
+                    scaled_sprite = pygame.transform.scale(sprite, 
+                        (int(sprite.get_width() * zoom_level), 
+                        int(sprite.get_height() * zoom_level)))
+                    
+                    # Apply blue tint for Player 2 units
+                    if unit.player_id == 2:
+                        scaled_sprite = self.colorize_surface(scaled_sprite, (100, 100, 255, 255))
+                    
+                    self.screen.blit(scaled_sprite, 
+                        (iso_x - scaled_sprite.get_width() // 2, 
+                        iso_y - scaled_sprite.get_height() // 2))
+                    self.draw_health_bar(self.screen, unit, iso_x, iso_y, zoom_level)
+            elif isinstance(unit, Swordsman):
                 unit.initialize_sprites()  # Initialize sprites if needed
                 sprite = unit.get_current_sprite()
                 if sprite:

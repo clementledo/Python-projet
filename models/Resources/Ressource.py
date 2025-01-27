@@ -89,7 +89,7 @@ class Resource:
         return {
             "resource_type": self.resource_type,
             "symbol": self.symbol,
-            "starting_resources": self.starting_resources
+            "starting_resources": self.quantity
         }
 
     @classmethod

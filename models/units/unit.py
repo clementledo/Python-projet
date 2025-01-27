@@ -62,7 +62,7 @@ class Unit:
                     self.destination = None
         elif self.status == unitStatus.ATTACKING:
             if self.target and self.target.health > 0:
-                if self.distance_to(self.target) <= self.attack_range:
+                if self.distance_to(self.target.position) <= self.attack_range:
                     self.atk(self.target)
                 else:
                     self.status = unitStatus.MOVING
