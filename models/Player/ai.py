@@ -571,7 +571,8 @@ class IA:
             base = self.get_main_base()
             if base:
                 for unit in military_units:
-                     unit.move_toward((base.pos[0] + random.randint(-4,4), base.pos[1] + random.randint(-4,4)), self.map_data)
+                    if unit.status != unitStatus.BUILDING:
+                        unit.move_toward((base.pos[0] + random.randint(-4,4), base.pos[1] + random.randint(-4,4)), self.map_data)
                 self.execute_attack_phase()
                         
     def allocate_villagers(self):
@@ -888,7 +889,8 @@ class IA:
         # Issue attack command to all units
         for unit in army_units:
             if unit.health <= 0:
-                self.game_state.model['units'].remove(unit)
+                if unit in self.game_state.model['units']:
+                    self.game_state.model['units'].remove(unit)
                 self.units[unit.unit_type].remove(unit)
                 self.map_data.get_tile(unit.position[0], unit.position[1]).unit.remove(unit)
                 continue
