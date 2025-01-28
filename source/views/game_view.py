@@ -58,6 +58,7 @@ class GameView:
 
         self.show_resource_ui = True  # Show the resource UI by default
         self.show_minimap = True # Ajouter cette variable
+        self.show_health_bars=True
 
     def colorize_surface(self, surface, color):
         """Apply color tint to a surface"""
@@ -264,6 +265,42 @@ class GameView:
                     self.animation_directions[unit][animation_type] = -1
                 elif self.unit_animation_frames[unit][animation_type] <= 0:
                    self.animation_directions[unit][animation_type] = 1
+
+            # Add health bar drawing at the end
+            if self.show_health_bars:
+                self.draw_health_bar(self.screen, unit, iso_x, iso_y)
+
+    def draw_health_bar(self, surface, unit, x, y):
+        """Draw a health bar proportional to unit's HP with camera zoom"""
+        if not self.show_health_bars:
+            return
+        # Get zoom from camera
+        zoom_level = 1.0
+        
+        # Bar dimensions scaled with zoom
+        bar_width = self.tile_size * 0.8 * zoom_level
+        bar_height = max(2, self.tile_size * 0.08 * zoom_level)
+        y_offset = self.tile_size * 0.2 * zoom_level
+        border = max(1, int(zoom_level))
+        
+        # Calculate position
+        pos_x = x + 32 + (self.tile_size * zoom_level ) / 8
+        pos_y = y - 1 * y_offset
+        
+        # Draw black border
+        pygame.draw.rect(surface, (0, 20, 0),
+                        (pos_x - border, pos_y - border,
+                        bar_width + 2*border, bar_height + 2*border))
+        
+        # Draw red background
+        pygame.draw.rect(surface, (200, 0, 0),
+                        (pos_x, pos_y, bar_width, bar_height))
+        
+        # Draw green health remaining - using hp attribute from Unit class
+        if unit.hp > 0:  # Unit class uses hp attribute
+            health_ratio = unit.hp / unit.hp  # Using initial hp as max health
+            pygame.draw.rect(surface, (0, 190, 0),
+                            (pos_x, pos_y, bar_width * health_ratio, bar_height))
 
     def render_game(self, carte, camera_x, camera_y, clock, players):
         self.render_map(carte, camera_x, camera_y)

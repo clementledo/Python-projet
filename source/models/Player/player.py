@@ -19,7 +19,7 @@ from models.Resources.resource_type import ResourceType
 
 
 class Player:
-    def __init__(self, player_id, general_strategy="economic"):
+    def __init__(self, player_id, general_strategy="aggressive"):
         self.player_id = player_id
         self.buildings = []
         self.units = []

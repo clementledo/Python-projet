@@ -130,6 +130,9 @@ def main():
                         game_view.show_resource_ui = not game_view.show_resource_ui # Modifier la variable si "p" est pressé
                 elif event.key == pygame.K_m:
                         game_view.show_minimap = not game_view.show_minimap  # Modifier la variable si "m" est pressé
+                # In the main game loop, add handler for 'H' key
+                elif event.key == pygame.K_h:
+                    game_view.show_health_bars = not game_view.show_health_bars
 
         if not paused:
             camera.handle_input()
