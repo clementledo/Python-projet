@@ -369,8 +369,12 @@ class GameView:
             # Calculate the positions for resource icons and texts
             
             # Display Player name
-            player_text_surface = self.font.render(f"Player {player.player_id}", True, (255, 255, 0) if player.player_id == 1 else (0, 255, 255)) # Change color if player 1 or player 2
-            self.screen.blit(player_text_surface, (ui_start_x + 20, resource_bar_y + 20)) # Display player text
+            player_text_surface = self.small_font.render(f"Player {index + 1}", True, (0, 0, 255) if player.player_id == 1 else (255, 0, 0))  # Utiliser une police plus petite
+            self.screen.blit(player_text_surface, (ui_start_x + 20, resource_bar_y + 20))  # Afficher le texte du joueur
+
+            # Afficher la population
+            population_text_surface = self.small_font.render(f"Population: {player.population}/{player.max_population}", True, pygame.Color('white'))
+            self.screen.blit(population_text_surface, (ui_start_x + 20, resource_bar_y + 35))  # Afficher la population sous le nom du joueur
             
             resource_types = [ResourceType.FOOD, ResourceType.WOOD, ResourceType.GOLD]  # Order of resources
             for resource_type in resource_types:
