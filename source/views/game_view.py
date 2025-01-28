@@ -10,7 +10,7 @@ from models.Units.swordsman import Swordsman
 from models.Buildings.building import Building
 from models.Player.player import Player
 from models.Resources.resource_type import ResourceType  # Import ResourceType
- # Import the game instance
+from models.Resources.resource import Resource  # Import Resource
 
 class GameView:
     def __init__(self, screen, tile_size=50, asset_manager=None):
@@ -116,7 +116,7 @@ class GameView:
                 terrain_texture = textures.get(tile.terrain_type, textures[Terrain_type.GRASS])
                 self.screen.blit(terrain_texture, (iso_x, iso_y))
                 
-                if tile.has_resource():
+                if tile.has_resource() and not tile.resource.is_food():
                     if tile.resource.is_wood():
                         tree_offset_y = tile_height // 0.47
                         tree_offset_x = tile_width // 2
