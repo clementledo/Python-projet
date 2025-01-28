@@ -13,7 +13,7 @@ from models.Resources.resource_type import ResourceType  # Import ResourceType
 from models.Resources.resource import Resource  # Import Resource
 
 class GameView:
-    def __init__(self, screen, tile_size=50, asset_manager=None):
+    def __init__(self, screen,camera, tile_size=64, asset_manager=None):
         self.screen = screen
         self.tile_size = tile_size
         self.asset_manager = asset_manager
@@ -59,6 +59,8 @@ class GameView:
         self.show_resource_ui = True  # Show the resource UI by default
         self.show_minimap = True # Ajouter cette variable
         self.show_health_bars=True
+        self.tile_size = tile_size
+        self.camera = camera
 
     def colorize_surface(self, surface, color):
         """Apply color tint to a surface"""
@@ -67,15 +69,15 @@ class GameView:
         return colorized
 
     def world_to_screen(self, x, y, camera_x, camera_y):
-        tile_width = self.tile_size * 2
-        tile_height = self.tile_size 
+        tile_width = self.camera.TILE_SIZE * 2  # Use camera's tile size
+        tile_height = self.camera.TILE_SIZE
         iso_x = (x - y) * tile_width // 2 - camera_x
         iso_y = (x + y) * tile_height // 2 - camera_y
         return iso_x, iso_y
 
     def screen_to_world(self, screen_x, screen_y, camera_x, camera_y):
-        tile_width = self.tile_size * 2
-        tile_height = self.tile_size
+        tile_width = self.camera.TILE_SIZE * 2  # Use camera's tile size
+        tile_height = self.camera.TILE_SIZE
         screen_x -= self.viewport_width // 2
         screen_y -= self.viewport_height // 4
         x = ((screen_x + camera_x) // (tile_width // 2) + (screen_y + camera_y) // (tile_height // 2)) // 2
@@ -83,11 +85,15 @@ class GameView:
         return x, y
     
     def render_map(self, carte, camera_x, camera_y):
+        
+        tile_width = self.camera.TILE_SIZE * 2  # Use camera's tile size
+        tile_height = self.camera.TILE_SIZE
+        zoom_level  = self.camera.zoom
         base_textures = {
             Terrain_type.GRASS: self.asset_manager.terrain_textures[Terrain_type.GRASS],
         }
-        tile_width = self.tile_size * 2
-        tile_height = self.tile_size
+        tile_width = int(self.tile_size * 2*zoom_level)
+        tile_height = int(self.tile_size*zoom_level)
         textures = {
             terrain: pygame.transform.scale(texture, (tile_width, tile_height))
             for terrain, texture in base_textures.items()
@@ -116,16 +122,26 @@ class GameView:
                 iso_x, iso_y = self.world_to_screen(x, y, camera_x, camera_y)
                 terrain_texture = textures.get(tile.terrain_type, textures[Terrain_type.GRASS])
                 self.screen.blit(terrain_texture, (iso_x, iso_y))
-                
+
+                def scaled_sprite(texture):
+                    zoom_scale = self.camera.zoom
+                    original_size = texture.get_rect().size
+                    scaled_size = (int(original_size[0] * zoom_scale), 
+                                int(original_size[1] * zoom_scale))
+                    return pygame.transform.scale(texture, scaled_size)
+            
                 if tile.has_resource() and not tile.resource.is_food():
                     if tile.resource.is_wood():
                         tree_offset_y = tile_height // 0.47
                         tree_offset_x = tile_width // 2
                         resource_texture = self.asset_manager.wood_sprites['tree']
+                        resource_texture =scaled_sprite(resource_texture)
+                        
                         self.screen.blit(resource_texture, (iso_x - tree_offset_x, iso_y - tree_offset_y))
                     elif tile.resource.is_gold():
                         gold_offset_y = -tile_height // 2.8
                         resource_texture = self.asset_manager.gold_sprites['gold']
+                        resource_texture =scaled_sprite(resource_texture)
                         self.screen.blit(resource_texture, (iso_x + 0, iso_y + gold_offset_y))
 
                 elif tile.is_occupied():
@@ -135,14 +151,20 @@ class GameView:
                             building_sprite = self.asset_manager.building_sprites.get(occupant.name)
                             
                             if building_sprite:
+                                zoom_scale = self.camera.zoom
+                                original_size = building_sprite.get_rect().size
+                                scaled_size = (int(original_size[0] * zoom_scale), 
+                                            int(original_size[1] * zoom_scale))
+                                scaled_sprite = pygame.transform.scale(building_sprite, scaled_size)
+
                                 iso_bx, iso_by = self.world_to_screen(occupant.position[0], occupant.position[1], camera_x, camera_y)
-                                offset_x = occupant.offset_x
-                                offset_y = occupant.offset_y
+                                offset_x = int(occupant.offset_x*zoom_level)
+                                offset_y = int(occupant.offset_y*zoom_level)
                                 if occupant.player_id == 1:
-                                    building_sprite = self.colorize_surface(building_sprite, (100, 100, 255, 255))
+                                    scaled_sprite = self.colorize_surface(scaled_sprite, (100, 100, 255, 255))
                                 elif occupant.player_id == 2:
-                                    building_sprite = self.colorize_surface(building_sprite, (255, 100, 100, 255))
-                                self.screen.blit(building_sprite, (iso_bx - offset_x, iso_by - offset_y))
+                                    scaled_sprite = self.colorize_surface(scaled_sprite, (255, 100, 100, 255))
+                                self.screen.blit(scaled_sprite, (iso_bx - offset_x, iso_by - offset_y))
                                 
                 # Check for adjacent units
                 for dx in [-1, 0, 1]:
@@ -241,16 +263,23 @@ class GameView:
             
             frame_index = self.unit_animation_frames[unit][animation_type]
             current_frame = animation_frames[frame_index % len(animation_frames)]
+
+            zoom_scale = self.camera.zoom
+            original_size = current_frame.get_rect().size
+            scaled_size = (int(original_size[0] /zoom_scale), 
+                        int(original_size[1] / zoom_scale))
+            scaled_sprite = pygame.transform.scale(current_frame, scaled_size)
+            
             # Apply blue tint if the unit belongs to player 2
             # Draw building sprite
             if unit.player_id == 1:
-                current_frame = self.colorize_surface(current_frame, (100, 100, 255, 255))
+                scaled_sprite = self.colorize_surface(current_frame, (100, 100, 255, 255))
             elif unit.player_id == 2:
-                current_frame = self.colorize_surface(current_frame, (255, 100, 100, 255))
+                scaled_sprite = self.colorize_surface(scaled_sprite, (255, 100, 100, 255))
                 
             
            
-            self.screen.blit(current_frame, (iso_x + self.unit_offsets[unit]['x'], iso_y - current_frame.get_height() // 2 + self.unit_offsets[unit]['y']))
+            self.screen.blit(scaled_sprite, (iso_x + self.unit_offsets[unit]['x'], iso_y - current_frame.get_height() // 2 + self.unit_offsets[unit]['y']))
 
             # Update animation frame for this unit
             animation_speed = self.animation_speed
@@ -275,7 +304,7 @@ class GameView:
         if not self.show_health_bars:
             return
         # Get zoom from camera
-        zoom_level = 1.0
+        zoom_level = self.camera.zoom
         
         # Bar dimensions scaled with zoom
         bar_width = self.tile_size * 0.8 * zoom_level
@@ -298,7 +327,7 @@ class GameView:
         
         # Draw green health remaining - using hp attribute from Unit class
         if unit.hp > 0:  # Unit class uses hp attribute
-            health_ratio = unit.hp / unit.hp  # Using initial hp as max health
+            health_ratio = unit.hp / unit.hp_max  # Using initial hp as max health
             pygame.draw.rect(surface, (0, 190, 0),
                             (pos_x, pos_y, bar_width * health_ratio, bar_height))
 
@@ -320,6 +349,7 @@ class GameView:
         """Renders the minimap content onto the minimap_surface."""
         self.minimap_surface.fill((50, 50, 50))  # Clear the minimap surface
 
+        zoom_level = self.camera.zoom
         map_width = carte.width
         map_height = carte.height
         scale_x = self.minimap_width / (map_width * self.tile_size * 2) # Scale X for the minimap

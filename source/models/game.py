@@ -10,7 +10,7 @@ import pickle
 import os
 
 MAP_SIZES = {
-    "Small": (30, 30),
+    "Small": (20, 20),
     "Medium": (120, 120),
     "Large": (300, 300)
 }

@@ -6,6 +6,7 @@ class Unit:
     def __init__(self, name, hp, attack, speed, range=1, position=(0, 0), symbol="", offset_x=0, offset_y=0, animation_speed = 5):
         self.name = name
         self.hp = hp
+        self.hp_max=hp
         self.attack = attack
         self.speed = speed
         self.range = range

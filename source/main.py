@@ -34,11 +34,19 @@ def player_play_turn(player, game, clock, stop_event):
             print(f"Exception in player_play_turn: {e}")
 
 def main():
+    # Initialize pygame and basic setup
     screen, clock, font, TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT = initialize_game()
     asset_manager = AssetManager()
-    game_view = GameView(screen, TILE_SIZE, asset_manager)
-    
-    # Afficher le menu principal
+
+    # Default values
+    width = 200
+    height = 200
+    starting_condition = "Moyenne"
+    map_type = "default"
+    strategy_player1 = "economic"
+    strategy_player2 = "aggressive"
+
+    # Show main menu
     menu_action = main_menu(screen, None)
     if menu_action == "quit":
         pygame.quit()
@@ -55,14 +63,13 @@ def main():
         map_type = menu_action.get("map_type", "default")
         starting_condition = menu_action.get("starting_condition", "Maigre")
         width, height = MAP_SIZES[map_size]
-        strategy_player1 = "economic"
-        strategy_player2 = "aggressive"
-        game = Game(width, height, starting_condition, map_type, strategy_player1, strategy_player2)
-    else:
-        game = Game(200, 200, "Moyenne", "default", "economic", "aggressive")
 
+    # Create game instance
+    game = Game(width, height, starting_condition, map_type, strategy_player1, strategy_player2)
     camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT, game.map.width, game.map.height)
+    game_view = GameView(screen, camera, TILE_SIZE, asset_manager)
 
+    # Initialize game resources and threads
     game.map.add_resources(game.map_type)
     
     stop_event = threading.Event()
@@ -80,7 +87,12 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            
+                stop_event.set()
+
+            # Zoom handling
+            elif event.type == pygame.MOUSEWHEEL:
+                camera.zoom = max(0.5, min(2.0, camera.zoom + event.y * 0.1))
+                camera.update_limits()  # Update camera limits after zoom change
 
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
