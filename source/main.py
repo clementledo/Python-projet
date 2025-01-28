@@ -4,14 +4,7 @@ from views.assets_manager import AssetManager
 from views.camera import Camera
 from models.game import Game, MAP_SIZES
 from models.Buildings.farm import Farm
-from models.Buildings.house import House
-from models.Buildings.camp import Camp
-from models.Buildings.keep import Keep
-from models.Units.archer import Archer
-from models.Units.horseman import Horseman
-from models.Units.swordsman import Swordsman
-from models.Units.villager import Villager
-import random
+from models.Buildings.barrack import Barrack
 import threading
 from views.menu import main_menu, pause_menu, settings_menu, load_menu, save_menu  # Importer les fonctions de menu
 
@@ -104,6 +97,7 @@ def main():
                                 starting_condition = menu_action.get("starting_condition", "Maigre")
                                 width, height = MAP_SIZES[map_size]
                                 game = Game(width, height, starting_condition, map_type)
+                                game.players[0].add_building("Farm", position=(5, 5))  # Ajout d'une ferme pour le joueur 1
                                 camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT, game.map.width, game.map.height)
                                 game.map.add_resources(game.map_type)
                                 player1_thread = threading.Thread(target=player_play_turn, args=(game.players[0], game, clock, stop_event))
