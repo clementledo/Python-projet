@@ -217,7 +217,7 @@ class IA:
         position = None
         for b in self.buildings[building_type]:
             distance = self.get_distance(pos, b.pos)
-            if distance < min_distance:
+            if distance < min_distance and b.useable:
                 min_distance = distance
                 position = b.pos
         return position
@@ -237,8 +237,9 @@ class IA:
             pos = self.find_nearby_building(unit.position,"Farm")
         else:
             pos = self.find_nearby_resources(unit, resource_type)
-        unit.destination = pos
-        self.change_unit_status(unit, unitStatus.GATHERING)
+        if pos:
+            unit.destination = pos
+            self.change_unit_status(unit, unitStatus.GATHERING)
 
     def check_gathering(self):
         unit = self.get_unit_by_status("Villager", unitStatus.GATHERING)
@@ -398,21 +399,129 @@ class IA:
         return len(self.buildings["Barracks"]) + len(self.buildings["Town_center"]) + len(self.buildings["House"]) + len(self.buildings["Farm"]) + len(self.buildings["Stable"] + len(self.buildings["Archery_Range"] + len(self.buildings["Keep"] + len(self.buildings["Camp"]
     """ 
     def execute_aggressive_strategy(self):
+        """
         military_units = []
         for unit_type in ["Archer", "Swordman", "Horseman", "Villager"]:
             military_units.extend(self.units.get(unit_type, []))
         self.spawn_villager()
-        self.execute_attack_phase()
+        self.execute_attack_phase()"""
+        if self.phase == 1:
+            self.execute_phase_one()
+        elif self.phase == 2:
+            self.execute_phase_two()
+        elif self.phase == 3:
+            self.execute_attack_phase()
+        
 
+    def execute_phase_one(self):
+        """
+        Phase 1: Establish Military Infrastructure
+        - Ensure Food Production
+        - Construct Military Buildings
+        """
+        if len(self.units["Villager"]) < 20 :
+            self.spawn_villager()     
+        
+        # Ensure Farms exist if food is limited
+        if len(self.buildings['Farm']) <= 2 and self.resources['wood'] >= 100 and self.resources["food"] < 300:
+            position = self.find_nearby_available_position(self.pos[0] + random.randint(-2,2)*5 , self.pos[1] + random.randint(-2,2)*5, (3, 3))
+            if position and self.get_available_villagers():
+                self.construct_building(Farm, position)
+        
+        # Construct Military Buildings
+        if len(self.buildings["Barracks"]) < 1 and self.can_afford({"wood" : 175}) and self.get_available_villagers():
+            x,y = self.buildings["Town_center"][random.randint(0,len(self.buildings["Town_center"]) - 1)].pos
+            pos = self.find_nearby_available_position(x, y, (4,4))
+            if pos:
+                self.construct_building(Barrack, pos)
+        
+        if len(self.buildings["Stable"]) < 1 and self.can_afford({"wood" : 175}) and self.get_available_villagers():
+            x,y = self.buildings["Town_center"][random.randint(0,len(self.buildings["Town_center"]) - 1)].pos
+            pos = self.find_nearby_available_position(x, y, (4,4))
+            if pos:
+                self.construct_building(Stable, pos)
+        
+        if len(self.buildings["Archery_Range"]) < 1 and self.can_afford({"wood" : 175}) and self.get_available_villagers():
+            x,y = self.buildings["Town_center"][random.randint(0,len(self.buildings["Town_center"]) - 1)].pos
+            pos = self.find_nearby_available_position(x, y, (4,4))
+            if pos:
+                self.construct_building(Archery_Range, pos)
+        
+        self.allocate_villagers(food=0.4,wood=0.6, gold=0)
+        
+        # Transition to Phase 2 when military buildings exist
+        if (len(self.buildings["Barracks"])) + len(self.buildings["Stable"]) + len(self.buildings["Archery_Range"]) > 2:
+            self.phase = 2
+
+        for building in self.buildings["In_construct"]:
+            #print(f"Building {building.name} at {building.pos} is building complete in {building.construction_time} turns.")
+            building.check_construction()   
+            if building.useable:
+                self.buildings["In_construct"].remove(building)
+                self.game_state.model['buildings'].append(building)
+                for villager in building.builder:
+                    self.change_unit_status(villager, unitStatus.IDLE)
+        for list in self.units.values():
+            for unit in list:
+                unit.update()  
+        self.check_returning()
+        self.check_gathering()
+
+    def execute_phase_two(self):
+        """
+        Phase 2: Train Army & Attack
+        - Villager Allocation
+        - Train a Balanced Army
+        - Attack When Ready
+        """
+        if len(self.units["Villager"]) < 10:
+            self.spawn_villager()   
+        # Allocate Villagers: 60% Food, 30% Gold, 10% Flexible
+        self.allocate_villagers(food=0.6,wood=0.05, gold=0.3)
+        
+        # Train a Balanced Army
+        if self.resources["food"] >= 50 and self.resources["gold"] >= 20:
+            for building_type in ["Barracks", "Stable", "Archery_Range"]:
+                for building in self.buildings[building_type]:
+                    if building.is_idle() and self.can_afford(building.unit_cost):
+                        pos = self.find_nearby_available_position(building.pos[0], building.pos[1], (2,2))
+                        if pos:
+                            building.train_unit(pos, self.game_state)
+                            self.deduct_resources(building.unit_cost)
+                            print(f"AI is training a new {building.unit_type} at {pos}.")
+                    elif building.training_time > 0:
+                        unit = building.check_training(self.game_state)
+                        if unit:
+                            self.units[building.unit_type].append(unit)
+        
+        if self.check_mate():
+            self.phase = 3
+        
+        for building in self.buildings["In_construct"]:
+            #print(f"Building {building.name} at {building.pos} is building complete in {building.construction_time} turns.")
+            building.check_construction()   
+            if building.useable:
+                self.buildings["In_construct"].remove(building)
+                self.game_state.model['buildings'].append(building)
+                for villager in building.builder:
+                    self.change_unit_status(villager, unitStatus.IDLE)
+        for list in self.units.values():
+            for unit in list:
+                unit.update()
+        self.check_returning()
+        self.check_gathering()
+    
     def execute_defensive_strategy(self):
         # Implement defensive strategy logic here
         print("Executing defensive strategy")
         # Example: Focus on building defenses and protecting resources
 
     def execute_economic_strategy(self):
+        if not self.is_base_secure():
+            self.defend_base()
         if self.phase == 1:
             self.execute_begin_phase()
-            if len(self.buildings["Town_center"]) >= 4:
+            if len(self.buildings["Town_center"]) >= 3:
                 self.phase = 2
         elif self.phase == 2:
             if self.check_mate():
@@ -420,10 +529,10 @@ class IA:
             self.execute_second_phase()
         if not self.is_base_secure():
             self.defend_base()
-               
+         
     def execute_begin_phase(self):
         # 0. Build Farm
-        if len(self.buildings['Farm']) <= 4 and self.resources['wood'] >= 100:
+        if len(self.buildings['Farm']) <= 3 and self.resources['wood'] >= 100:
             position = self.find_nearby_available_position(self.pos[0] + random.randint(-2,2)*5 , self.pos[1] + random.randint(-2,2)*5, (3, 3))
             if position and self.get_available_villagers():
                 self.construct_building(Farm, position)
@@ -441,10 +550,10 @@ class IA:
                     self.units["Villager"].append(villa)
 
         # 2. Allocate Villagers to resources
-        self.allocate_villagers()
+        self.allocate_villagers(0.8,0.2,0)
 
         # 3. Build new Town Halls if conditions are met
-        if len(self.buildings['Town_center']) < 4 and self.resources['wood'] >= 350:
+        if len(self.buildings['Town_center']) < 3 and self.resources['wood'] >= 350:
             position = self.find_nearby_available_position(self.pos[0] - 5*random.randint(-2,2), self.pos[1] + 10*random.randint(1,3),(6,6))
             if position and self.get_available_villagers():
                 self.construct_building(Town_center, position)
@@ -540,11 +649,7 @@ class IA:
                         if unit:
                             self.units[building.unit_type].append(unit)
 
-        # Build Farms in advance
-        if len(self.buildings["Farm"]) < 5:
-            pos = self.buildings["Town_center"][random.randint(1,len(self.buildings["Town_center"]))]
-            self.construct_building("Farm", self.find_nearby_available_position(pos,(3,3)))
-
+       
         if not self.is_base_secure():
             self.defend_base()
         
@@ -574,7 +679,7 @@ class IA:
                         unit.move_toward((base.pos[0] + random.randint(-4,4), base.pos[1] + random.randint(-4,4)), self.map_data)
                 self.execute_attack_phase()
                         
-    def allocate_villagers(self):
+    def allocate_villagers(self, food = 0.6, wood = 0.2, gold = 0.2):
         
         available_villagers = self.get_available_villagers()
         villager_gather = self.get_unit_by_status("Villager", unitStatus.GATHERING)
@@ -589,19 +694,19 @@ class IA:
             else:
                 villager_gold.append(v)
         
-        if len(villager_farm) < 4:
+        if len(villager_farm) < food*len(self.units["Villager"]):
             if available_villagers:
                 villager = available_villagers[0]
                 villager_farm.append(villager)
                 available_villagers.remove(villager)
         
         
-        if len(villager_wood) < 3:
+        if len(villager_wood) < wood*len(self.units["Villager"]):
             if available_villagers:
                 villager = available_villagers.pop(0)
                 villager_wood.append(villager)
         
-        if len(villager_gold) < 3 and self.phase > 1:
+        if len(villager_gold) < gold*len(self.units["Villager"]) and self.phase > 1:
             if available_villagers:
                 villager = available_villagers.pop(0)
                 villager_gold.append(villager)
@@ -782,7 +887,7 @@ class IA:
 
         # Condition 1: Enough combat units
         if ai_combat_units >= combat_unit_threshold:
-            print(f"AI has {ai_combat_units} combat units, meeting the threshold of {combat_unit_threshold}.")
+            #print(f"AI has {ai_combat_units} combat units, meeting the threshold of {combat_unit_threshold}.")
             return True
 
         # Get AI's total unit count
@@ -795,16 +900,14 @@ class IA:
 
         # Condition 2: Total unit count far surpasses opponent
         unit_ratio = ai_total_units / max(1, opponent_total_units)  # Prevent division by zero
-        if unit_ratio >= 1.5:  # AI has at least twice as many units as the opponent
-            print(f"AI unit ratio ({unit_ratio:.2f}) surpasses opponent significantly.")
+        if unit_ratio >= 1.5 and ai_total_units > 20:  # AI has at least twice as many units as the opponent
+            #print(f"AI unit ratio ({unit_ratio:.2f}) surpasses opponent significantly.")
             return True
 
         # If neither condition is met, do not attack
-        print(f"AI does not meet attack conditions: {ai_combat_units} combat units, ratio {unit_ratio:.2f}.")
+        #print(f"AI does not meet attack conditions: {ai_combat_units} combat units, ratio {unit_ratio:.2f}.")
         return False
 
-        
-    
     def get_enemy_critical_point(self):
         """
     Identifies the nearest critical point to attack.
@@ -975,7 +1078,6 @@ class IA:
         
         return False, None
                  
-    
     def remove_dead_units(self):
             unit_types = ["Villager", "Archer", "Horseman","Swordsman"]
             for unit_type in unit_types:
@@ -1024,7 +1126,7 @@ class IA:
     def execute_attack_phase(self):
         # Collect all military units
         military_units = []
-        for unit_type in ["Archer", "Swordman", "Horseman", "Villager"]:
+        for unit_type in ["Archer", "Swordsman", "Horseman", "Villager"]:
             military_units.extend(self.units.get(unit_type, []))
 
         # Find all enemy units and buildings
@@ -1087,7 +1189,6 @@ class IA:
                         self.game_state.model['units'].remove(unit)
 
         #print("Attack phase completed.")
-
 
     def is_valid_target_position(self, position):
         # Add checks to verify the target's position is valid
