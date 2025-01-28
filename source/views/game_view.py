@@ -59,6 +59,12 @@ class GameView:
         self.show_resource_ui = True  # Show the resource UI by default
         self.show_minimap = True # Ajouter cette variable
 
+    def colorize_surface(self, surface, color):
+        """Apply color tint to a surface"""
+        colorized = surface.copy()
+        colorized.fill(color, special_flags=pygame.BLEND_RGBA_MULT)
+        return colorized
+
     def world_to_screen(self, x, y, camera_x, camera_y):
         tile_width = self.tile_size * 2
         tile_height = self.tile_size 
@@ -126,10 +132,15 @@ class GameView:
                     if hasattr(occupant, 'size') and hasattr(occupant, 'name'):
                         if (x, y) == (occupant.position[0] + occupant.size[1] - 1, occupant.position[1] + occupant.size[1] - 1):
                             building_sprite = self.asset_manager.building_sprites.get(occupant.name)
+                            
                             if building_sprite:
                                 iso_bx, iso_by = self.world_to_screen(occupant.position[0], occupant.position[1], camera_x, camera_y)
                                 offset_x = occupant.offset_x
                                 offset_y = occupant.offset_y
+                                if occupant.player_id == 1:
+                                    building_sprite = self.colorize_surface(building_sprite, (100, 100, 255, 255))
+                                elif occupant.player_id == 2:
+                                    building_sprite = self.colorize_surface(building_sprite, (255, 100, 100, 255))
                                 self.screen.blit(building_sprite, (iso_bx - offset_x, iso_by - offset_y))
                                 
                 # Check for adjacent units
@@ -229,6 +240,14 @@ class GameView:
             
             frame_index = self.unit_animation_frames[unit][animation_type]
             current_frame = animation_frames[frame_index % len(animation_frames)]
+            # Apply blue tint if the unit belongs to player 2
+            # Draw building sprite
+            if unit.player_id == 1:
+                current_frame = self.colorize_surface(current_frame, (100, 100, 255, 255))
+            elif unit.player_id == 2:
+                current_frame = self.colorize_surface(current_frame, (255, 100, 100, 255))
+                
+            
            
             self.screen.blit(current_frame, (iso_x + self.unit_offsets[unit]['x'], iso_y - current_frame.get_height() // 2 + self.unit_offsets[unit]['y']))
 
