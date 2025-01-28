@@ -151,6 +151,9 @@ def main():
                         f.write(game.to_json())
                     if running_server :
                       webbrowser.open_new_tab(f"http://localhost:{PORT}")
+                elif event.key == pygame.K_h:
+                    game_view.show_health_bars = not game_view.show_health_bars
+
 
         if not paused:
             camera.handle_input()
