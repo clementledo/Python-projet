@@ -171,9 +171,13 @@ def main():
     
     pygame.quit()
 
-    if running_server :
-      server_thread.join()
-    
+    if running_server:
+        server_thread.join()
+
+    # Terminate all threads
+    stop_event.set()
+    player1_thread.join()
+    player2_thread.join()
 
 if __name__ == "__main__":
     main()
