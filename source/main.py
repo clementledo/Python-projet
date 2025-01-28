@@ -94,10 +94,13 @@ def main():
                         pause_action = pause_menu(screen, game)
                         if pause_action == "quit":
                             running = False
+                          
                         elif pause_action == "main_menu":
                             menu_action = main_menu(screen, None)
                             if menu_action == "quit":
                                 running = False
+                                
+                               
                             elif isinstance(menu_action, dict) and menu_action.get("action") == "start":
                                 map_size = menu_action.get("map_size", "Medium")
                                 map_type = menu_action.get("map_type", "default")
@@ -141,9 +144,6 @@ def main():
 
         clock.tick(150)
     
-    stop_event.set()
-    player1_thread.join()
-    player2_thread.join()
     pygame.quit()
 
 if __name__ == "__main__":
