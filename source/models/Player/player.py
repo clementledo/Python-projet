@@ -56,11 +56,12 @@ class Player:
     def send_villager_to_collect(self, map, clock):
         with ThreadPoolExecutor(max_workers=5) as executor:  # Limit the number of threads
             futures = []
-            for unit in self.units:
-                if isinstance(unit, Villager):
-                    villager = unit
-                    resource_type = random.choice([ResourceType.WOOD, ResourceType.GOLD])
-                    futures.append(executor.submit(self._collect_resources, villager, map, resource_type, clock))
+            available_villagers = [unit for unit in self.units if isinstance(unit, Villager)]
+            num_villagers = min(len(available_villagers), 10)  # Limit the number of villagers to 5
+            selected_villagers = random.sample(available_villagers, num_villagers)
+            for villager in selected_villagers:
+                resource_type = random.choice([ResourceType.WOOD, ResourceType.GOLD, ResourceType.FOOD])
+                futures.append(executor.submit(self._collect_resources, villager, map, resource_type, clock))
             for future in futures:
                 try:
                     future.result()
@@ -151,6 +152,8 @@ class Player:
             time.sleep(0.1)  # Simulate building time
         map.add_building(building)
         self.add_building(building)
+        for resource, amount in building.cost.items():
+            self.resources[resource] -= amount
         print(f"{building.name} built at {building.position}")
 
     def _move_villager_to_building_site(self, villager, map, building, clock):
@@ -206,11 +209,17 @@ class Player:
             self._aggressive_strategy(game, clock)
 
     def _economic_strategy(self, game, clock):
-        # self.send_villager_to_collect(game.map, clock)
-        # if self.resources[ResourceType.FOOD] >= 50 and self.population < self.max_population:
-        #     self.create_villager(game.map)
-        # self._defend_buildings(game, clock)
-        self.send_units_to_build(Camp(), game.map, clock)
+        if Farm not in [type(building) for building in self.buildings]:
+            self.send_units_to_build(Farm(), game.map, clock)
+        self.send_villager_to_collect(game.map, clock)
+        if self.resources[ResourceType.FOOD] >= 50 and self.population < self.max_population:
+            self.create_villager(game.map)
+        if self.population + 5 >= self.max_population:
+            if TownCenter not in [type(building) for building in self.buildings] and self.resources[ResourceType.WOOD] >= 350:
+                self.send_units_to_build(TownCenter(), game.map, clock)
+            elif self.resources[ResourceType.WOOD] >= 25:
+                self.send_units_to_build(House(), game.map, clock)
+        self._defend_buildings(game, clock)
 
     def _aggressive_strategy(self, game, clock):
         self.send_units_to_attack(game, clock)
