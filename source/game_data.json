@@ -1,0 +1,100 @@
+{
+    "players": [
+        {
+            "player_id": 1,
+            "resources": {
+                "GOLD": 50,
+                "WOOD": 180,
+                "FOOD": 50
+            },
+            "buildings": [
+                {
+                    "name": "Town Centre",
+                    "hp": 1000,
+                    "position": [
+                        0,
+                        0
+                    ]
+                },
+                {
+                    "name": "Farm",
+                    "hp": 100,
+                    "position": [
+                        1,
+                        4
+                    ]
+                }
+            ],
+            "units": [
+                {
+                    "name": "Villager",
+                    "hp": 25,
+                    "position": [
+                        4,
+                        2
+                    ]
+                },
+                {
+                    "name": "Villager",
+                    "hp": 25,
+                    "position": [
+                        0,
+                        4
+                    ]
+                },
+                {
+                    "name": "Villager",
+                    "hp": 25,
+                    "position": [
+                        11,
+                        16
+                    ]
+                }
+            ]
+        },
+        {
+            "player_id": 2,
+            "resources": {
+                "GOLD": 50,
+                "WOOD": 200,
+                "FOOD": 50
+            },
+            "buildings": [
+                {
+                    "name": "Town Centre",
+                    "hp": 1000,
+                    "position": [
+                        114,
+                        114
+                    ]
+                }
+            ],
+            "units": [
+                {
+                    "name": "Villager",
+                    "hp": 25,
+                    "position": [
+                        110,
+                        112
+                    ]
+                },
+                {
+                    "name": "Villager",
+                    "hp": 25,
+                    "position": [
+                        110,
+                        112
+                    ]
+                },
+                {
+                    "name": "Villager",
+                    "hp": 25,
+                    "position": [
+                        110,
+                        112
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -38,8 +38,8 @@ class GameView:
         self.unit_offsets = {} # Store offsets for each unit
         
         # Minimap related
-        self.minimap_width = 400 # Largeur
-        self.minimap_height = 200  # Hauteur (la moitié de la largeur)
+        self.minimap_width = 600 # Largeur
+        self.minimap_height = 300  # Hauteur (la moitié de la largeur)
         self.minimap_x = self.viewport_width - self.minimap_width - 10  # Position from the right
         self.minimap_y = self.viewport_height - self.minimap_height - 10  # Position from the bottom
         self.minimap_surface = pygame.Surface((self.minimap_width, self.minimap_height), pygame.SRCALPHA)
@@ -58,7 +58,6 @@ class GameView:
 
         self.show_resource_ui = True  # Show the resource UI by default
         self.show_minimap = True # Ajouter cette variable
-        self.show_health_bars=True
 
     def colorize_surface(self, surface, color):
         """Apply color tint to a surface"""
@@ -266,42 +265,6 @@ class GameView:
                 elif self.unit_animation_frames[unit][animation_type] <= 0:
                    self.animation_directions[unit][animation_type] = 1
 
-            # Add health bar drawing at the end
-            if self.show_health_bars:
-                self.draw_health_bar(self.screen, unit, iso_x, iso_y)
-
-    def draw_health_bar(self, surface, unit, x, y):
-        """Draw a health bar proportional to unit's HP with camera zoom"""
-        if not self.show_health_bars:
-            return
-        # Get zoom from camera
-        zoom_level = 1.0
-        
-        # Bar dimensions scaled with zoom
-        bar_width = self.tile_size * 0.8 * zoom_level
-        bar_height = max(2, self.tile_size * 0.08 * zoom_level)
-        y_offset = self.tile_size * 0.2 * zoom_level
-        border = max(1, int(zoom_level))
-        
-        # Calculate position
-        pos_x = x + 32 + (self.tile_size * zoom_level ) / 8
-        pos_y = y - 1 * y_offset
-        
-        # Draw black border
-        pygame.draw.rect(surface, (0, 20, 0),
-                        (pos_x - border, pos_y - border,
-                        bar_width + 2*border, bar_height + 2*border))
-        
-        # Draw red background
-        pygame.draw.rect(surface, (200, 0, 0),
-                        (pos_x, pos_y, bar_width, bar_height))
-        
-        # Draw green health remaining - using hp attribute from Unit class
-        if unit.hp > 0:  # Unit class uses hp attribute
-            health_ratio = unit.hp / unit.hp  # Using initial hp as max health
-            pygame.draw.rect(surface, (0, 190, 0),
-                            (pos_x, pos_y, bar_width * health_ratio, bar_height))
-
     def render_game(self, carte, camera_x, camera_y, clock, players):
         self.render_map(carte, camera_x, camera_y)
         fps = clock.get_fps()
@@ -359,7 +322,7 @@ class GameView:
                          pygame.draw.rect(self.minimap_surface, building_color, (mini_x, mini_y, 5, 5)) # Taille des buildings
                     elif isinstance(occupant, Unit) or isinstance(occupant, list):
                         unit_color = (0, 0, 255) if any(p.player_id == 1 for p in players if occupant in p.units) else (255, 255, 0) if any(p.player_id == 2 for p in players if occupant in p.units) else (200, 200, 200)
-                        pygame.draw.circle(self.minimap_surface, unit_color, (int(mini_x + 3), int(mini_y + 3)), 2) # Dessiner un cercle (point) pour les unités
+                        pygame.draw.circle(self.minimap_surface, unit_color, (int(mini_x + 3), int(mini_y + 3)), 4) # Dessiner un cercle (point) pour les unités
 
     
     def render_minimap(self, carte, players):

@@ -8,10 +8,11 @@ from models.Buildings.stable import Stable
 from models.Resources.resource_type import ResourceType
 import pickle
 import os
+import json
 
 MAP_SIZES = {
-    "Small": (30, 30),
-    "Medium": (120, 120),
+    "Small": (120, 120),
+    "Medium": (200, 200),
     "Large": (300, 300)
 }
 
@@ -162,3 +163,42 @@ class Game:
 
     def __repr__(self):
         return (f"Game(map={self.map}, players={len(self.players)})")
+    
+    def to_json(self):
+        """Exporte les données du jeu (joueurs, bâtiments, unités) en JSON."""
+        game_data = {
+            "players": []
+        }
+        for player in self.players:
+            player_data = {
+                "player_id": player.player_id,
+                "resources": {k.name: v for k, v in player.resources.items()},
+                "buildings": [{
+                    "name": building.name,
+                    "hp": building.hp,
+                    "position": building.position
+                } for building in player.buildings] if player.buildings else [],
+                "units": [{
+                    "name": unit.__class__.__name__,
+                    "hp": unit.hp,
+                    "position": unit.position
+                } for unit in player.units] if player.units else []
+            }
+            game_data["players"].append(player_data)
+        return json.dumps(game_data, indent=4)
+
+    def save_state(self, filename): 
+      """Sauvegarde l'état du jeu"""
+      import pickle
+      with open(filename, 'wb') as f:
+        pickle.dump(self, f)
+
+    def load_state(self, filename):
+      """Charge l'état du jeu"""
+      import pickle
+      try:
+        with open(filename, 'rb') as f:
+          loaded_game = pickle.load(f)
+          self.__dict__.update(loaded_game.__dict__)
+      except FileNotFoundError:
+          print("No save file to load")
