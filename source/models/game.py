@@ -44,11 +44,11 @@ STARTING_CONDITIONS = {
 }
 
 class Game:
-    def __init__(self, width, height, starting_condition="Maigre", map_type="default"):
+    def __init__(self, width, height, starting_condition="Maigre", map_type="default", strategy_player1="economic", strategy_player2="economic"):
         self.map = Map(width, height)
         self.players = []
-        self.add_player(Player(1), starting_condition)
-        self.add_player(Player(2), starting_condition)
+        self.add_player(Player(1,strategy_player1), starting_condition)
+        self.add_player(Player(2,strategy_player2), starting_condition)
         self.map_type = map_type
         self.map.add_resources(self.map_type)
 

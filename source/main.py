@@ -55,9 +55,11 @@ def main():
         map_type = menu_action.get("map_type", "default")
         starting_condition = menu_action.get("starting_condition", "Maigre")
         width, height = MAP_SIZES[map_size]
-        game = Game(width, height, starting_condition, map_type)
+        strategy_player1 = "economic"
+        strategy_player2 = "aggressive"
+        game = Game(width, height, starting_condition, map_type, strategy_player1, strategy_player2)
     else:
-        game = Game(200, 200, "Moyenne", "default")
+        game = Game(200, 200, "Moyenne", "default", "economic", "aggressive")
 
     camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT, game.map.width, game.map.height)
 
@@ -99,8 +101,9 @@ def main():
                                 map_type = menu_action.get("map_type", "default")
                                 starting_condition = menu_action.get("starting_condition", "Maigre")
                                 width, height = MAP_SIZES[map_size]
-                                game = Game(width, height, starting_condition, map_type)
-                                game.players[0].add_building("Farm", position=(5, 5))  # Ajout d'une ferme pour le joueur 1
+                                strategy_player1 = "economic"
+                                strategy_player2 = "aggressive"
+                                game = Game(width, height, starting_condition, map_type, strategy_player1, strategy_player2)
                                 camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT, game.map.width, game.map.height)
                                 game.map.add_resources(game.map_type)
                                 player1_thread = threading.Thread(target=player_play_turn, args=(game.players[0], game, clock, stop_event))
