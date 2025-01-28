@@ -30,13 +30,14 @@ def initialize_game() -> tuple:
 
     return screen, clock, font, TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT
 
-def player_collect_resources(player, game_map, clock):
-    while True:
+def player_play_turn(player, game, clock, stop_event):
+    while not stop_event.is_set():
         try:
-            player.send_villager_to_collect(game_map, clock)
+            player.play_turn(game, clock)
         except ValueError as e:
             print(e)
-            break
+        except Exception as e:
+            print(f"Exception in player_play_turn: {e}")
 
 def main():
     screen, clock, font, TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT = initialize_game()
@@ -47,8 +48,9 @@ def main():
 
     game.map.add_resources(game.map_type)
     
-    player1_thread = threading.Thread(target=player_collect_resources, args=(game.players[0], game.map, clock))
-    player2_thread = threading.Thread(target=player_collect_resources, args=(game.players[1], game.map, clock))
+    stop_event = threading.Event()
+    player1_thread = threading.Thread(target=player_play_turn, args=(game.players[0], game, clock, stop_event))
+    player2_thread = threading.Thread(target=player_play_turn, args=(game.players[1], game, clock, stop_event))
 
     player1_thread.start()
     player2_thread.start()
@@ -64,12 +66,19 @@ def main():
         camera_x, camera_y = camera.scroll.x, camera.scroll.y
 
         game_view.render_game(game.map, camera_x, camera_y, clock, game.players)
-        #game_view.render_minimap(game.map, game.players)
+        game_view.render_minimap(game.map, game.players)
 
         pygame.display.flip()
         
         clock.tick(60)
+
+        if game.check_game_over():
+            running = False
+            print("Game Over")
     
+    stop_event.set()
+    player1_thread.join()
+    player2_thread.join()
     pygame.quit()
 
 if __name__ == "__main__":

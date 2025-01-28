@@ -29,6 +29,6 @@ class TownCenter(Building):
                 x, y = self.position[0] + dx, self.position[1] + dy
                 if 0 <= x < map.width and 0 <= y < map.height:
                     tile = map.get_tile(x, y)
-                    if tile.occupant is None:
+                    if tile.occupant is None or isinstance(tile.occupant, list):
                         return (x, y)
         return None

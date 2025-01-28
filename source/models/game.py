@@ -125,5 +125,13 @@ class Game:
         for player in self.players:
             print(player)
 
+    def check_game_over(self):
+        for player in self.players:
+            if not player.buildings:
+                return True
+            if not player.units and player.resources[ResourceType.FOOD] < 50:
+                return True
+        return False
+
     def __repr__(self):
         return (f"Game(map={self.map}, players={len(self.players)})")

@@ -18,27 +18,34 @@ class Unit:
         self.offset_x = offset_x
         self.offset_y = offset_y
         self.animation_speed = animation_speed
+        self.player_id = None
 
     def __repr__(self):
         return (f"Unit(name={self.name}, hp={self.hp}, attack={self.attack}, "
                 f"speed={self.speed}, range={self.range}, position={self.position}, "
                 f"symbol={self.symbol}, status={self.status})")
 
-    def attack_target(self, target, map, player):
+    def attack_target(self, target, map, enemy_player):
         if self.hp <= 0 or target.hp <= 0:
             raise ValueError("One of the units is already dead")
-        if abs(self.position[0] - target.position[0]) > 1 or abs(self.position[1] - target.position[1]) > 1:
-            raise ValueError("Target is not adjacent")
+        if abs(self.position[0] - target.position[0]) > self.range or abs(self.position[1] - target.position[1]) > self.range:
+            raise ValueError("Target is out of range")
         target.hp -= self.attack
         if target.hp <= 0:
             target.hp = 0
             if isinstance(target, Unit):
                 map.remove_unit(target)
-                player.remove_unit(target)
+                enemy_player.remove_unit(target)
             elif isinstance(target, Building):
                 map.remove_building(target)
-                player.remove_building(target)
+                enemy_player.remove_building(target)
         self.status = Status.ATTACKING  # Update status to attacking
+        self.path = []  # Stop moving
+        if isinstance(target, Unit):
+            target.path = []  # Stop moving
+            
+        print(f"{self.name} attacked {target.name} for {self.attack} damage")
+        print(f"{target.name} has {target.hp} HP left")
 
     @staticmethod
     def heuristic(a, b):

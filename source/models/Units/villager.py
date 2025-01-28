@@ -14,27 +14,6 @@ class Villager(Unit):
         self.resource_collected = 0
         self.collection_rate = 25 # 25 resources per minute
 
-    def build(self, building: Building, map, player, num_villagers=1):
-        if not self._is_adjacent_to_building_site(building):
-            self.move_adjacent_to_building_site(map, building)
-        
-        for resource, amount in building.cost.items():
-            if player.resources.get(resource, 0) < amount:
-                raise ValueError(f"Not enough {resource} to build {building.name}")
-
-        nominal_time = building.build_time
-        actual_time = 3 * nominal_time / (num_villagers + 2)
-        if self._can_place_building(building, map):
-            for _ in range(int(actual_time)):
-                # Simulate building time
-                print("building...")
-                pass
-            map.add_building(building)
-            for resource, amount in building.cost.items():
-                player.resources[resource] -= amount
-        else:
-            raise ValueError("Cannot place building at the specified location")
-
     def move_adjacent_to_building_site(self, map, building: Building):
         self.move_adjacent_to(map, building)
 
@@ -66,7 +45,7 @@ class Villager(Unit):
         for y in range(map.height):
             for x in range(map.width):
                 tile = map.get_tile(x, y)
-                if isinstance(tile.occupant, (TownCenter, Camp)):
+                if isinstance(tile.occupant, (TownCenter, Camp)) and tile.occupant.player_id == self.player_id:
                     distance = math.sqrt((self.position[0] - x) ** 2 + (self.position[1] - y) ** 2)
                     if distance < min_distance:
                         min_distance = distance
@@ -81,7 +60,7 @@ class Villager(Unit):
             self.resource_tile_to_collect.resource.quantity -= amount
             if self.resource_tile_to_collect.resource.quantity <= 0:
                 self.resource_tile_to_collect.resource = None
-            print(f"{self} collected {amount} from {self.resource_tile_to_collect}")
+            # print(f"{self} collected {amount} from {self.resource_tile_to_collect}")
             self.resource_tile_to_collect = None
         else:
             raise ValueError("Villager is not adjacent to the resource tile or resource tile is empty")
@@ -91,11 +70,11 @@ class Villager(Unit):
         for x, y in adjacent_tiles:
             if 0 <= x < map.width and 0 <= y < map.height:
                 tile = map.get_tile(x, y)
-                if isinstance(tile.occupant, (TownCenter, Camp)):
+                if isinstance(tile.occupant, (TownCenter, Camp)) and tile.occupant.player_id == self.player_id:
                     collected = self.resource_collected
                     player.add_resource(self.resource_collected_type, collected)
                     self.resource_collected = 0
-                    print(f"{self} dropped {collected} resources at {tile}")
+                    # print(f"{self} dropped {collected} resources at {tile}")
                     return collected
         raise ValueError("Villager is not adjacent to a TownCenter or Camp")
 
