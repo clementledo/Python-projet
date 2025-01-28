@@ -231,4 +231,3 @@ class Villager(Unit):
 
     def collect_resource(self, resource_type):
         self.task = resource_type  # Set the task attribute when collecting a resource
-        # ... existing code for collecting resources ...
