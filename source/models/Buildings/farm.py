@@ -7,5 +7,4 @@ class Farm(Building):
         
         self.offset_x = 62
         self.offset_y = 0
-        
         self.cost = {ResourceType.WOOD: 60}

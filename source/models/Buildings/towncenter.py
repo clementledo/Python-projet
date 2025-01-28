@@ -13,7 +13,7 @@ class TownCenter(Building):
         from models.Units.villager import Villager  # Local import to avoid circular import
         if player.resources[ResourceType.FOOD] < 50:
             raise ValueError("Not enough Food to create a Villager")
-        time.sleep(2.5)  # Simulate 25 seconds spawn time
+        time.sleep(25)  # Simulate 25 seconds spawn time
         spawn_position = self._find_spawn_position(map)
         if spawn_position:
             villager = Villager(position=spawn_position)

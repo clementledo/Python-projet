@@ -1,4 +1,5 @@
 from models.Buildings.building import Building
+from models.Resources.resource_type import ResourceType
 import math
 
 class Keep(Building):
@@ -6,6 +7,7 @@ class Keep(Building):
         super().__init__(name="Keep", build_time=80, hp=800, size=(1, 1), position=position, symbol="K")
         self.attack_power = 5
         self.attack_range = 8
+        self.cost = {ResourceType.WOOD: 35 , ResourceType.GOLD: 125}
 
     def attack(self, target):
         if self.hp <= 0 or target.hp <= 0:

@@ -7,7 +7,13 @@ from models.Buildings.farm import Farm
 from models.Buildings.barrack import Barrack
 import threading
 from views.menu import main_menu, pause_menu, settings_menu, load_menu, save_menu
-import pygame
+import webbrowser
+import os
+import http.server
+import socketserver
+
+PORT = 8000 # Define the port
+running_server = False # Define a global variable to verify that the server is running
 
 def initialize_game() -> tuple:
     """Initialize the game and return essential components."""
@@ -33,6 +39,15 @@ def player_play_turn(player, game, clock, stop_event):
             print(e)
         except Exception as e:
             print(f"Exception in player_play_turn: {e}")
+
+def start_server():
+    """Start the local HTTP server in a separate thread."""
+    global running_server
+    running_server = True
+    Handler = http.server.SimpleHTTPRequestHandler
+    with socketserver.TCPServer(("", PORT), Handler) as httpd:
+      print(f"Serving at port http://localhost:{PORT}")
+      httpd.serve_forever()
 
 def main():
     screen, clock, font, TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT = initialize_game()
@@ -71,6 +86,10 @@ def main():
 
     player1_thread.start()
     player2_thread.start()
+
+    server_thread = threading.Thread(target=start_server)
+    server_thread.daemon = True  # The thread will close when the main thread close
+    server_thread.start()
 
     running = True
     paused = False
@@ -127,6 +146,11 @@ def main():
                         game_view.show_resource_ui = not game_view.show_resource_ui
                 elif event.key == pygame.K_m:
                         game_view.show_minimap = not game_view.show_minimap
+                elif event.key == pygame.K_TAB:
+                    with open('game_data.json', 'w') as f:
+                        f.write(game.to_json())
+                    if running_server :
+                      webbrowser.open_new_tab(f"http://localhost:{PORT}")
 
         if not paused:
             camera.handle_input()
@@ -137,6 +161,9 @@ def main():
         pygame.display.flip()
 
         clock.tick(150)
+
+    if running_server :
+      server_thread.join()
     
     pygame.quit()
 
