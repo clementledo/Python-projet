@@ -1,6 +1,8 @@
 from models.Buildings.building import Building
 from models.Units.status import Status
 import math
+from models.Resources.resource_type import ResourceType
+from models.Buildings.farm import Farm
 
 class Unit:
     def __init__(self, name, hp, attack, speed, range=1, position=(0, 0), symbol="", offset_x=0, offset_y=0, animation_speed = 5):
@@ -77,9 +79,9 @@ class Unit:
 
             for next in self.neighbors(current, map):
                 tile = map.get_tile(next[0], next[1])
-                if tile.is_occupied() and not isinstance(tile.occupant, list) and not tile.occupant.walkable:
+                if tile.is_occupied() and not isinstance(tile.occupant, list) and not tile.occupant.walkable and not isinstance(tile.occupant, Farm):
                     continue
-                if tile.has_resource():
+                if tile.has_resource() and tile.resource.type != ResourceType.FOOD:
                     continue
                 new_cost = cost_so_far[current] + self.heuristic(current, next)
                 if next not in cost_so_far or new_cost < cost_so_far[next]:
@@ -142,7 +144,7 @@ class Unit:
                 tile = map.get_tile(next[0], next[1])
                 if tile.is_occupied() and not isinstance(tile.occupant, list) and not tile.occupant.walkable:
                     continue
-                if tile.has_resource():
+                if tile.has_resource() and tile.resource.type != ResourceType.FOOD:
                     continue
                 new_cost = cost_so_far[current] + self.heuristic(current, next)
                 if next not in cost_so_far or new_cost < cost_so_far[next]:

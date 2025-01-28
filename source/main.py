@@ -143,6 +143,10 @@ def main():
         pygame.display.flip()
 
         clock.tick(150)
+        
+        if game.check_game_over():
+            print("Game Over")
+            running = False
     
     pygame.quit()
 

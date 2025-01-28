@@ -54,8 +54,12 @@ class Map:
                 self.grid[y][x].occupant = [unit]
             elif isinstance(self.grid[y][x].occupant, list):
                 self.grid[y][x].occupant.append(unit)
+            elif isinstance(self.grid[y][x].occupant, Building) and self.grid[y][x].occupant.walkable:
+                if not isinstance(self.grid[y][x].occupant, list):
+                    self.grid[y][x].occupant = [self.grid[y][x].occupant]
+                self.grid[y][x].occupant.append(unit)
             else:
-                raise ValueError("Tile is already occupied by a building")
+                raise ValueError("Tile is already occupied by a non-walkable building")
         else:
             raise ValueError("Coordinates out of bounds")
 
