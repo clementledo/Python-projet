@@ -99,7 +99,11 @@ class AssetManager:
         try:
             self.building_sprites['Town Centre'] = pygame.image.load('assets/Buildings/town_center.png').convert_alpha()
             
-            self.building_sprites['Farm'] = pygame.image.load('assets/Buildings/farm.jpg').convert_alpha()
+            original_stable = pygame.image.load('assets/Buildings/farm.png').convert_alpha()
+            scaled_width = int(original_stable.get_width() * 0.8)
+            scaled_height = int(original_stable.get_height() * 0.8)
+            self.building_sprites['Farm'] = pygame.transform.scale(original_stable, (scaled_width, scaled_height))
+
 
             self.building_sprites['House'] = pygame.image.load('assets/Buildings/House.png').convert_alpha()
 
