@@ -99,11 +99,12 @@ class Map:
                 else:
                     print('.', end=' ')
             print()
+    
 
     def add_resources(self, map_type="default"):
-        if map_type == "default":
+        if map_type == "ressources_generales":
             self._generate_default_resources()
-        elif map_type == "central_gold":
+        elif map_type == "centre_ressources":
             self._generate_central_gold_resources()
         else:
             raise ValueError("Unknown map type")
@@ -111,7 +112,7 @@ class Map:
     def _generate_default_resources(self):
         for y in range(self.height):
             for x in range(self.width):
-                if random.random() < 0.05:  # 10% chance to place a resource
+                if random.random() < 0.03:  # 10% chance to place a resource
                     if self.grid[y][x].occupant is None:
                         resource_type = random.choice([ResourceType.WOOD, ResourceType.GOLD])
                         if resource_type == ResourceType.GOLD:
@@ -126,9 +127,9 @@ class Map:
         for y in range(self.height):
             for x in range(self.width):
                 if abs(x - center_x) < radius_x and abs(y - center_y) < radius_y:
-                    if random.random() < 0.3:  # 30% chance to place gold
+                    if random.random() < 0.05:  # 30% chance to place gold
                         if self.grid[y][x].occupant is None:
                             self.grid[y][x].resource = Resource(ResourceType.GOLD, 800)
-                elif random.random() < 0.1:  # 10% chance to place other resources
+                elif random.random() < 0.02:  # 10% chance to place other resources
                     if self.grid[y][x].occupant is None:
                         self.grid[y][x].resource = Resource(ResourceType.WOOD, 100)

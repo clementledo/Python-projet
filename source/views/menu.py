@@ -1,4 +1,6 @@
+import os
 import pygame
+from models.game import Game  # Adjust the import path as necessary
 
 def main_menu(screen, game_state):
     """Main menu display and handling"""
@@ -45,9 +47,7 @@ def main_menu(screen, game_state):
 
         pygame.display.flip()
 
-    return "quit"
-
-def pause_menu(screen, game_state):
+def pause_menu(screen, game):
     """
     Affiche le menu de pause.
     Retourne une action basée sur l'entrée utilisateur.
@@ -68,7 +68,8 @@ def pause_menu(screen, game_state):
     # Pre-calculate text positions and surfaces
     for button in buttons:
         text_surface = font.render(button["label"], True, (255, 255, 255))
-        text_rect = text_surface.get_rect(center=button["rect"].center)  # Use .center for simplicity
+        text_rect = text_surface.get_rect(center=(button["rect"].x + button["rect"].width // 2, 
+                                                 button["rect"].y + button["rect"].height // 2))
         button["text_surface"] = text_surface
         button["text_rect"] = text_rect
         
@@ -78,25 +79,25 @@ def pause_menu(screen, game_state):
 
     running = True
     while running:
-        # Rendre le fond semi-transparent
-        screen.blit(bg_image,(0,0))
-        overlay = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
-        #overlay.fill((0, 0, 0.5, 10))  # Semi-transparent noir
         screen.blit(overlay, (0, 0))
+        screen.blit(bg_image, (0, 0))
 
-        # Gérer les événements
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return "quit"
-
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Clic gauche
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 for button in buttons:
                     if button["rect"].collidepoint(event.pos):
                         if button["action"] == "save":
-                            game_state.save_state("save_game.pkl")  # Sauvegarde
+                            save_filename = save_menu(screen)
+                            if save_filename:
+                                game.save_game(save_filename)
                         elif button["action"] == "load":
-                            game_state.load_state("save_game.pkl")  # Chargement
-                        return button["action"]
+                            game_state = load_menu(screen)
+                            #return "load" if game_state == "load" else "resume"
+                            
+                        else:
+                            return button["action"]
 
         for button in buttons:
             pygame.draw.rect(screen, (90, 42, 42), button["rect"])
@@ -150,7 +151,7 @@ def settings_menu(screen):
         return buttons
 
     buttons = create_buttons([
-        {"label": "Start", "action": "start_game", "rect": pygame.Rect(670, 1020, 200, 50)},
+        {"label": "Start", "action": "start_game", "rect": pygame.Rect(670, 980, 200, 50)},
         {"label": "Back", "action": "back", "rect": pygame.Rect(890, 1020, 200, 50)}
     ])
 
@@ -229,4 +230,141 @@ def settings_menu(screen):
 
         pygame.display.flip()
 
+    return "quit"
 
+def load_menu(screen):
+    font = pygame.font.SysFont("Cinzel", 48)
+    save_files = [f for f in os.listdir('save_games') if f.endswith('.pkl')]
+
+    buttons = []
+    for i, save_file in enumerate(save_files):
+        rect = pygame.Rect(670, 200 + i * 60, 200, 50)
+        buttons.append({"label": save_file, "action": save_file, "rect": rect})
+
+        back_button = {"label": "Back", "rect": pygame.Rect(790, 570, 200, 50)}
+
+    running = True
+    while running:
+        screen.fill((0, 0, 0))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return "quit"
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                for button in buttons:
+                    if button["rect"].collidepoint(event.pos):
+                        return button["action"]
+                
+
+        for button in buttons:
+            text_surface = font.render(button["label"], True, (255, 255, 255))
+            text_rect = text_surface.get_rect(center=(button["rect"].x + button["rect"].width // 2, 
+                                                      button["rect"].y + button["rect"].height // 2))
+            pygame.draw.rect(screen, (90, 42, 42), button["rect"])
+            screen.blit(text_surface, text_rect)
+
+        pygame.display.flip()
+
+    return "quit"
+
+def get_save_filename(screen):
+    font = pygame.font.SysFont("Cinzel", 48)
+    input_box = pygame.Rect(670, 400, 200, 50)
+    color_inactive = pygame.Color('lightskyblue3')
+    color_active = pygame.Color('dodgerblue2')
+    color = color_inactive
+    active = False
+    text = ''
+    done = False
+
+    while not done:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return None
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if input_box.collidepoint(event.pos):
+                    active = not active
+                else:
+                    active = False
+                color = color_active if active else color_inactive
+            elif event.type == pygame.KEYDOWN:
+                if active:
+                    if event.key == pygame.K_RETURN:
+                        done = True
+                    elif event.key == pygame.K_BACKSPACE:
+                        text = text[:-1]
+                    else:
+                        text += event.unicode
+
+        screen.fill((0, 0, 0))
+        txt_surface = font.render(text, True, color)
+        width = max(200, txt_surface.get_width() + 10)
+        input_box.w = width
+        screen.blit(txt_surface, (input_box.x + 5, input_box.y + 5))
+        pygame.draw.rect(screen, color, input_box, 2)
+
+        pygame.display.flip()
+
+    return text + '.pkl'
+
+def save_menu(screen):
+    font = pygame.font.SysFont("Cinzel", 48)
+    input_box = pygame.Rect(670, 400, 400, 50)
+    color_inactive = pygame.Color('lightskyblue3')
+    color_active = pygame.Color('dodgerblue2')
+    color = color_inactive
+    active = False
+    text = ''
+    done = False
+
+    save_button = {"label": "Save", "rect": pygame.Rect(670, 500, 200, 50)}
+    cancel_button = {"label": "Cancel", "rect": pygame.Rect(880, 500, 200, 50)}
+
+    while not done:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return None
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if input_box.collidepoint(event.pos):
+                    active = not active
+                else:
+                    active = False
+                color = color_active if active else color_inactive
+
+                if save_button["rect"].collidepoint(event.pos):
+                    return text + '.pkl'
+                elif cancel_button["rect"].collidepoint(event.pos):
+                    return None
+
+            elif event.type == pygame.KEYDOWN:
+                if active:
+                    if event.key == pygame.K_RETURN:
+                        done = True
+                    elif event.key == pygame.K_BACKSPACE:
+                        text = text[:-1]
+                    else:
+                        text += event.unicode
+
+        screen.fill((0, 0, 0))
+        txt_surface = font.render(text, True, color)
+        width = max(400, txt_surface.get_width() + 10)
+        input_box.w = width
+        screen.blit(txt_surface, (input_box.x + 5, input_box.y + 5))
+        pygame.draw.rect(screen, color, input_box, 2)
+
+        # Draw Save and Cancel buttons
+        save_text_surface = font.render(save_button["label"], True, (255, 255, 255))
+        save_text_rect = save_text_surface.get_rect(center=(save_button["rect"].x + save_button["rect"].width // 2, 
+                                                            save_button["rect"].y + save_button["rect"].height // 2))
+        pygame.draw.rect(screen, (90, 42, 42), save_button["rect"])
+        screen.blit(save_text_surface, save_text_rect)
+
+        cancel_text_surface = font.render(cancel_button["label"], True, (255, 255, 255))
+        cancel_text_rect = cancel_text_surface.get_rect(center=(cancel_button["rect"].x + cancel_button["rect"].width // 2, 
+                                                                cancel_button["rect"].y + cancel_button["rect"].height // 2))
+        pygame.draw.rect(screen, (90, 42, 42), cancel_button["rect"])
+        screen.blit(cancel_text_surface, cancel_text_rect)
+
+        pygame.display.flip()
+
+    return text + '.pkl'

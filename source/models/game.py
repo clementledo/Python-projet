@@ -6,7 +6,14 @@ from models.Units.villager import Villager
 from models.Buildings.archery_range import ArcheryRange
 from models.Buildings.stable import Stable
 from models.Resources.resource_type import ResourceType
+import pickle
+import os
 
+MAP_SIZES = {
+    "Small": (120, 120),
+    "Medium": (200, 200),
+    "Large": (300, 300)
+}
 
 STARTING_CONDITIONS = {
     "Maigre": {
@@ -124,6 +131,18 @@ class Game:
         self.map.display()
         for player in self.players:
             print(player)
+
+    def save_game(self, filename):
+        os.makedirs('save_games', exist_ok=True)
+        filepath = os.path.join('save_games', filename)
+        with open(filepath, 'wb') as f:
+            pickle.dump(self, f)
+
+    @staticmethod
+    def load_game(filename):
+        filepath = os.path.join('save_games', filename)
+        with open(filepath, 'rb') as f:
+            return pickle.load(f)
 
     def __repr__(self):
         return (f"Game(map={self.map}, players={len(self.players)})")
