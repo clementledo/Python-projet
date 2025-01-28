@@ -3,15 +3,6 @@ from views.game_view import GameView
 from views.assets_manager import AssetManager
 from views.camera import Camera
 from models.game import Game
-from models.Buildings.farm import Farm
-from models.Buildings.house import House
-from models.Buildings.camp import Camp
-from models.Buildings.keep import Keep
-from models.Units.archer import Archer
-from models.Units.horseman import Horseman
-from models.Units.swordsman import Swordsman
-from models.Units.villager import Villager
-import random
 import threading
 
 def initialize_game() -> tuple:
@@ -59,16 +50,20 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_p:
+                    game_view.show_resource_ui = not game_view.show_resource_ui # Modifier la variable si "p" est pressé
+                if event.key == pygame.K_m:
+                    game_view.show_minimap = not game_view.show_minimap  # Modifier la variable si "m" est pressé
 
         camera.handle_input()
         camera_x, camera_y = camera.scroll.x, camera.scroll.y
 
         game_view.render_game(game.map, camera_x, camera_y, clock, game.players)
-        #game_view.render_minimap(game.map, game.players)
 
         pygame.display.flip()
-        
-        clock.tick(60)
+
+        clock.tick(150)
     
     pygame.quit()
 
