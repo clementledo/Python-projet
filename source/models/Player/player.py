@@ -1,14 +1,20 @@
-from models.Buildings.building import Building
-from models.Units.unit import Unit
-from models.Buildings.towncenter import TownCenter
-from models.Units.villager import Villager
-from models.Resources.resource_type import ResourceType
-from models.Buildings.house import House
-import math
 import random
-from models.Buildings.farm import Farm
 from concurrent.futures import ThreadPoolExecutor
 import time
+
+from models.Units.unit import Unit
+from models.Units.villager import Villager
+
+from models.Buildings.building import Building
+from models.Buildings.towncenter import TownCenter
+from models.Buildings.house import House
+from models.Buildings.barrack import Barrack
+from models.Buildings.farm import Farm
+from models.Buildings.keep import Keep
+from models.Buildings.camp import Camp
+
+from models.Resources.resource_type import ResourceType
+
 
 class Player:
     def __init__(self, player_id, general_strategy="economic"):
@@ -122,6 +128,76 @@ class Player:
         else:
             raise ValueError("No TownCenter available to spawn a Villager")
 
+    # Add a method to build a building
+
+    def build(self, building: Building, map, villagers, clock):
+        if not villagers:
+            raise ValueError("No villagers available to build")
+        nominal_time = building.build_time
+        actual_time = 3 * nominal_time / (len(villagers) + 2)
+        start_time = time.time()
+        
+        with ThreadPoolExecutor(max_workers=len(villagers)) as executor:
+            futures = []
+            for villager in villagers:
+                futures.append(executor.submit(self._move_villager_to_building_site, villager, map, building, clock))
+            for future in futures:
+                try:
+                    future.result()
+                except Exception as e:
+                    print(f"Exception in thread: {e}")
+
+        while time.time() - start_time < actual_time:
+            time.sleep(0.1)  # Simulate building time
+        map.add_building(building)
+        self.add_building(building)
+        print(f"{building.name} built at {building.position}")
+
+    def _move_villager_to_building_site(self, villager, map, building, clock):
+        villager.move_adjacent_to_building_site(map, building)
+        while villager.path:
+            villager.update_position()
+            clock.tick(60)
+
+    def send_units_to_build(self, building: Building, map, clock):
+        # Find a valid position near existing buildings
+        position = self._find_valid_building_position(map, building.size)
+        if position:
+            building.position = position
+            # Select villagers to build
+            available_villagers = [unit for unit in self.units if isinstance(unit, Villager)]
+            if available_villagers:
+                print(f"Sending {len(available_villagers)} villagers to build {building.name}")
+                num_villagers = min(len(available_villagers), 5)  # Limit the number of villagers to 5
+                selected_villagers = random.sample(available_villagers, num_villagers)
+                self.build(building, map, selected_villagers, clock)
+            else:
+                raise ValueError("No villagers available to build")
+        else:
+            raise ValueError("No valid position available to build")
+
+    def _find_valid_building_position(self, map, size):
+        for building in self.buildings:
+            for dx in range(-5, 6):
+                for dy in range(-5, 6):
+                    x, y = building.position[0] + dx, building.position[1] + dy
+                    if 0 <= x < map.width and 0 <= y < map.height:
+                        if self._can_place_building(map, x, y, size):
+                            return (x, y)
+        return None
+
+    def _can_place_building(self, map, x, y, size):
+        if x + size[0] > map.width or y + size[1] > map.height:
+            return False
+        for i in range(size[1]):
+            for j in range(size[0]):
+                tile = map.get_tile(x + j, y + i)
+                if tile.occupant is not None or tile.has_resource():
+                    return False
+        return True
+    
+    # Add a method to play a turn
+
     def play_turn(self, game, clock):
         strategy = self._choose_strategy()
         if strategy == "economic":
@@ -130,14 +206,23 @@ class Player:
             self._aggressive_strategy(game, clock)
 
     def _economic_strategy(self, game, clock):
-        self.send_villager_to_collect(game.map, clock)
-        if self.resources[ResourceType.FOOD] >= 50 and self.population < self.max_population:
-            self.create_villager(game.map)
-        self._defend_buildings(game, clock)
+        # self.send_villager_to_collect(game.map, clock)
+        # if self.resources[ResourceType.FOOD] >= 50 and self.population < self.max_population:
+        #     self.create_villager(game.map)
+        # self._defend_buildings(game, clock)
+        self.send_units_to_build(Camp(), game.map, clock)
 
     def _aggressive_strategy(self, game, clock):
         self.send_units_to_attack(game, clock)
         self._defend_buildings(game, clock)
+        
+    def _choose_strategy(self):
+        if self.general_strategy == "economic":
+            return random.choices(["economic", "aggressive"], [0.7, 0.3])[0]
+        else:
+            return random.choices(["economic", "aggressive"], [0.3, 0.7])[0]
+        
+    # Add a method to defend buildings
 
     def _defend_buildings(self, game, clock):
         for building in self.buildings:
@@ -177,12 +262,6 @@ class Player:
                         clock.tick(60)
         except Exception as e:
             print(f"Exception while defending: {e}")
-
-    def _choose_strategy(self):
-        if self.general_strategy == "economic":
-            return random.choices(["economic", "aggressive"], [0.7, 0.3])[0]
-        else:
-            return random.choices(["economic", "aggressive"], [0.3, 0.7])[0]
        
     def __repr__(self):
         return (f"Player(id={self.player_id}, buildings={len(self.buildings)}, "
