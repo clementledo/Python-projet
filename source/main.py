@@ -3,12 +3,9 @@ from views.game_view import GameView
 from views.assets_manager import AssetManager
 from views.camera import Camera
 from models.game import Game, MAP_SIZES
-from models.Buildings.farm import Farm
-from models.Buildings.barrack import Barrack
 import threading
 from views.menu import main_menu, pause_menu, settings_menu, load_menu, save_menu
 import webbrowser
-import os
 import http.server
 import socketserver
 

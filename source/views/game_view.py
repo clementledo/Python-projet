@@ -314,15 +314,20 @@ class GameView:
                     occupant = tile.occupant
                     if isinstance(occupant, Building):
                          if any(p.player_id == 1 for p in players if occupant in p.buildings): # check player id
-                            building_color = (0, 255, 0)
+                            building_color = (0, 0, 255)
                          elif any(p.player_id == 2 for p in players if occupant in p.buildings):
                             building_color = (255, 0, 0)
                          else:
                             building_color = (200, 200, 200)
                          pygame.draw.rect(self.minimap_surface, building_color, (mini_x, mini_y, 5, 5)) # Taille des buildings
                     elif isinstance(occupant, Unit) or isinstance(occupant, list):
-                        unit_color = (0, 0, 255) if any(p.player_id == 1 for p in players if occupant in p.units) else (255, 255, 0) if any(p.player_id == 2 for p in players if occupant in p.units) else (200, 200, 200)
-                        pygame.draw.circle(self.minimap_surface, unit_color, (int(mini_x + 3), int(mini_y + 3)), 4) # Dessiner un cercle (point) pour les unités
+                            if isinstance(occupant, list):
+                                for unit in occupant:
+                                    unit_color = (255, 165, 0) if any(p.player_id == 2 for p in players if unit in p.units) else (128, 0, 128)  # Orange pour joueur 2, Violet sinon
+                                    pygame.draw.circle(self.minimap_surface, unit_color, (int(mini_x + 3), int(mini_y + 3)), 4)  # Dessiner un cercle pour chaque unité
+                            else:
+                                unit_color = (255, 165, 0) if any(p.player_id == 2 for p in players if occupant in p.units) else (128, 0, 128)  # Orange pour joueur 2, Violet sinon
+                                pygame.draw.circle(self.minimap_surface, unit_color, (int(mini_x + 3), int(mini_y + 3)), 4)  # Dessiner un cercle pour l'unité
 
     
     def render_minimap(self, carte, players):
