@@ -15,4 +15,3 @@ class Building:
     def __repr__(self):
         return (f"Building(name={self.name}, build_time={self.build_time}, hp={self.hp}, "
                 f"size={self.size}, position={self.position}, walkable={self.walkable} symbol={self.symbol})")
-

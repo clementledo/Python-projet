@@ -6,7 +6,8 @@ from models.game import Game, MAP_SIZES
 from models.Buildings.farm import Farm
 from models.Buildings.barrack import Barrack
 import threading
-from views.menu import main_menu, pause_menu, settings_menu, load_menu, save_menu  # Importer les fonctions de menu
+from views.menu import main_menu, pause_menu, settings_menu, load_menu, save_menu
+import pygame
 
 def initialize_game() -> tuple:
     """Initialize the game and return essential components."""
@@ -100,7 +101,6 @@ def main():
                                 starting_condition = menu_action.get("starting_condition", "Maigre")
                                 width, height = MAP_SIZES[map_size]
                                 game = Game(width, height, starting_condition, map_type)
-                                game.players[0].add_building("Farm", position=(5, 5))  # Ajout d'une ferme pour le joueur 1
                                 camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT, game.map.width, game.map.height)
                                 game.map.add_resources(game.map_type)
                                 player1_thread = threading.Thread(target=player_play_turn, args=(game.players[0], game, clock, stop_event))
@@ -124,9 +124,9 @@ def main():
                         game.save_game(save_filename)
 
                 elif event.key == pygame.K_p:
-                        game_view.show_resource_ui = not game_view.show_resource_ui # Modifier la variable si "p" est pressé
+                        game_view.show_resource_ui = not game_view.show_resource_ui
                 elif event.key == pygame.K_m:
-                        game_view.show_minimap = not game_view.show_minimap  # Modifier la variable si "m" est pressé
+                        game_view.show_minimap = not game_view.show_minimap
 
         if not paused:
             camera.handle_input()

@@ -1,0 +1,82 @@
+{
+    "players": [
+        {
+            "id": 1,
+            "buildings": [
+                {
+                    "name": "Town Centre",
+                    "hp": 1000,
+                    "position": [
+                        0,
+                        0
+                    ]
+                }
+            ],
+            "units": [
+                {
+                    "name": "Villager",
+                    "hp": 25,
+                    "position": [
+                        5,
+                        1
+                    ]
+                },
+                {
+                    "name": "Villager",
+                    "hp": 25,
+                    "position": [
+                        4,
+                        4
+                    ]
+                },
+                {
+                    "name": "Villager",
+                    "hp": 25,
+                    "position": [
+                        5,
+                        1
+                    ]
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "buildings": [
+                {
+                    "name": "Town Centre",
+                    "hp": 1000,
+                    "position": [
+                        34,
+                        34
+                    ]
+                }
+            ],
+            "units": [
+                {
+                    "name": "Villager",
+                    "hp": 25,
+                    "position": [
+                        37,
+                        30
+                    ]
+                },
+                {
+                    "name": "Villager",
+                    "hp": 25,
+                    "position": [
+                        37,
+                        30
+                    ]
+                },
+                {
+                    "name": "Villager",
+                    "hp": 25,
+                    "position": [
+                        35,
+                        33
+                    ]
+                }
+            ]
+        }
+    ]
+}
