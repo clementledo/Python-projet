@@ -19,8 +19,11 @@ class Villager(Unit):
 
     def move_adjacent_to_resource(self, map, resource_type: ResourceType):
         resource_tile = self.find_nearest_resource_tile(map, resource_type)
-        self.resource_tile_to_collect = resource_tile
-        self.move_adjacent_to(map, resource_tile)
+        if resource_tile and (not resource_tile.is_occupied() or isinstance(resource_tile.occupant, Farm)):
+            self.resource_tile_to_collect = resource_tile
+            self.move_adjacent_to(map, resource_tile)
+        else:
+            raise ValueError("No valid resource tile found or tile is occupied")
         
     def move_to_drop_resource(self, map):
         tile = self.find_nearest_town_center_camp(map)
@@ -60,7 +63,6 @@ class Villager(Unit):
             self.resource_tile_to_collect.resource.quantity -= amount
             if self.resource_tile_to_collect.resource.quantity <= 0:
                 self.resource_tile_to_collect.resource = None
-            # print(f"{self} collected {amount} from {self.resource_tile_to_collect}")
             self.resource_tile_to_collect = None
         else:
             raise ValueError("Villager is not adjacent to the resource tile or resource tile is empty")

@@ -99,11 +99,10 @@ class AssetManager:
         try:
             self.building_sprites['Town Centre'] = pygame.image.load('assets/Buildings/town_center.png').convert_alpha()
             
-            original_stable = pygame.image.load('assets/Buildings/farm.png').convert_alpha()
-            scaled_width = int(original_stable.get_width() * 0.8)
-            scaled_height = int(original_stable.get_height() * 0.8)
-            self.building_sprites['Farm'] = pygame.transform.scale(original_stable, (scaled_width, scaled_height))
-
+            original_farm = pygame.image.load('assets/Buildings/farm.png').convert_alpha()
+            scaled_width = int(original_farm.get_width() * 0.8)
+            scaled_height = int(original_farm.get_height() * 0.8)
+            self.building_sprites['Farm'] = pygame.transform.scale(original_farm, (scaled_width, scaled_height))
 
             self.building_sprites['House'] = pygame.image.load('assets/Buildings/House.png').convert_alpha()
 
@@ -276,6 +275,10 @@ class AssetManager:
             self.resource_bar_sprite = pygame.transform.scale(self.resource_bar_sprite, (600, 70))  # Increase width again
         except pygame.error as e:
             print(f"Error loading resource bar sprite: assets/UI/resource_bar.png - {e}")
+
+    def load_minimap_frame(self):
+        """Charge le sprite du cadre de la mini map."""
+        return pygame.image.load('assets/resourcecivpanel.png').convert_alpha()
 
     def apply_tint(self, image, tint_color):
         """Appliquer une teinte de couleur à une image"""

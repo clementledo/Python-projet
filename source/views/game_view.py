@@ -38,8 +38,8 @@ class GameView:
         self.unit_offsets = {} # Store offsets for each unit
         
         # Minimap related
-        self.minimap_width = 400 # Largeur
-        self.minimap_height = 200  # Hauteur (la moitié de la largeur)
+        self.minimap_width = 600 # Largeur
+        self.minimap_height = 300  # Hauteur (la moitié de la largeur)
         self.minimap_x = self.viewport_width - self.minimap_width - 10  # Position from the right
         self.minimap_y = self.viewport_height - self.minimap_height - 10  # Position from the bottom
         self.minimap_surface = pygame.Surface((self.minimap_width, self.minimap_height), pygame.SRCALPHA)
@@ -295,10 +295,9 @@ class GameView:
                 elif self.unit_animation_frames[unit][animation_type] <= 0:
                    self.animation_directions[unit][animation_type] = 1
 
-            # Add health bar drawing at the end
-            if self.show_health_bars:
-                self.draw_health_bar(self.screen, unit, iso_x, iso_y)
-
+        if self.show_health_bars:
+            self.draw_health_bar(self.screen, unit, iso_x, iso_y)
+                
     def draw_health_bar(self, surface, unit, x, y):
         """Draw a health bar proportional to unit's HP with camera zoom"""
         if not self.show_health_bars:
@@ -330,6 +329,7 @@ class GameView:
             health_ratio = unit.hp / unit.hp_max  # Using initial hp as max health
             pygame.draw.rect(surface, (0, 190, 0),
                             (pos_x, pos_y, bar_width * health_ratio, bar_height))
+
 
     def render_game(self, carte, camera_x, camera_y, clock, players):
         self.render_map(carte, camera_x, camera_y)
@@ -389,7 +389,7 @@ class GameView:
                          pygame.draw.rect(self.minimap_surface, building_color, (mini_x, mini_y, 5, 5)) # Taille des buildings
                     elif isinstance(occupant, Unit) or isinstance(occupant, list):
                         unit_color = (0, 0, 255) if any(p.player_id == 1 for p in players if occupant in p.units) else (255, 255, 0) if any(p.player_id == 2 for p in players if occupant in p.units) else (200, 200, 200)
-                        pygame.draw.circle(self.minimap_surface, unit_color, (int(mini_x + 3), int(mini_y + 3)), 2) # Dessiner un cercle (point) pour les unités
+                        pygame.draw.circle(self.minimap_surface, unit_color, (int(mini_x + 3), int(mini_y + 3)), 4) # Dessiner un cercle (point) pour les unités
 
     
     def render_minimap(self, carte, players):

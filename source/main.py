@@ -6,7 +6,14 @@ from models.game import Game, MAP_SIZES
 from models.Buildings.farm import Farm
 from models.Buildings.barrack import Barrack
 import threading
-from views.menu import main_menu, pause_menu, settings_menu, load_menu, save_menu  # Importer les fonctions de menu
+from views.menu import main_menu, pause_menu, settings_menu, load_menu, save_menu
+import webbrowser
+import os
+import http.server
+import socketserver
+
+PORT = 8000 # Define the port
+running_server = False # Define a global variable to verify that the server is running
 
 def initialize_game() -> tuple:
     """Initialize the game and return essential components."""
@@ -32,6 +39,15 @@ def player_play_turn(player, game, clock, stop_event):
             print(e)
         except Exception as e:
             print(f"Exception in player_play_turn: {e}")
+
+def start_server():
+    """Start the local HTTP server in a separate thread."""
+    global running_server
+    running_server = True
+    Handler = http.server.SimpleHTTPRequestHandler
+    with socketserver.TCPServer(("", PORT), Handler) as httpd:
+      print(f"Serving at port http://localhost:{PORT}")
+      httpd.serve_forever()
 
 def main():
     # Initialize pygame and basic setup
@@ -63,6 +79,9 @@ def main():
         map_type = menu_action.get("map_type", "default")
         starting_condition = menu_action.get("starting_condition", "Maigre")
         width, height = MAP_SIZES[map_size]
+        game = Game(width, height, starting_condition, map_type)
+    else:
+        game = Game(200, 200, "Moyenne", "default")
 
     # Create game instance
     game = Game(width, height, starting_condition, map_type, strategy_player1, strategy_player2)
@@ -79,6 +98,10 @@ def main():
 
     player1_thread.start()
     player2_thread.start()
+
+    server_thread = threading.Thread(target=start_server)
+    server_thread.daemon = True  # The thread will close when the main thread close
+    server_thread.start()
 
     running = True
     paused = False
@@ -113,9 +136,7 @@ def main():
                                 map_type = menu_action.get("map_type", "default")
                                 starting_condition = menu_action.get("starting_condition", "Maigre")
                                 width, height = MAP_SIZES[map_size]
-                                strategy_player1 = "economic"
-                                strategy_player2 = "aggressive"
-                                game = Game(width, height, starting_condition, map_type, strategy_player1, strategy_player2)
+                                game = Game(width, height, starting_condition, map_type)
                                 camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT, game.map.width, game.map.height)
                                 game.map.add_resources(game.map_type)
                                 player1_thread = threading.Thread(target=player_play_turn, args=(game.players[0], game, clock, stop_event))
@@ -139,12 +160,17 @@ def main():
                         game.save_game(save_filename)
 
                 elif event.key == pygame.K_p:
-                        game_view.show_resource_ui = not game_view.show_resource_ui # Modifier la variable si "p" est pressé
+                        game_view.show_resource_ui = not game_view.show_resource_ui
                 elif event.key == pygame.K_m:
-                        game_view.show_minimap = not game_view.show_minimap  # Modifier la variable si "m" est pressé
-                # In the main game loop, add handler for 'H' key
+                        game_view.show_minimap = not game_view.show_minimap
+                elif event.key == pygame.K_TAB:
+                    with open('game_data.json', 'w') as f:
+                        f.write(game.to_json())
+                    if running_server :
+                      webbrowser.open_new_tab(f"http://localhost:{PORT}")
                 elif event.key == pygame.K_h:
                     game_view.show_health_bars = not game_view.show_health_bars
+
 
         if not paused:
             camera.handle_input()
@@ -155,8 +181,20 @@ def main():
         pygame.display.flip()
 
         clock.tick(150)
+        
+        if game.check_game_over():
+            print("Game Over")
+            running = False
     
     pygame.quit()
+
+    if running_server:
+        server_thread.join()
+
+    # Terminate all threads
+    stop_event.set()
+    player1_thread.join()
+    player2_thread.join()
 
 if __name__ == "__main__":
     main()

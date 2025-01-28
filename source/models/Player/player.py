@@ -82,6 +82,8 @@ class Player:
                 villager.update_position()
                 clock.tick(60)
             villager.drop_resource(map, self)
+        except ValueError as e:
+            print(f"ValueError while collecting resources: {e}")
         except Exception as e:
             print(f"Exception while collecting resources: {e}")
 
@@ -279,11 +281,13 @@ class Player:
         self.send_villager_to_collect(game.map, clock)
         if self.resources[ResourceType.FOOD] >= 50 and self.population < self.max_population:
             self.create_villager(game.map)
-        if self.population + 5 >= self.max_population:
-            if TownCenter not in [type(building) for building in self.buildings] and self.resources[ResourceType.WOOD] >= 350:
-                self.send_units_to_build(TownCenter(), game.map, clock)
-            elif self.resources[ResourceType.WOOD] >= 25:
+        if self.population + 5 >= self.max_population and self.resources[ResourceType.WOOD] >= 25:
                 self.send_units_to_build(House(), game.map, clock)
+        
+        # Ensure at least 2 TownCenters
+        town_centers = [building for building in self.buildings if isinstance(building, TownCenter)]
+        if len(town_centers) < 2 and self.resources[ResourceType.WOOD] >= 350:
+            self.send_units_to_build(TownCenter(), game.map, clock)
         
         # Check if a camp is needed
         if not any(isinstance(building, Camp) for building in self.buildings) and self.resources[ResourceType.WOOD] >= 100:
@@ -300,6 +304,11 @@ class Player:
         self._defend_buildings(game, clock)
 
     def _aggressive_strategy(self, game, clock):
+        
+        # Ensure at least 2 TownCenters
+        town_centers = [building for building in self.buildings if isinstance(building, TownCenter)]
+        if len(town_centers) < 2 and self.resources[ResourceType.WOOD] >= 350:
+            self.send_units_to_build(TownCenter(), game.map, clock)
         
         if not any(isinstance(building, Barrack) for building in self.buildings) and self.resources[ResourceType.WOOD] >= 175:
             self.send_units_to_build(Barrack(), game.map, clock)
@@ -328,10 +337,20 @@ class Player:
         if len(offensive_units) >= 10:
             self.send_units_to_attack(game, clock)
         else:
-            weighted_units = offensive_units + [unit for unit in self.units if isinstance(unit, Villager)] * 0.1
+            weighted_units = offensive_units + [unit for unit in self.units if isinstance(unit, Villager)]
+            weighted_units += [unit for unit in self.units if isinstance(unit, Villager)] * int(0.1 * len(self.units))
             selected_units = random.sample(weighted_units, min(3, len(weighted_units)))
-            for unit in selected_units:
-                self._attack_target(unit, game.map, random.choice(self.units + self.buildings), game.players[1] if game.players[0] == self else game.players[0], clock)
+            enemy_player = game.players[1] if game.players[0] == self else game.players[0]
+            with ThreadPoolExecutor(max_workers=3) as executor:
+                futures = []
+                for unit in selected_units:
+                    target = random.choice(enemy_player.units + enemy_player.buildings)
+                    futures.append(executor.submit(self._attack_target, unit, game.map, target, enemy_player, clock))
+                for future in futures:
+                    try:
+                        future.result()
+                    except Exception as e:
+                        print(f"Exception in thread: {e}")
         
         self._defend_buildings(game, clock)
 
