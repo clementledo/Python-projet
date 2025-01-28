@@ -11,8 +11,8 @@ import os
 import json
 
 MAP_SIZES = {
-    "Small": (30, 30),
-    "Medium": (200, 200),
+    "Small": (20, 20),
+    "Medium": (120, 120),
     "Large": (300, 300)
 }
 
@@ -135,11 +135,20 @@ class Game:
 
     def check_game_over(self):
         for player in self.players:
+            # Condition 1: Player has no buildings left
             if not player.buildings:
                 return True
+            # Condition 2: Player has no units and insufficient resources to create new units
             if not player.units and player.resources[ResourceType.FOOD] < 50:
                 return True
+            # Condition 3: Player's TownCenter is destroyed
+            if not any(isinstance(building, TownCenter) for building in player.buildings):
+                return True
+            # Condition 4: Player's population is zero and no resources to create new units
+            if player.population == 0 and player.resources[ResourceType.FOOD] < 50:
+                return True
         return False
+
     def save_game(self, filename):
         os.makedirs('save_games', exist_ok=True)
         filepath = os.path.join('save_games', filename)
