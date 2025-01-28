@@ -20,6 +20,7 @@ class GameView:
         self.building_sprites = {}
         
         self.font = pygame.font.SysFont('Arial', 24)
+        self.small_font = pygame.font.SysFont('Arial', 16)  # Ajout d'une police plus petite
         self.decorations = []
         self.decorations_generated = False
         self.sprite_cache = {}
@@ -36,8 +37,8 @@ class GameView:
         self.unit_offsets = {} # Store offsets for each unit
         
         # Minimap related
-        self.minimap_width = 600 # Largeur
-        self.minimap_height = 300  # Hauteur (la moitié de la largeur)
+        self.minimap_width = 400 # Largeur
+        self.minimap_height = 200  # Hauteur (la moitié de la largeur)
         self.minimap_x = self.viewport_width - self.minimap_width - 10  # Position from the right
         self.minimap_y = self.viewport_height - self.minimap_height - 10  # Position from the bottom
         self.minimap_surface = pygame.Surface((self.minimap_width, self.minimap_height), pygame.SRCALPHA)
@@ -52,7 +53,10 @@ class GameView:
             ResourceType.FOOD: 150,    # Offset for FOOD from the start of the bar
             ResourceType.WOOD: 300,    # Offset for WOOD from the start of the bar
             ResourceType.GOLD: 450     # Offset for GOLD from the start of the bar
-        }
+        }  
+
+        self.show_resource_ui = True  # Show the resource UI by default
+        self.show_minimap = True # Ajouter cette variable
 
     def world_to_screen(self, x, y, camera_x, camera_y):
         tile_width = self.tile_size * 2
@@ -94,6 +98,8 @@ class GameView:
         max_x = min(max_x + padding_x, map_width - 1)
         max_y = min(max_y + padding_y, map_height - 1)
 
+        units_to_render = []  # List to store adjacent units
+
         for y in range(min_y, max_y + 1):
             for x in range(min_x, max_x + 1):
                 tile = carte.get_tile(x, y)
@@ -102,7 +108,6 @@ class GameView:
                 iso_x, iso_y = self.world_to_screen(x, y, camera_x, camera_y)
                 terrain_texture = textures.get(tile.terrain_type, textures[Terrain_type.GRASS])
                 self.screen.blit(terrain_texture, (iso_x, iso_y))
-                iso_x, iso_y = self.world_to_screen(x, y, camera_x, camera_y)
                 
                 if tile.has_resource():
                     if tile.resource.is_wood():
@@ -125,14 +130,32 @@ class GameView:
                                 offset_x = occupant.offset_x
                                 offset_y = occupant.offset_y
                                 self.screen.blit(building_sprite, (iso_bx - offset_x, iso_by - offset_y))
+                                
+                # Check for adjacent units
+                for dx in [-1, 0, 1]:
+                    for dy in [-1, 0, 1]:
+                        if dx == 0 and dy == 0:
+                            continue  # Skip the current tile
+                        adj_x, adj_y = x + dx, y + dy
+                        if 0 <= adj_x < map_width and 0 <= adj_y < map_height:
+                            adj_tile = carte.get_tile(adj_x, adj_y)
+                            if adj_tile.occupant and isinstance(adj_tile.occupant, Unit):
+                                units_to_render.append(adj_tile.occupant)
+                            elif isinstance(adj_tile.occupant, list):
+                                for unit in adj_tile.occupant:
+                                     if isinstance(unit, Unit):
+                                          units_to_render.append(unit)
 
-                if tile.occupant:
-                    if isinstance(tile.occupant, list):
-                        for unit in tile.occupant:
-                            if isinstance(unit, Unit):
-                                self.render_units(unit, carte, camera_x, camera_y)
-                    elif isinstance(tile.occupant, Unit):
-                        self.render_units(tile.occupant, carte, camera_x, camera_y)
+        self.render_adjacent_units(units_to_render, carte, camera_x, camera_y)
+
+
+    def render_adjacent_units(self, units_to_render, carte, camera_x, camera_y):
+        """Render units that are adjacent to a tile, ensuring they are drawn on top."""
+        seen = set()
+        for unit in units_to_render:
+            if unit not in seen:
+               self.render_units(unit, carte, camera_x, camera_y)
+               seen.add(unit)
 
     def render_units(self, unit, carte, camera_x, camera_y):
         """Render any unit on the map."""
@@ -229,7 +252,10 @@ class GameView:
         self.screen.blit(fps_text, (10, 10))
 
         # Render the resource UI
-        self.render_resource_ui(players)
+        if  self.show_resource_ui: # condition d'affichage des barres
+            self.render_resource_ui(players)        
+        if self.show_minimap: # condition pour la minimap
+            self.render_minimap(carte, players)
         self.dirty_rects = []
 
 
@@ -274,7 +300,7 @@ class GameView:
                          else:
                             building_color = (200, 200, 200)
                          pygame.draw.rect(self.minimap_surface, building_color, (mini_x, mini_y, 5, 5)) # Taille des buildings
-                    elif isinstance(occupant, Unit):
+                    elif isinstance(occupant, Unit) or isinstance(occupant, list):
                         unit_color = (0, 0, 255) if any(p.player_id == 1 for p in players if occupant in p.units) else (255, 255, 0) if any(p.player_id == 2 for p in players if occupant in p.units) else (200, 200, 200)
                         pygame.draw.circle(self.minimap_surface, unit_color, (int(mini_x + 3), int(mini_y + 3)), 2) # Dessiner un cercle (point) pour les unités
 
@@ -287,6 +313,15 @@ class GameView:
             self.minimap_frame_counter = 0
 
         self.screen.blit(self.minimap_surface, (self.minimap_x, self.minimap_y))
+        # Ajustement du cadre pour qu'il soit légèrement plus grand et ne coupe pas la mini map
+        frame_thickness = 3
+        pygame.draw.rect(
+            self.screen,
+            (255, 255, 255),
+            (self.minimap_x - frame_thickness, self.minimap_y - frame_thickness,
+             self.minimap_width + 2 * frame_thickness, self.minimap_height + 2 * frame_thickness),
+            frame_thickness
+        )  # Ajustement du cadre
 
     def render_resource_ui(self, players):
         """Renders the resource UI for all players."""
@@ -297,27 +332,31 @@ class GameView:
         
         for index, player in enumerate(players):
             # Calculate the y position of the resource bar
-            bar_y = ui_start_y + index * (self.resource_bar_height + self.resource_bar_spacing)
-
+            resource_bar_y = ui_start_y + index * (self.resource_bar_height * 2 + self.resource_bar_spacing)
+            info_bar_y = resource_bar_y + self.resource_bar_height
+            
             # Draw resource bar background
             if self.asset_manager.resource_bar_sprite:
-                 self.screen.blit(self.asset_manager.resource_bar_sprite, (ui_start_x, bar_y))
+                 self.screen.blit(self.asset_manager.resource_bar_sprite, (ui_start_x, resource_bar_y))
+                 self.screen.blit(self.asset_manager.resource_bar_sprite, (ui_start_x, info_bar_y))
             else:
                 # Fallback if the sprite doesn't exist
                  pygame.draw.rect(self.screen, (50, 20, 20),
-                             (ui_start_x, bar_y, 280, self.resource_bar_height))
+                             (ui_start_x, resource_bar_y, 600, self.resource_bar_height))
+                 pygame.draw.rect(self.screen, (50, 20, 20),
+                             (ui_start_x, info_bar_y, 600, self.resource_bar_height))
             
             # Calculate the positions for resource icons and texts
             
             # Display Player name
             player_text_surface = self.font.render(f"Player {player.player_id}", True, (255, 255, 0) if player.player_id == 1 else (0, 255, 255)) # Change color if player 1 or player 2
-            self.screen.blit(player_text_surface, (ui_start_x + 20, bar_y + 20)) # Display player text
+            self.screen.blit(player_text_surface, (ui_start_x + 20, resource_bar_y + 20)) # Display player text
             
             resource_types = [ResourceType.FOOD, ResourceType.WOOD, ResourceType.GOLD]  # Order of resources
             for resource_type in resource_types:
                 icon_x = ui_start_x + self.resource_offsets.get(resource_type, 0)  # Use offset from dictionary
                 text_x = icon_x + self.resource_icon_size - 50  # Offset for text after icon
-                icon_y = bar_y + self.resource_bar_height // 2 - self.resource_icon_size // 2  # Center vertically
+                icon_y = resource_bar_y + self.resource_bar_height // 2 - self.resource_icon_size // 2  # Center vertically
                 
                 # Get the resource sprite
                 resource_sprite = None
@@ -333,5 +372,29 @@ class GameView:
 
                 amount = player.resources.get(resource_type, 0)
                 text_surface = self.font.render(str(amount), True, pygame.Color('white'))
-                text_rect = text_surface.get_rect(center=(text_x + self.resource_text_offset , bar_y + self.resource_bar_height // 2))
+                text_rect = text_surface.get_rect(center=(text_x + self.resource_text_offset , resource_bar_y + self.resource_bar_height // 2))
                 self.screen.blit(text_surface, text_rect)  # Display resource amount
+            
+            # === Affichage de la seconde barre (bâtiments et unités) ===
+            
+            # === Informations sur les bâtiments
+            building_counts = {}
+            for building in player.buildings:
+                 building_name = building.name
+                 building_counts[building_name] = building_counts.get(building_name, 0) + 1
+
+            building_text = "Bâtiments : " + ", ".join([f"{name}: {count}" for name, count in building_counts.items()])
+            building_surface = self.small_font.render(building_text, True, pygame.Color('white'))  # Utilisation de la petite police
+            building_rect = building_surface.get_rect(topleft=(ui_start_x + 20, info_bar_y + 15))
+            self.screen.blit(building_surface, building_rect)
+            
+             # === Informations sur les unités
+            unit_counts = {}
+            for unit in player.units:
+                unit_name = unit.name
+                unit_counts[unit_name] = unit_counts.get(unit_name, 0) + 1
+
+            unit_text = "Unités : " + ", ".join([f"{name}: {count}" for name, count in unit_counts.items()])
+            unit_surface = self.small_font.render(unit_text, True, pygame.Color('white'))  # Utilisation de la petite police
+            unit_rect = unit_surface.get_rect(topleft=(ui_start_x + 20, info_bar_y + 35))
+            self.screen.blit(unit_surface, unit_rect)
