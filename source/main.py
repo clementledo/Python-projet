@@ -162,10 +162,11 @@ def main():
 
         clock.tick(150)
 
+    pygame.quit()
+
     if running_server :
       server_thread.join()
     
-    pygame.quit()
 
 if __name__ == "__main__":
     main()
