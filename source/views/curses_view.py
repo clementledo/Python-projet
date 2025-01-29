@@ -135,22 +135,27 @@ class CursesView:
 
     def draw_map(self):
         height, width = self.screen.getmaxyx()
-        max_y = min(self.map.height, height)
-        max_x = min(self.map.width, width // 2)
+        max_y = min(self.map.height - self.offset_y, height)
+        max_x = min(self.map.width - self.offset_x, width // 2)
 
-        for y in range(max_y):
-            for x in range(max_x):
-                tile = self.map.grid[y][x]
-                if tile.occupant:
-                    if isinstance(tile.occupant, list):
-                        unit = tile.occupant[0]
-                        color = self.color_pairs['player1'] if unit.player_id == 1 else self.color_pairs['player2']
-                        self.screen.addch(y, x*2, unit.symbol, color)
+        for screen_y in range(max_y):
+            for screen_x in range(max_x):
+                # Calculer les coordonnées réelles sur la map en tenant compte des offsets
+                map_y = screen_y + self.offset_y
+                map_x = screen_x + self.offset_x
+                
+                if 0 <= map_y < self.map.height and 0 <= map_x < self.map.width:
+                    tile = self.map.grid[map_y][map_x]
+                    if tile.occupant:
+                        if isinstance(tile.occupant, list):
+                            unit = tile.occupant[0]
+                            color = self.color_pairs['player1'] if unit.player_id == 1 else self.color_pairs['player2']
+                            self.screen.addch(screen_y, screen_x*2, unit.symbol, color)
+                        else:
+                            entity = tile.occupant
+                            color = self.color_pairs['player1'] if entity.player_id == 1 else self.color_pairs['player2']
+                            self.screen.addch(screen_y, screen_x*2, entity.symbol, color)
+                    elif tile.has_resource():
+                        self.screen.addch(screen_y, screen_x*2, tile.resource.type.value, self.color_pairs['resource'])
                     else:
-                        entity = tile.occupant
-                        color = self.color_pairs['player1'] if entity.player_id == 1 else self.color_pairs['player2']
-                        self.screen.addch(y, x*2, entity.symbol, color)
-                elif tile.has_resource():
-                    self.screen.addch(y, x*2, tile.resource.type.value, self.color_pairs['resource'])
-                else:
-                    self.screen.addch(y, x*2, '.', self.color_pairs['empty'])
+                        self.screen.addch(screen_y, screen_x*2, '.', self.color_pairs['empty'])

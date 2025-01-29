@@ -174,20 +174,16 @@ def main():
                     game_view.show_health_bars = not game_view.show_health_bars
                 elif event.key == pygame.K_F9:
                     # Pause game state
-                    paused = True
-                    # Store window state
-                    pygame_surface = screen.copy()
+                   
+                    
                     # Switch to terminal view
                     curses_view = CursesView(game.map)
-                    try:
-                        return_to_pygame = curses_view.run_display()
-                    finally:
-                        curses_view.cleanup()
                     
-                    if return_to_pygame:
-                        
-                        # Resume game
-                        paused = False
+                    curses_view.run_display()
+                
+                    curses_view.cleanup()
+                    
+                
 
         if not paused:
             camera.handle_input()
