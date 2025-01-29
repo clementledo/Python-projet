@@ -11,7 +11,7 @@ import os
 import json
 
 MAP_SIZES = {
-    "Small": (20, 20),
+    "Small": (50, 50),
     "Medium": (120, 120),
     "Large": (300, 300)
 }

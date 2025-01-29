@@ -11,6 +11,8 @@ import webbrowser
 import os
 import http.server
 import socketserver
+import curses
+from views.curses_view import CursesView
 
 PORT = 8000 # Define the port
 running_server = False # Define a global variable to verify that the server is running
@@ -58,7 +60,7 @@ def main():
     width = 200
     height = 200
     starting_condition = "Moyenne"
-    map_type = "default"
+    map_type = "ressources_generales"
     strategy_player1 = "economic"
     strategy_player2 = "aggressive"
 
@@ -170,7 +172,22 @@ def main():
                       webbrowser.open_new_tab(f"http://localhost:{PORT}")
                 elif event.key == pygame.K_h:
                     game_view.show_health_bars = not game_view.show_health_bars
-
+                elif event.key == pygame.K_F9:
+                    # Pause game state
+                    paused = True
+                    # Store window state
+                    pygame_surface = screen.copy()
+                    # Switch to terminal view
+                    curses_view = CursesView(game.map)
+                    try:
+                        return_to_pygame = curses_view.run_display()
+                    finally:
+                        curses_view.cleanup()
+                    
+                    if return_to_pygame:
+                        
+                        # Resume game
+                        paused = False
 
         if not paused:
             camera.handle_input()
@@ -180,7 +197,7 @@ def main():
 
         pygame.display.flip()
 
-        clock.tick(150)
+        clock.tick(650)
         
         if game.check_game_over():
             print("Game Over")

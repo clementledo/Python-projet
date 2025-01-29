@@ -22,7 +22,7 @@
                     "name": "Villager",
                     "hp": 25,
                     "position": [
-                        0,
+                        4,
                         4
                     ]
                 },
@@ -30,16 +30,16 @@
                     "name": "Villager",
                     "hp": 25,
                     "position": [
-                        0,
-                        5
+                        4,
+                        4
                     ]
                 },
                 {
                     "name": "Villager",
                     "hp": 25,
                     "position": [
-                        0,
-                        6
+                        4,
+                        4
                     ]
                 }
             ]
@@ -47,17 +47,25 @@
         {
             "player_id": 2,
             "resources": {
-                "GOLD": 2000,
-                "WOOD": 2000,
-                "FOOD": 2000
+                "GOLD": 2040,
+                "WOOD": 1960,
+                "FOOD": 1950
             },
             "buildings": [
                 {
                     "name": "Town Centre",
                     "hp": 1000,
                     "position": [
-                        194,
-                        194
+                        114,
+                        114
+                    ]
+                },
+                {
+                    "name": "Farm",
+                    "hp": 100,
+                    "position": [
+                        109,
+                        109
                     ]
                 }
             ],
@@ -66,24 +74,32 @@
                     "name": "Villager",
                     "hp": 25,
                     "position": [
-                        192,
-                        196
+                        113,
+                        113
                     ]
                 },
                 {
                     "name": "Villager",
                     "hp": 25,
                     "position": [
-                        191,
-                        196
+                        113,
+                        113
                     ]
                 },
                 {
                     "name": "Villager",
                     "hp": 25,
                     "position": [
-                        192,
-                        196
+                        113,
+                        113
+                    ]
+                },
+                {
+                    "name": "Villager",
+                    "hp": 25,
+                    "position": [
+                        113,
+                        113
                     ]
                 }
             ]
